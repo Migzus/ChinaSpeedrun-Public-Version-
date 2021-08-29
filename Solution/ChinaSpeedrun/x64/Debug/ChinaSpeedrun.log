@@ -1,3 +1,0 @@
-﻿  main.cpp
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-  ChinaSpeedrun.vcxproj -> C:\Users\Synthas\Desktop\All\Projects\ChinaSpeedrun\Solution\x64\Debug\ChinaSpeedrun.exe
