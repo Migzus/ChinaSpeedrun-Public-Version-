@@ -1,4 +1,0 @@
-﻿  main.cpp
-  LINK : C:\Users\Synthas\Desktop\All\Projects\ChinaSpeedrun\x64\Debug\ChinaSpeedrun.exe not found or not built by the last incremental link; performing full link
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-  ChinaSpeedrun.vcxproj -> C:\Users\Synthas\Desktop\All\Projects\ChinaSpeedrun\x64\Debug\ChinaSpeedrun.exe
