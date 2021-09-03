@@ -1,10 +1,15 @@
 #include "ChinaEngine.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include <cstring>
 #include <map>
 #include <set>
 #include <cstdint>
 #include <algorithm>
+
+#include <chrono>
 
 std::vector<char> ChinaEngine::ReadFile(const std::string& filename)
 {
@@ -59,11 +64,15 @@ void ChinaEngine::InitVulkan()
 	CreateSwapChain();
 	CreateImageViews();
 	CreateRenderPass();
+	CreateDescriptorSetLayout();
 	CreateGraphicsPipeline();
 	CreateFramebuffers();
 	CreateCommandPool();
 	CreateVertexBuffer();
 	CreateIndexBuffer();
+	CreateUniformBuffers();
+	CreateDescriptorPool();
+	CreateDescriptorSets();
 	CreateCommandBuffers();
 	CreateSyncObjects();
 }
@@ -98,6 +107,8 @@ void ChinaEngine::DrawFrame()
 		vkWaitForFences(device, 1, &imagesInFlight[_imageIndex], VK_TRUE, UINT64_MAX);
 	
 	imagesInFlight[_imageIndex] = inFlightFences[currentFrame];
+
+	UpdateUniformBuffer(_imageIndex);
 
 	VkSubmitInfo _submitInfo{};
 	_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -146,6 +157,8 @@ void ChinaEngine::DrawFrame()
 void ChinaEngine::Cleanup()
 {
 	CleanupSwapChain();
+
+	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
 	vkDestroyBuffer(device, indexBuffer, nullptr);
 	vkFreeMemory(device, indexBufferMemory, nullptr);
@@ -396,6 +409,24 @@ void ChinaEngine::CreateImageViews()
 	}
 }
 
+void ChinaEngine::CreateDescriptorSetLayout()
+{
+	VkDescriptorSetLayoutBinding _uboLayoutBinding{};
+	_uboLayoutBinding.binding = 0;
+	_uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	_uboLayoutBinding.descriptorCount = 1;
+	_uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	_uboLayoutBinding.pImmutableSamplers = nullptr;
+
+	VkDescriptorSetLayoutCreateInfo _layoutInfo{};
+	_layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	_layoutInfo.bindingCount = 1;
+	_layoutInfo.pBindings = &_uboLayoutBinding;
+
+	if (vkCreateDescriptorSetLayout(device, &_layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL] :\tFailed to create descriptor set layout.");
+}
+
 void ChinaEngine::CreateGraphicsPipeline()
 {
 	auto _vertShaderCode{ ReadFile("../Resources/shaders/vert.spv") };
@@ -460,7 +491,7 @@ void ChinaEngine::CreateGraphicsPipeline()
 	_rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	_rasterizer.lineWidth = 1.0f;
 	_rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-	_rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	_rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	_rasterizer.depthBiasEnable = VK_FALSE;
 	_rasterizer.depthBiasConstantFactor = 0.0f;
 	_rasterizer.depthBiasClamp = 0.0f;
@@ -498,8 +529,8 @@ void ChinaEngine::CreateGraphicsPipeline()
 
 	VkPipelineLayoutCreateInfo _pipelineLayoutInfo{};
 	_pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	_pipelineLayoutInfo.setLayoutCount = 0;
-	_pipelineLayoutInfo.pSetLayouts = nullptr;
+	_pipelineLayoutInfo.setLayoutCount = 1;
+	_pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 	_pipelineLayoutInfo.pushConstantRangeCount = 0;
 	_pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
@@ -650,6 +681,68 @@ void ChinaEngine::CreateIndexBuffer()
 	vkFreeMemory(device, _stagingBufferMemory, nullptr);
 }
 
+void ChinaEngine::CreateUniformBuffers()
+{
+	VkDeviceSize _bufferSize{ sizeof(UniformBufferObject) };
+
+	uniformBuffers.resize(swapChainImages.size());
+	uniformBuffersMemory.resize(swapChainImages.size());
+
+	for (size_t i{ 0 }; i < swapChainImages.size(); i++)
+		CreateBuffer(_bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
+}
+
+void ChinaEngine::CreateDescriptorPool()
+{
+	VkDescriptorPoolSize _poolSize{};
+	_poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	_poolSize.descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+
+	VkDescriptorPoolCreateInfo _poolInfo{};
+	_poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	_poolInfo.poolSizeCount = 1;
+	_poolInfo.pPoolSizes = &_poolSize;
+	_poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());
+
+	if (vkCreateDescriptorPool(device, &_poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL] :\tFailed to create descriptor pool.");
+}
+
+void ChinaEngine::CreateDescriptorSets()
+{
+	std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
+	VkDescriptorSetAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = descriptorPool;
+	allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size());
+	allocInfo.pSetLayouts = layouts.data();
+
+	descriptorSets.resize(swapChainImages.size());
+	if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
+		throw std::runtime_error("failed to allocate descriptor sets!");
+
+	for (size_t i{ 0 }; i < swapChainImages.size(); i++)
+	{
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = uniformBuffers[i];
+		bufferInfo.offset = 0;
+		bufferInfo.range = sizeof(UniformBufferObject);
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = descriptorSets[i];
+		descriptorWrite.dstBinding = 0;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+		descriptorWrite.pImageInfo = nullptr;
+		descriptorWrite.pTexelBufferView = nullptr;
+
+		vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+	}
+}
+
 void ChinaEngine::CreateCommandBuffers()
 {
 	commandBuffers.resize(swapChainFramebuffers.size());
@@ -691,6 +784,7 @@ void ChinaEngine::CreateCommandBuffers()
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, _vertexBuffers, _offsets);
 		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
+		vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
 		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 		
 		vkCmdEndRenderPass(commandBuffers[i]);
@@ -717,6 +811,25 @@ void ChinaEngine::CreateSyncObjects()
 	for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; i++)
 		if (vkCreateSemaphore(device, &_semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS || vkCreateSemaphore(device, &_semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS || vkCreateFence(device, &_fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
 			throw std::runtime_error("[FAIL] :\tFailed to create semaphores.");
+}
+
+void ChinaEngine::UpdateUniformBuffer(uint32_t currentImage)
+{
+	static auto _startTime{ std::chrono::high_resolution_clock::now() };
+
+	auto _currentTime{ std::chrono::high_resolution_clock::now() };
+	float _time{ std::chrono::duration<float, std::chrono::seconds::period>(_currentTime - _startTime).count() };
+
+	UniformBufferObject _ubo{};
+	_ubo.model = glm::rotate(Matrix4x4(1.0f), _time * glm::radians(90.0f), Vector3(0.0f, 0.0f, 1.0f));
+	_ubo.view = glm::lookAt(Vector3(2.0f, 2.0f, 2.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, 1.0f));
+	_ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+	_ubo.proj[1][1] *= -1;
+
+	void* _data;
+	vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(_ubo), 0, &_data);
+	memcpy(_data, &_ubo, sizeof(_ubo));
+	vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
 }
 
 void ChinaEngine::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
@@ -801,6 +914,9 @@ void ChinaEngine::RecreateSwapChain()
 	CreateRenderPass();
 	CreateGraphicsPipeline();
 	CreateFramebuffers();
+	CreateUniformBuffers();
+	CreateDescriptorPool();
+	CreateDescriptorSets();
 	CreateCommandBuffers();
 }
 
@@ -819,6 +935,14 @@ void ChinaEngine::CleanupSwapChain()
 		vkDestroyImageView(device, imageView, nullptr);
 
 	vkDestroySwapchainKHR(device, swapChain, nullptr);
+
+	for (size_t i{ 0 }; i < swapChainImages.size(); i++)
+	{
+		vkDestroyBuffer(device, uniformBuffers[i], nullptr);
+		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+	}
+
+	vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 }
 
 VkShaderModule ChinaEngine::CreateShaderModule(const std::vector<char>& code)

@@ -17,6 +17,11 @@
 
 #include "Mathf.h"
 
+struct UniformBufferObject
+{
+	Matrix4x4 model, view, proj;
+};
+
 struct Vertex
 {
 	Vector2 position;
@@ -84,18 +89,23 @@ private:
 
 	GLFWwindow* window;
 
+	std::vector<VkDescriptorSet> descriptorSets;
 	std::vector<VkSemaphore> imageAvailableSemaphores, renderFinishedSemaphores;
 	std::vector<VkFence> inFlightFences, imagesInFlight;
 	std::vector<VkCommandBuffer> commandBuffers;
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	std::vector<VkImageView> swapChainImageViews;
 	std::vector<VkImage> swapChainImages;
+	std::vector<VkBuffer> uniformBuffers;
+	std::vector<VkDeviceMemory> uniformBuffersMemory;
 
+	VkDescriptorPool descriptorPool;
 	VkDeviceMemory vertexBufferMemory, indexBufferMemory;
 	VkBuffer vertexBuffer, indexBuffer;
 	VkCommandPool commandPool;
 	VkPipeline graphicsPipeline;
 	VkRenderPass renderPass;
+	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout;
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
@@ -120,15 +130,20 @@ private:
 	void CreateLogicalDevice();
 	void CreateSwapChain();
 	void CreateImageViews();
+	void CreateDescriptorSetLayout();
 	void CreateGraphicsPipeline();
 	void CreateRenderPass();
 	void CreateFramebuffers();
 	void CreateCommandPool();
 	void CreateVertexBuffer();
 	void CreateIndexBuffer();
+	void CreateUniformBuffers();
+	void CreateDescriptorPool();
+	void CreateDescriptorSets();
 	void CreateCommandBuffers();
 	void CreateSyncObjects();
 
+	void UpdateUniformBuffer(uint32_t currentImage);
 	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	void RecreateSwapChain();
