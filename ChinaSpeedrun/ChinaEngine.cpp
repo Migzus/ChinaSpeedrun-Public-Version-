@@ -24,6 +24,12 @@ std::vector<char> ChinaEngine::ReadFile(const std::string& filename)
 	return _buffer;
 }
 
+void ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int width, int height)
+{
+	auto _app{ reinterpret_cast<ChinaEngine*>(glfwGetWindowUserPointer(window)) };
+	_app->framebufferResized = true;
+}
+
 void ChinaEngine::Run()
 {
 	InitWindow();
@@ -37,9 +43,10 @@ void ChinaEngine::InitWindow()
 	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	window = glfwCreateWindow(WIDTH, HEIGHT, APP_NAME.c_str(), nullptr, nullptr);
+	glfwSetWindowUserPointer(window, this);
+	glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
 }
 
 void ChinaEngine::InitVulkan()
@@ -75,7 +82,15 @@ void ChinaEngine::DrawFrame()
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
 	uint32_t _imageIndex;
-	vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &_imageIndex);
+	VkResult _result{ vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &_imageIndex) };
+
+	if (_result == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		RecreateSwapChain();
+		return;
+	}
+	else if (_result != VK_SUCCESS && _result != VK_SUBOPTIMAL_KHR)
+		throw std::runtime_error("[FAIL] :\tFailed to acquire swap chain image.");
 
 	if (imagesInFlight[_imageIndex] != VK_NULL_HANDLE)
 		vkWaitForFences(device, 1, &imagesInFlight[_imageIndex], VK_TRUE, UINT64_MAX);
@@ -113,13 +128,23 @@ void ChinaEngine::DrawFrame()
 	_presentInfo.pImageIndices = &_imageIndex;
 	_presentInfo.pResults = nullptr;
 
-	vkQueuePresentKHR(presentQueue, &_presentInfo);
+	_result = vkQueuePresentKHR(presentQueue, &_presentInfo);
+
+	if (_result == VK_ERROR_OUT_OF_DATE_KHR || _result == VK_SUBOPTIMAL_KHR || framebufferResized)
+	{
+		framebufferResized = false;
+		RecreateSwapChain();
+	}
+	else if (_result != VK_SUCCESS)
+		throw std::runtime_error("[FAIL] :\tFailed to present swap chain image.");
 
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void ChinaEngine::Cleanup()
 {
+	CleanupSwapChain();
+
 	for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
 		vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -129,17 +154,6 @@ void ChinaEngine::Cleanup()
 
 	vkDestroyCommandPool(device, commandPool, nullptr);
 
-	for (auto framebuffer : swapChainFramebuffers)
-		vkDestroyFramebuffer(device, framebuffer, nullptr);
-
-	vkDestroyPipeline(device, graphicsPipeline, nullptr);
-	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-    vkDestroyRenderPass(device, renderPass, nullptr);
-
-	for (auto imageView : swapChainImageViews)
-		vkDestroyImageView(device, imageView, nullptr);
-
-	vkDestroySwapchainKHR(device, swapChain, nullptr);
 	vkDestroyDevice(device, nullptr);
 
 	if (enableValidationLayers)
@@ -643,6 +657,47 @@ void ChinaEngine::CreateSyncObjects()
 			throw std::runtime_error("[FAIL] :\tFailed to create semaphores.");
 }
 
+void ChinaEngine::RecreateSwapChain()
+{
+	int width{ 0 }, height{ 0 };
+
+	glfwGetFramebufferSize(window, &width, &height);
+
+	while (width == 0 || height == 0)
+	{
+		glfwGetFramebufferSize(window, &width, &height);
+		glfwWaitEvents();
+	}
+
+	vkDeviceWaitIdle(device);
+
+	CleanupSwapChain();
+
+	CreateSwapChain();
+	CreateImageViews();
+	CreateRenderPass();
+	CreateGraphicsPipeline();
+	CreateFramebuffers();
+	CreateCommandBuffers();
+}
+
+void ChinaEngine::CleanupSwapChain()
+{
+	for (auto framebuffer : swapChainFramebuffers)
+		vkDestroyFramebuffer(device, framebuffer, nullptr);
+
+	vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+
+	vkDestroyPipeline(device, graphicsPipeline, nullptr);
+	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+	vkDestroyRenderPass(device, renderPass, nullptr);
+
+	for (auto imageView : swapChainImageViews)
+		vkDestroyImageView(device, imageView, nullptr);
+
+	vkDestroySwapchainKHR(device, swapChain, nullptr);
+}
+
 VkShaderModule ChinaEngine::CreateShaderModule(const std::vector<char>& code)
 {
 	VkShaderModuleCreateInfo _createInfo{};
@@ -757,7 +812,7 @@ QueueFamilyIndices ChinaEngine::FindQueueFamilies(VkPhysicalDevice device)
 	return _indices;
 }
 
-// currently an unused function, will use it in the future
+// currently an unused function, will use it in the future (probably)
 int ChinaEngine::RateDeviceSuitability(VkPhysicalDevice device)
 {
 	int _score{ 0 };

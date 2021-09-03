@@ -33,6 +33,7 @@ class ChinaEngine
 {
 public:
 	static std::vector<char> ReadFile(const std::string& filename);
+	static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
 
 	void Run();
 protected:
@@ -54,6 +55,7 @@ private:
 	const uint32_t HEIGHT{ 600 };
 
 	size_t currentFrame{ 0 };
+	bool framebufferResized{ false };
 
 	GLFWwindow* window;
 
@@ -97,6 +99,9 @@ private:
 	void CreateCommandPool();
 	void CreateCommandBuffers();
 	void CreateSyncObjects();
+
+	void RecreateSwapChain();
+	void CleanupSwapChain();
 
 	VkShaderModule CreateShaderModule(const std::vector<char>& code);
 	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
