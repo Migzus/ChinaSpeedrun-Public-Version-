@@ -13,6 +13,18 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <array>
+
+#include "Mathf.h"
+
+struct Vertex
+{
+	Vector2 position;
+	Vector3 color;
+
+	static VkVertexInputBindingDescription GetBindingDescription();
+	static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions();
+};
 
 struct QueueFamilyIndices
 {
@@ -51,6 +63,19 @@ private:
 	const bool enableValidationLayers{ true };
 #endif
 
+	const std::vector<Vertex> vertices
+	{
+		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+	};
+
+	const std::vector<uint16_t> indices
+	{
+		0, 1, 2, 2, 3, 0
+	};
+
 	const uint32_t WIDTH{ 800 };
 	const uint32_t HEIGHT{ 600 };
 
@@ -66,6 +91,8 @@ private:
 	std::vector<VkImageView> swapChainImageViews;
 	std::vector<VkImage> swapChainImages;
 
+	VkDeviceMemory vertexBufferMemory, indexBufferMemory;
+	VkBuffer vertexBuffer, indexBuffer;
 	VkCommandPool commandPool;
 	VkPipeline graphicsPipeline;
 	VkRenderPass renderPass;
@@ -97,9 +124,13 @@ private:
 	void CreateRenderPass();
 	void CreateFramebuffers();
 	void CreateCommandPool();
+	void CreateVertexBuffer();
+	void CreateIndexBuffer();
 	void CreateCommandBuffers();
 	void CreateSyncObjects();
 
+	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	void RecreateSwapChain();
 	void CleanupSwapChain();
 
@@ -109,6 +140,7 @@ private:
 	SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	int RateDeviceSuitability(VkPhysicalDevice device);
 	bool IsDeviceSuitable(VkPhysicalDevice device);
 	bool CheckDeviceExtensionSupport(VkPhysicalDevice device);

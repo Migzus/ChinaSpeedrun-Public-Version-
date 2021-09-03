@@ -157,9 +157,11 @@
   <ItemGroup>
     <ClCompile Include="ChinaEngine.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Mathf.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
+    <ClInclude Include="Mathf.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

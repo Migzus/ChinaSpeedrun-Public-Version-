@@ -21,9 +21,15 @@
     <ClCompile Include="ChinaEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Mathf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mathf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
