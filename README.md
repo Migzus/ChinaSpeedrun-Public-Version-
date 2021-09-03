@@ -20,3 +20,4 @@ If you don't run this file; when running the compiled progarm, it will crash.
 Libraries used:<br>
 GLFW<br>
 GLM<br>
+The stb collection<br>
