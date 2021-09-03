@@ -56,7 +56,7 @@ void ChinaEngine::InitVulkan()
 	CreateFramebuffers();
 	CreateCommandPool();
 	CreateCommandBuffers();
-	CreateSemaphores();
+	CreateSyncObjects();
 }
 
 void ChinaEngine::MainLoop()
@@ -72,13 +72,20 @@ void ChinaEngine::MainLoop()
 
 void ChinaEngine::DrawFrame()
 {
+	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+
 	uint32_t _imageIndex;
-	vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &_imageIndex);
+	vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &_imageIndex);
+
+	if (imagesInFlight[_imageIndex] != VK_NULL_HANDLE)
+		vkWaitForFences(device, 1, &imagesInFlight[_imageIndex], VK_TRUE, UINT64_MAX);
+	
+	imagesInFlight[_imageIndex] = inFlightFences[currentFrame];
 
 	VkSubmitInfo _submitInfo{};
 	_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-	VkSemaphore _waitSemaphores[]{ imageAvailableSemaphore };
+	VkSemaphore _waitSemaphores[]{ imageAvailableSemaphores[currentFrame] };
 	VkPipelineStageFlags _waitStages[]{ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	_submitInfo.waitSemaphoreCount = 1;
 	_submitInfo.pWaitSemaphores = _waitSemaphores;
@@ -86,16 +93,17 @@ void ChinaEngine::DrawFrame()
 	_submitInfo.commandBufferCount = 1;
 	_submitInfo.pCommandBuffers = &commandBuffers[_imageIndex];
 
-	VkSemaphore _signalSemaphores[]{ renderFinishedSemaphore };
+	VkSemaphore _signalSemaphores[]{ renderFinishedSemaphores[currentFrame] };
 	_submitInfo.signalSemaphoreCount = 1;
 	_submitInfo.pSignalSemaphores = _signalSemaphores;
 
-	if (vkQueueSubmit(graphicsQueue, 1, &_submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
+	vkResetFences(device, 1, &inFlightFences[currentFrame]);
+
+	if (vkQueueSubmit(graphicsQueue, 1, &_submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
 		throw std::runtime_error("[FAIL] :\tFailed to submit draw command buffer.");
 
 	VkPresentInfoKHR _presentInfo{};
 	_presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
 	_presentInfo.waitSemaphoreCount = 1;
 	_presentInfo.pWaitSemaphores = _signalSemaphores;
 	
@@ -106,12 +114,19 @@ void ChinaEngine::DrawFrame()
 	_presentInfo.pResults = nullptr;
 
 	vkQueuePresentKHR(presentQueue, &_presentInfo);
+
+	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void ChinaEngine::Cleanup()
 {
-	vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
-	vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
+	for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; i++)
+	{
+		vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
+		vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
+		vkDestroyFence(device, inFlightFences[i], nullptr);
+	}
+
 	vkDestroyCommandPool(device, commandPool, nullptr);
 
 	for (auto framebuffer : swapChainFramebuffers)
@@ -609,13 +624,23 @@ void ChinaEngine::CreateCommandBuffers()
 	}
 }
 
-void ChinaEngine::CreateSemaphores()
+void ChinaEngine::CreateSyncObjects()
 {
+	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+	imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
+
 	VkSemaphoreCreateInfo _semaphoreInfo{};
 	_semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-	if (vkCreateSemaphore(device, &_semaphoreInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS || vkCreateSemaphore(device, &_semaphoreInfo, nullptr, &renderFinishedSemaphore) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to create semaphores.");
+	VkFenceCreateInfo _fenceInfo{};
+	_fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	_fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; i++)
+		if (vkCreateSemaphore(device, &_semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS || vkCreateSemaphore(device, &_semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS || vkCreateFence(device, &_fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
+			throw std::runtime_error("[FAIL] :\tFailed to create semaphores.");
 }
 
 VkShaderModule ChinaEngine::CreateShaderModule(const std::vector<char>& code)

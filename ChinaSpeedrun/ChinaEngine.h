@@ -38,6 +38,7 @@ public:
 protected:
 	
 private:
+	const int MAX_FRAMES_IN_FLIGHT{ 2 };
 	const std::string APP_NAME{ "China Speedrun" };
 	const std::string ENGINE_NAME{ "ChinaEngine" };
 	const std::vector<const char*> validationLayers{ "VK_LAYER_KHRONOS_validation" };
@@ -52,14 +53,17 @@ private:
 	const uint32_t WIDTH{ 800 };
 	const uint32_t HEIGHT{ 600 };
 
+	size_t currentFrame{ 0 };
+
 	GLFWwindow* window;
 
+	std::vector<VkSemaphore> imageAvailableSemaphores, renderFinishedSemaphores;
+	std::vector<VkFence> inFlightFences, imagesInFlight;
 	std::vector<VkCommandBuffer> commandBuffers;
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	std::vector<VkImageView> swapChainImageViews;
 	std::vector<VkImage> swapChainImages;
 
-	VkSemaphore imageAvailableSemaphore, renderFinishedSemaphore;
 	VkCommandPool commandPool;
 	VkPipeline graphicsPipeline;
 	VkRenderPass renderPass;
@@ -92,7 +96,7 @@ private:
 	void CreateFramebuffers();
 	void CreateCommandPool();
 	void CreateCommandBuffers();
-	void CreateSemaphores();
+	void CreateSyncObjects();
 
 	VkShaderModule CreateShaderModule(const std::vector<char>& code);
 	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
