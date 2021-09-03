@@ -14,6 +14,8 @@ Just to quickly sum up what one has to do in order to compile-and-run this code,
 Vulkan 1.2.182.0 (Or later) (If you use a newer version, you must update some of the paths in the project solution.)<br>
 Visual Studio 2019 (we used this, but I am certain you can use 2017 as well)
 
+Once downloaded you MUST go into the Resource/shaders directory; run a file named compile.bat (if Linux compile.sh)
+If you don't run this file; when running the compiled progarm, it will crash.
 
 Libraries used:<br>
 GLFW<br>
