@@ -12,6 +12,8 @@
 /// </summary>
 /// <returns></returns>
 
+using namespace cs;
+
 int main() {
     ChinaEngine engine;
 

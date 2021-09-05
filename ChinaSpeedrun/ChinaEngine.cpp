@@ -11,7 +11,7 @@
 
 #include <chrono>
 
-std::vector<char> ChinaEngine::ReadFile(const std::string& filename)
+std::vector<char> cs::ChinaEngine::ReadFile(const std::string& filename)
 {
 	std::ifstream _file{ filename, std::ios::ate | std::ios::binary };
 
@@ -29,13 +29,13 @@ std::vector<char> ChinaEngine::ReadFile(const std::string& filename)
 	return _buffer;
 }
 
-void ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int width, int height)
+void cs::ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int width, int height)
 {
 	auto _app{ reinterpret_cast<ChinaEngine*>(glfwGetWindowUserPointer(window)) };
 	_app->framebufferResized = true;
 }
 
-void ChinaEngine::Run()
+void cs::ChinaEngine::Run()
 {
 	InitWindow();
 	InitVulkan();
@@ -43,7 +43,7 @@ void ChinaEngine::Run()
 	Cleanup();
 }
 
-void ChinaEngine::InitWindow()
+void cs::ChinaEngine::InitWindow()
 {
 	glfwInit();
 
@@ -54,7 +54,7 @@ void ChinaEngine::InitWindow()
 	glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
 }
 
-void ChinaEngine::InitVulkan()
+void cs::ChinaEngine::InitVulkan()
 {
 	CreateInstance();
 	SetupDebugMessenger();
@@ -68,6 +68,9 @@ void ChinaEngine::InitVulkan()
 	CreateGraphicsPipeline();
 	CreateFramebuffers();
 	CreateCommandPool();
+	CreateTextureImage();
+	CreateTextureImageView();
+	CreateTextureSampler();
 	CreateVertexBuffer();
 	CreateIndexBuffer();
 	CreateUniformBuffers();
@@ -77,7 +80,7 @@ void ChinaEngine::InitVulkan()
 	CreateSyncObjects();
 }
 
-void ChinaEngine::MainLoop()
+void cs::ChinaEngine::MainLoop()
 {
 	while (!glfwWindowShouldClose(window))
 	{
@@ -88,7 +91,7 @@ void ChinaEngine::MainLoop()
 	vkDeviceWaitIdle(device);
 }
 
-void ChinaEngine::DrawFrame()
+void cs::ChinaEngine::DrawFrame()
 {
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
@@ -154,9 +157,15 @@ void ChinaEngine::DrawFrame()
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void ChinaEngine::Cleanup()
+void cs::ChinaEngine::Cleanup()
 {
 	CleanupSwapChain();
+
+	vkDestroySampler(device, textureSampler, nullptr);
+	vkDestroyImageView(device, textureImageView, nullptr);
+
+	vkDestroyImage(device, textureImage, nullptr);
+	vkFreeMemory(device, textureImageMemory, nullptr);
 
 	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
@@ -188,7 +197,7 @@ void ChinaEngine::Cleanup()
 	glfwTerminate();
 }
 
-void ChinaEngine::CreateInstance()
+void cs::ChinaEngine::CreateInstance()
 {
 	if (enableValidationLayers && !CheckValidationSupport())
 		throw std::runtime_error("[ERROR] :\tRequested validation layer support, but non are available.");
@@ -229,7 +238,7 @@ void ChinaEngine::CreateInstance()
 		throw std::runtime_error("[FAIL] :\tCould not create a Vulkan Instance.");
 }
 
-void ChinaEngine::SetupDebugMessenger()
+void cs::ChinaEngine::SetupDebugMessenger()
 {
 	if (!enableValidationLayers)
 		return;
@@ -241,13 +250,13 @@ void ChinaEngine::SetupDebugMessenger()
 		throw std::runtime_error("[FAIL] :\tFailed to set up debug messenger.");
 }
 
-void ChinaEngine::CreateSurface()
+void cs::ChinaEngine::CreateSurface()
 {
 	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS)
 		throw std::runtime_error("[FAIL] :\tFailed to create window surface.");
 }
 
-void ChinaEngine::PickPhysicalDevice()
+void cs::ChinaEngine::PickPhysicalDevice()
 {
 	uint32_t _deviceCount{ 0 };
 	vkEnumeratePhysicalDevices(instance, &_deviceCount, nullptr);
@@ -283,7 +292,7 @@ void ChinaEngine::PickPhysicalDevice()
 	*/
 }
 
-void ChinaEngine::CreateLogicalDevice()
+void cs::ChinaEngine::CreateLogicalDevice()
 {
 	QueueFamilyIndices _indices{ FindQueueFamilies(physicalDevice) };
 
@@ -327,7 +336,7 @@ void ChinaEngine::CreateLogicalDevice()
 	vkGetDeviceQueue(device, _indices.graphicsFamily.value(), 0, &presentQueue);
 }
 
-void ChinaEngine::CreateSwapChain()
+void cs::ChinaEngine::CreateSwapChain()
 {
 	SwapChainSupportDetails _swapChainSupport{ QuerySwapChainSupport(physicalDevice) };
 
@@ -383,33 +392,15 @@ void ChinaEngine::CreateSwapChain()
 	swapChainExtent = _extent;
 }
 
-void ChinaEngine::CreateImageViews()
+void cs::ChinaEngine::CreateImageViews()
 {
 	swapChainImageViews.resize(swapChainImages.size());
 
 	for (size_t i{ 0 }; i < swapChainImages.size(); i++)
-	{
-		VkImageViewCreateInfo _createInfo{};
-		_createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		_createInfo.image = swapChainImages[i];
-		_createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		_createInfo.format = swapChainImageFormat;
-		_createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-		_createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-		_createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-		_createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-		_createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		_createInfo.subresourceRange.baseMipLevel = 0;
-		_createInfo.subresourceRange.levelCount = 1;
-		_createInfo.subresourceRange.baseArrayLayer = 0;
-		_createInfo.subresourceRange.layerCount = 1;
-
-		if (vkCreateImageView(device, &_createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL] :\tFailed to create image views.");
-	}
+		swapChainImageViews[i] = CreateImageView(swapChainImages[i], swapChainImageFormat);
 }
 
-void ChinaEngine::CreateDescriptorSetLayout()
+void cs::ChinaEngine::CreateDescriptorSetLayout()
 {
 	VkDescriptorSetLayoutBinding _uboLayoutBinding{};
 	_uboLayoutBinding.binding = 0;
@@ -418,16 +409,24 @@ void ChinaEngine::CreateDescriptorSetLayout()
 	_uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 	_uboLayoutBinding.pImmutableSamplers = nullptr;
 
+	VkDescriptorSetLayoutBinding _samplerLayoutBinding{};
+	_samplerLayoutBinding.binding = 1;
+	_samplerLayoutBinding.descriptorCount = 1;
+	_samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	_samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	_samplerLayoutBinding.pImmutableSamplers = nullptr;
+
+	std::array<VkDescriptorSetLayoutBinding, 2> _bindings { _uboLayoutBinding, _samplerLayoutBinding };
 	VkDescriptorSetLayoutCreateInfo _layoutInfo{};
 	_layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	_layoutInfo.bindingCount = 1;
-	_layoutInfo.pBindings = &_uboLayoutBinding;
+	_layoutInfo.bindingCount = static_cast<uint32_t>(_bindings.size());
+	_layoutInfo.pBindings = _bindings.data();
 
 	if (vkCreateDescriptorSetLayout(device, &_layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
 		throw std::runtime_error("[FAIL] :\tFailed to create descriptor set layout.");
 }
 
-void ChinaEngine::CreateGraphicsPipeline()
+void cs::ChinaEngine::CreateGraphicsPipeline()
 {
 	auto _vertShaderCode{ ReadFile("../Resources/shaders/vert.spv") };
 	auto _fragShaderCode{ ReadFile("../Resources/shaders/frag.spv") };
@@ -562,7 +561,7 @@ void ChinaEngine::CreateGraphicsPipeline()
 	vkDestroyShaderModule(device, _vertShaderModule, nullptr);
 }
 
-void ChinaEngine::CreateRenderPass()
+void cs::ChinaEngine::CreateRenderPass()
 {
 	VkAttachmentDescription _colorAttachment{};
 	_colorAttachment.format = swapChainImageFormat;
@@ -604,7 +603,7 @@ void ChinaEngine::CreateRenderPass()
 		throw std::runtime_error("[FAIL] :\tFailed to create render pass.");
 }
 
-void ChinaEngine::CreateFramebuffers()
+void cs::ChinaEngine::CreateFramebuffers()
 {
 	swapChainFramebuffers.resize(swapChainImageViews.size());
 
@@ -625,7 +624,7 @@ void ChinaEngine::CreateFramebuffers()
 	}
 }
 
-void ChinaEngine::CreateCommandPool()
+void cs::ChinaEngine::CreateCommandPool()
 {
 	QueueFamilyIndices _queueFamilyIndices{ FindQueueFamilies(physicalDevice) };
 
@@ -638,15 +637,74 @@ void ChinaEngine::CreateCommandPool()
 		throw std::runtime_error("[FAIL] :\tFailed to create command pool.");
 }
 
-void ChinaEngine::CreateVertexBuffer()
+void cs::ChinaEngine::CreateTextureImage()
+{
+	int _texWidth, _texHeight, _texChannels;
+	stbi_uc* _pixels{ stbi_load("../Resources/textures/junko_gyate.png", &_texWidth, &_texHeight, &_texChannels, STBI_rgb_alpha) };
+	VkDeviceSize _imageSize{ static_cast<uint64_t>(_texWidth * _texHeight * 4) }; // 4 color channels (r, g, b, a)
+
+	if (!_pixels)
+		throw std::runtime_error("[FAIL] :\tFailed to load texture image.");
+
+	VkBuffer _stagingBuffer;
+	VkDeviceMemory _stagingBufferMemory;
+	CreateBuffer(_imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
+
+	void* _data;
+	vkMapMemory(device, _stagingBufferMemory, 0, _imageSize, 0, &_data);
+	memcpy(_data, _pixels, static_cast<size_t>(_imageSize));
+	vkUnmapMemory(device, _stagingBufferMemory);
+
+	stbi_image_free(_pixels);
+
+	CreateImage(_texWidth, _texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+	
+	TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	CopyBufferToImage(_stagingBuffer, textureImage, static_cast<uint32_t>(_texWidth), static_cast<uint32_t>(_texHeight));
+	TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+	vkDestroyBuffer(device, _stagingBuffer, nullptr);
+	vkFreeMemory(device, _stagingBufferMemory, nullptr);
+}
+
+void cs::ChinaEngine::CreateTextureImageView()
+{
+	textureImageView = CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+
+	for (uint32_t i = 0; i < swapChainImages.size(); i++)
+		swapChainImageViews[i] = CreateImageView(swapChainImages[i], swapChainImageFormat);
+}
+
+void cs::ChinaEngine::CreateTextureSampler()
+{
+	VkSamplerCreateInfo _samplerInfo{};
+	_samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	_samplerInfo.magFilter = VK_FILTER_LINEAR;
+	_samplerInfo.minFilter = VK_FILTER_LINEAR;
+	_samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	_samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	_samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	_samplerInfo.anisotropyEnable = VK_FALSE;
+	_samplerInfo.maxAnisotropy = 1.0f;
+	_samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+	_samplerInfo.compareEnable = VK_FALSE;
+	_samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+	_samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	_samplerInfo.mipLodBias = 0.0f;
+	_samplerInfo.minLod = 0.0f;
+	_samplerInfo.maxLod = 0.0f;
+
+	if (vkCreateSampler(device, &_samplerInfo, nullptr, &textureSampler) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL] :\tFailed to create texture sampler.");
+}
+
+void cs::ChinaEngine::CreateVertexBuffer()
 {
 	VkDeviceSize _bufferSize{ sizeof(vertices[0]) * vertices.size() };
 
 	VkBuffer _stagingBuffer;
-	
-
 	VkDeviceMemory _stagingBufferMemory;
-	CreateBuffer(_bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
+	CreateBuffer(_bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
 
 	void* _data;
 	vkMapMemory(device, _stagingBufferMemory, 0, _bufferSize, 0, &_data);
@@ -660,7 +718,7 @@ void ChinaEngine::CreateVertexBuffer()
 	vkFreeMemory(device, _stagingBufferMemory, nullptr);
 }
 
-void ChinaEngine::CreateIndexBuffer()
+void cs::ChinaEngine::CreateIndexBuffer()
 {
 	VkDeviceSize _bufferSize{ sizeof(indices[0]) * indices.size() };
 
@@ -681,7 +739,7 @@ void ChinaEngine::CreateIndexBuffer()
 	vkFreeMemory(device, _stagingBufferMemory, nullptr);
 }
 
-void ChinaEngine::CreateUniformBuffers()
+void cs::ChinaEngine::CreateUniformBuffers()
 {
 	VkDeviceSize _bufferSize{ sizeof(UniformBufferObject) };
 
@@ -692,58 +750,74 @@ void ChinaEngine::CreateUniformBuffers()
 		CreateBuffer(_bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
 }
 
-void ChinaEngine::CreateDescriptorPool()
+void cs::ChinaEngine::CreateDescriptorPool()
 {
-	VkDescriptorPoolSize _poolSize{};
-	_poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	_poolSize.descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+	std::array<VkDescriptorPoolSize, 2> poolSizes{};
+	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+	// here we can bind more descriptor pools
+	// might also want to also prepare stuff in CreateDescriptorSetLayout()
 
 	VkDescriptorPoolCreateInfo _poolInfo{};
 	_poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	_poolInfo.poolSizeCount = 1;
-	_poolInfo.pPoolSizes = &_poolSize;
+	_poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+	_poolInfo.pPoolSizes = poolSizes.data();
 	_poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());
 
 	if (vkCreateDescriptorPool(device, &_poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
 		throw std::runtime_error("[FAIL] :\tFailed to create descriptor pool.");
 }
 
-void ChinaEngine::CreateDescriptorSets()
+void cs::ChinaEngine::CreateDescriptorSets()
 {
-	std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = descriptorPool;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size());
-	allocInfo.pSetLayouts = layouts.data();
+	std::vector<VkDescriptorSetLayout> _layouts(swapChainImages.size(), descriptorSetLayout);
+	VkDescriptorSetAllocateInfo _allocInfo{};
+	_allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	_allocInfo.descriptorPool = descriptorPool;
+	_allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size());
+	_allocInfo.pSetLayouts = _layouts.data();
 
 	descriptorSets.resize(swapChainImages.size());
-	if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
-		throw std::runtime_error("failed to allocate descriptor sets!");
+	if (vkAllocateDescriptorSets(device, &_allocInfo, descriptorSets.data()) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL] :\tFailed to allocate descriptor sets.");
 
 	for (size_t i{ 0 }; i < swapChainImages.size(); i++)
 	{
-		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = uniformBuffers[i];
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(UniformBufferObject);
+		VkDescriptorBufferInfo _bufferInfo{};
+		_bufferInfo.buffer = uniformBuffers[i];
+		_bufferInfo.offset = 0;
+		_bufferInfo.range = sizeof(UniformBufferObject);
 
-		VkWriteDescriptorSet descriptorWrite{};
-		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = descriptorSets[i];
-		descriptorWrite.dstBinding = 0;
-		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = &bufferInfo;
-		descriptorWrite.pImageInfo = nullptr;
-		descriptorWrite.pTexelBufferView = nullptr;
+		VkDescriptorImageInfo _imageInfo{};
+		_imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		_imageInfo.imageView = textureImageView;
+		_imageInfo.sampler = textureSampler;
 
-		vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+		std::array<VkWriteDescriptorSet, 2> _descriptorWrites{};
+
+		_descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		_descriptorWrites[0].dstSet = descriptorSets[i];
+		_descriptorWrites[0].dstBinding = 0;
+		_descriptorWrites[0].dstArrayElement = 0;
+		_descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		_descriptorWrites[0].descriptorCount = 1;
+		_descriptorWrites[0].pBufferInfo = &_bufferInfo;
+
+		_descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		_descriptorWrites[1].dstSet = descriptorSets[i];
+		_descriptorWrites[1].dstBinding = 1;
+		_descriptorWrites[1].dstArrayElement = 0;
+		_descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		_descriptorWrites[1].descriptorCount = 1;
+		_descriptorWrites[1].pImageInfo = &_imageInfo;
+
+		vkUpdateDescriptorSets(device, static_cast<uint32_t>(_descriptorWrites.size()), _descriptorWrites.data(), 0, nullptr);
 	}
 }
 
-void ChinaEngine::CreateCommandBuffers()
+void cs::ChinaEngine::CreateCommandBuffers()
 {
 	commandBuffers.resize(swapChainFramebuffers.size());
 
@@ -794,7 +868,7 @@ void ChinaEngine::CreateCommandBuffers()
 	}
 }
 
-void ChinaEngine::CreateSyncObjects()
+void cs::ChinaEngine::CreateSyncObjects()
 {
 	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -813,7 +887,61 @@ void ChinaEngine::CreateSyncObjects()
 			throw std::runtime_error("[FAIL] :\tFailed to create semaphores.");
 }
 
-void ChinaEngine::UpdateUniformBuffer(uint32_t currentImage)
+void cs::ChinaEngine::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
+{
+	VkImageCreateInfo _imageInfo{};
+	_imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	_imageInfo.imageType = VK_IMAGE_TYPE_2D;
+	_imageInfo.extent.width = width;
+	_imageInfo.extent.height = height;
+	_imageInfo.extent.depth = 1;
+	_imageInfo.mipLevels = 1;
+	_imageInfo.arrayLayers = 1;
+	_imageInfo.format = format;
+	_imageInfo.tiling = tiling;
+	_imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	_imageInfo.usage = usage;
+	_imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	_imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	if (vkCreateImage(device, &_imageInfo, nullptr, &image) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL] :\tFailed to create image.");
+
+	VkMemoryRequirements _memRequirements;
+	vkGetImageMemoryRequirements(device, image, &_memRequirements);
+
+	VkMemoryAllocateInfo _allocInfo{};
+	_allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	_allocInfo.allocationSize = _memRequirements.size;
+	_allocInfo.memoryTypeIndex = FindMemoryType(_memRequirements.memoryTypeBits, properties);
+
+	if (vkAllocateMemory(device, &_allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL] :\tFailed to allocate image memory.");
+
+	vkBindImageMemory(device, image, imageMemory, 0);
+}
+
+VkImageView cs::ChinaEngine::CreateImageView(VkImage image, VkFormat format)
+{
+	VkImageViewCreateInfo _viewInfo{};
+	_viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	_viewInfo.image = image;
+	_viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	_viewInfo.format = format;
+	_viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	_viewInfo.subresourceRange.baseMipLevel = 0;
+	_viewInfo.subresourceRange.levelCount = 1;
+	_viewInfo.subresourceRange.baseArrayLayer = 0;
+	_viewInfo.subresourceRange.layerCount = 1;
+
+	VkImageView _imageView;
+	if (vkCreateImageView(device, &_viewInfo, nullptr, &_imageView) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL] :\tFailed to create texture image view.");
+
+	return _imageView;
+}
+
+void cs::ChinaEngine::UpdateUniformBuffer(uint32_t currentImage)
 {
 	static auto _startTime{ std::chrono::high_resolution_clock::now() };
 
@@ -832,7 +960,27 @@ void ChinaEngine::UpdateUniformBuffer(uint32_t currentImage)
 	vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
 }
 
-void ChinaEngine::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+VkCommandBuffer cs::ChinaEngine::BeginSingleTimeCommands()
+{
+	VkCommandBufferAllocateInfo _allocInfo{};
+	_allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	_allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	_allocInfo.commandPool = commandPool;
+	_allocInfo.commandBufferCount = 1;
+
+	VkCommandBuffer _commandBuffer;
+	vkAllocateCommandBuffers(device, &_allocInfo, &_commandBuffer);
+
+	VkCommandBufferBeginInfo _beginInfo{};
+	_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	_beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(_commandBuffer, &_beginInfo);
+
+	return _commandBuffer;
+}
+
+void cs::ChinaEngine::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 {
 	VkBufferCreateInfo _bufferInfo{};
 	_bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -857,43 +1005,101 @@ void ChinaEngine::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMe
 	vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
 
-void ChinaEngine::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+void cs::ChinaEngine::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
-	VkCommandBufferAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = commandPool;
-	allocInfo.commandBufferCount = 1;
+	VkCommandBuffer _commandBuffer{ BeginSingleTimeCommands() };
 
-	VkCommandBuffer commandBuffer;
-	vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+	VkBufferCopy _copyRegion{};
+	_copyRegion.srcOffset = 0;
+	_copyRegion.dstOffset = 0;
+	_copyRegion.size = size;
+	vkCmdCopyBuffer(_commandBuffer, srcBuffer, dstBuffer, 1, &_copyRegion);
 
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	EndSingleTimeCommands(_commandBuffer);
+}
 
-	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+void cs::ChinaEngine::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+{
+	VkCommandBuffer _commandBuffer{ BeginSingleTimeCommands() };
 
-	VkBufferCopy copyRegion{};
-	copyRegion.srcOffset = 0;
-	copyRegion.dstOffset = 0;
-	copyRegion.size = size;
-	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+	VkBufferImageCopy _region{};
+	_region.bufferOffset = 0;
+	_region.bufferRowLength = 0;
+	_region.bufferImageHeight = 0;
+	_region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	_region.imageSubresource.mipLevel = 0;
+	_region.imageSubresource.baseArrayLayer = 0;
+	_region.imageSubresource.layerCount = 1;
+	_region.imageOffset = { 0, 0, 0 };
+	_region.imageExtent = { width, height, 1 };
 
+	vkCmdCopyBufferToImage(_commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &_region);
+
+	EndSingleTimeCommands(_commandBuffer);
+}
+
+void cs::ChinaEngine::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
+{
 	vkEndCommandBuffer(commandBuffer);
 
-	VkSubmitInfo submitInfo{};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffer;
+	VkSubmitInfo _submitInfo{};
+	_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	_submitInfo.commandBufferCount = 1;
+	_submitInfo.pCommandBuffers = &commandBuffer;
 
-	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueSubmit(graphicsQueue, 1, &_submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(graphicsQueue);
 
 	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
 
-void ChinaEngine::RecreateSwapChain()
+void cs::ChinaEngine::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+{
+	VkCommandBuffer _commandBuffer{ BeginSingleTimeCommands() };
+
+	VkImageMemoryBarrier _barrier{};
+	_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	_barrier.oldLayout = oldLayout;
+	_barrier.newLayout = newLayout;
+	_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	_barrier.image = image;
+	_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	_barrier.subresourceRange.baseMipLevel = 0;
+	_barrier.subresourceRange.levelCount = 1;
+	_barrier.subresourceRange.baseArrayLayer = 0;
+	_barrier.subresourceRange.layerCount = 1;
+	_barrier.srcAccessMask = 0;
+	_barrier.dstAccessMask = 0;
+
+	VkPipelineStageFlags _sourceStage;
+	VkPipelineStageFlags _destinationStage;
+
+	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	{
+		_barrier.srcAccessMask = 0;
+		_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		_sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		_destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
+		_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		_sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		_destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	}
+	else
+		throw std::invalid_argument("[ERROR] :\tUnsupported layout transition.");
+
+	vkCmdPipelineBarrier(_commandBuffer, _sourceStage, _destinationStage, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
+
+	EndSingleTimeCommands(_commandBuffer);
+}
+
+void cs::ChinaEngine::RecreateSwapChain()
 {
 	int width{ 0 }, height{ 0 };
 
@@ -918,9 +1124,11 @@ void ChinaEngine::RecreateSwapChain()
 	CreateDescriptorPool();
 	CreateDescriptorSets();
 	CreateCommandBuffers();
+
+	imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
 }
 
-void ChinaEngine::CleanupSwapChain()
+void cs::ChinaEngine::CleanupSwapChain()
 {
 	for (auto framebuffer : swapChainFramebuffers)
 		vkDestroyFramebuffer(device, framebuffer, nullptr);
@@ -945,7 +1153,7 @@ void ChinaEngine::CleanupSwapChain()
 	vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 }
 
-VkShaderModule ChinaEngine::CreateShaderModule(const std::vector<char>& code)
+VkShaderModule cs::ChinaEngine::CreateShaderModule(const std::vector<char>& code)
 {
 	VkShaderModuleCreateInfo _createInfo{};
 	_createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -959,7 +1167,7 @@ VkShaderModule ChinaEngine::CreateShaderModule(const std::vector<char>& code)
 	return _shaderModule;
 }
 
-VkSurfaceFormatKHR ChinaEngine::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
+VkSurfaceFormatKHR cs::ChinaEngine::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 {
 	for (const auto& availableFormat : availableFormats)
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
@@ -968,7 +1176,7 @@ VkSurfaceFormatKHR ChinaEngine::ChooseSwapSurfaceFormat(const std::vector<VkSurf
 	return availableFormats[0];
 }
 
-VkPresentModeKHR ChinaEngine::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
+VkPresentModeKHR cs::ChinaEngine::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
 {
 	// VK_PRESENT_MODE_IMMEDIATE_KHR : May lead to screen tearing.
 	// VK_PRESENT_MODE_FIFO_KHR :      Is similar to v-sync.
@@ -980,7 +1188,7 @@ VkPresentModeKHR ChinaEngine::ChooseSwapPresentMode(const std::vector<VkPresentM
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-SwapChainSupportDetails ChinaEngine::QuerySwapChainSupport(VkPhysicalDevice device)
+cs::SwapChainSupportDetails cs::ChinaEngine::QuerySwapChainSupport(VkPhysicalDevice device)
 {
 	SwapChainSupportDetails _details;
 
@@ -1007,7 +1215,7 @@ SwapChainSupportDetails ChinaEngine::QuerySwapChainSupport(VkPhysicalDevice devi
 	return _details;
 }
 
-VkExtent2D ChinaEngine::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
+VkExtent2D cs::ChinaEngine::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
 {
 	if (capabilities.currentExtent.width != UINT32_MAX) {
 		return capabilities.currentExtent;
@@ -1028,7 +1236,7 @@ VkExtent2D ChinaEngine::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabil
 	}
 }
 
-QueueFamilyIndices ChinaEngine::FindQueueFamilies(VkPhysicalDevice device)
+cs::QueueFamilyIndices cs::ChinaEngine::FindQueueFamilies(VkPhysicalDevice device)
 {
 	int i{ 0 };
 	uint32_t _queueFamilyCount{ 0 };
@@ -1059,7 +1267,7 @@ QueueFamilyIndices ChinaEngine::FindQueueFamilies(VkPhysicalDevice device)
 	return _indices;
 }
 
-uint32_t ChinaEngine::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+uint32_t cs::ChinaEngine::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
 	VkPhysicalDeviceMemoryProperties memProperties;
 	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
@@ -1072,7 +1280,7 @@ uint32_t ChinaEngine::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags 
 }
 
 // currently an unused function, will use it in the future (probably)
-int ChinaEngine::RateDeviceSuitability(VkPhysicalDevice device)
+int cs::ChinaEngine::RateDeviceSuitability(VkPhysicalDevice device)
 {
 	int _score{ 0 };
 	VkPhysicalDeviceProperties _deviceProperties;
@@ -1097,7 +1305,7 @@ int ChinaEngine::RateDeviceSuitability(VkPhysicalDevice device)
 	return _score;
 }
 
-bool ChinaEngine::IsDeviceSuitable(VkPhysicalDevice device)
+bool cs::ChinaEngine::IsDeviceSuitable(VkPhysicalDevice device)
 {
 	QueueFamilyIndices _indices{ FindQueueFamilies(device) };
 	bool _extensionsSupported{ CheckDeviceExtensionSupport(device) };
@@ -1112,7 +1320,7 @@ bool ChinaEngine::IsDeviceSuitable(VkPhysicalDevice device)
 	return FindQueueFamilies(device).IsComplete()  && _extensionsSupported && _swapChainAdequate;
 }
 
-bool ChinaEngine::CheckDeviceExtensionSupport(VkPhysicalDevice device)
+bool cs::ChinaEngine::CheckDeviceExtensionSupport(VkPhysicalDevice device)
 {
 	uint32_t _extensionCount;
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &_extensionCount, nullptr);
@@ -1129,7 +1337,7 @@ bool ChinaEngine::CheckDeviceExtensionSupport(VkPhysicalDevice device)
 	return _requiredExtensions.empty();
 }
 
-bool ChinaEngine::CheckValidationSupport()
+bool cs::ChinaEngine::CheckValidationSupport()
 {
 	uint32_t _layerCount{ 0 };
 	vkEnumerateInstanceLayerProperties(&_layerCount, nullptr);
@@ -1157,7 +1365,7 @@ bool ChinaEngine::CheckValidationSupport()
 	return true;
 }
 
-std::vector<const char*> ChinaEngine::GetRequiredExtensions()
+std::vector<const char*> cs::ChinaEngine::GetRequiredExtensions()
 {
 	uint32_t _glfwExtensionCount{ 0 };
 	const char** _glfwExtensions;
@@ -1173,7 +1381,7 @@ std::vector<const char*> ChinaEngine::GetRequiredExtensions()
 	return _extensions;
 }
 
-VkResult ChinaEngine::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
+VkResult cs::ChinaEngine::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
 	auto _func{ (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT") };
 
@@ -1183,7 +1391,7 @@ VkResult ChinaEngine::CreateDebugUtilsMessengerEXT(VkInstance instance, const Vk
 	return VK_ERROR_EXTENSION_NOT_PRESENT;
 }
 
-void ChinaEngine::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
+void cs::ChinaEngine::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
 {
 	createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -1193,7 +1401,7 @@ void ChinaEngine::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateIn
 	createInfo.pUserData = nullptr;
 }
 
-void ChinaEngine::DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
+void cs::ChinaEngine::DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
 {
 	auto _func{ (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT") };
 
@@ -1201,19 +1409,19 @@ void ChinaEngine::DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtil
 		_func(instance, debugMessenger, pAllocator);
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL ChinaEngine::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+VKAPI_ATTR VkBool32 VKAPI_CALL cs::ChinaEngine::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
 	std::cerr << "[INFO] :\t Validation layers: " << pCallbackData->pMessage << '\n';
 
 	return VK_FALSE;
 }
 
-bool QueueFamilyIndices::IsComplete()
+bool cs::QueueFamilyIndices::IsComplete()
 {
 	return graphicsFamily.has_value() && presentFamily.has_value();
 }
 
-VkVertexInputBindingDescription Vertex::GetBindingDescription()
+VkVertexInputBindingDescription cs::Vertex::GetBindingDescription()
 {
 	VkVertexInputBindingDescription _bindingDescription{};
 	_bindingDescription.binding = 0;
@@ -1223,9 +1431,9 @@ VkVertexInputBindingDescription Vertex::GetBindingDescription()
 	return _bindingDescription;
 }
 
-std::array<VkVertexInputAttributeDescription, 2> Vertex::GetAttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 3> cs::Vertex::GetAttributeDescriptions()
 {
-	std::array<VkVertexInputAttributeDescription, 2> _attributeDescriptions{};
+	std::array<VkVertexInputAttributeDescription, 3> _attributeDescriptions{};
 	_attributeDescriptions[0].binding = 0;
 	_attributeDescriptions[0].location = 0;
 	_attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
@@ -1235,6 +1443,11 @@ std::array<VkVertexInputAttributeDescription, 2> Vertex::GetAttributeDescription
 	_attributeDescriptions[1].location = 1;
 	_attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
 	_attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+	_attributeDescriptions[2].binding = 0;
+	_attributeDescriptions[2].location = 2;
+	_attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+	_attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 
 	return _attributeDescriptions;
 }
