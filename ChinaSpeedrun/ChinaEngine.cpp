@@ -66,6 +66,7 @@ void cs::ChinaEngine::InitVulkan()
 	CreateRenderPass();
 	CreateDescriptorSetLayout();
 	CreateGraphicsPipeline();
+	CreateDepthResources();
 	CreateFramebuffers();
 	CreateCommandPool();
 	CreateTextureImage();
@@ -397,7 +398,7 @@ void cs::ChinaEngine::CreateImageViews()
 	swapChainImageViews.resize(swapChainImages.size());
 
 	for (size_t i{ 0 }; i < swapChainImages.size(); i++)
-		swapChainImageViews[i] = CreateImageView(swapChainImages[i], swapChainImageFormat);
+		swapChainImageViews[i] = CreateImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
 void cs::ChinaEngine::CreateDescriptorSetLayout()
@@ -416,7 +417,7 @@ void cs::ChinaEngine::CreateDescriptorSetLayout()
 	_samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 	_samplerLayoutBinding.pImmutableSamplers = nullptr;
 
-	std::array<VkDescriptorSetLayoutBinding, 2> _bindings { _uboLayoutBinding, _samplerLayoutBinding };
+	std::array<VkDescriptorSetLayoutBinding, 2> _bindings{ _uboLayoutBinding, _samplerLayoutBinding };
 	VkDescriptorSetLayoutCreateInfo _layoutInfo{};
 	_layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	_layoutInfo.bindingCount = static_cast<uint32_t>(_bindings.size());
@@ -505,6 +506,18 @@ void cs::ChinaEngine::CreateGraphicsPipeline()
 	_multisampling.alphaToCoverageEnable = VK_FALSE;
 	_multisampling.alphaToOneEnable = VK_FALSE;
 
+	VkPipelineDepthStencilStateCreateInfo _depthStencil{};
+	_depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	_depthStencil.depthTestEnable = VK_TRUE;
+	_depthStencil.depthWriteEnable = VK_TRUE;
+	_depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+	_depthStencil.depthBoundsTestEnable = VK_FALSE;
+	_depthStencil.minDepthBounds = 0.0f;
+	_depthStencil.maxDepthBounds = 1.0f;
+	_depthStencil.stencilTestEnable = VK_FALSE;
+	_depthStencil.front = {};
+	_depthStencil.back = {};
+
 	VkPipelineColorBlendAttachmentState _colorBlendAttachment{};
 	_colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 	_colorBlendAttachment.blendEnable = VK_FALSE;
@@ -545,7 +558,7 @@ void cs::ChinaEngine::CreateGraphicsPipeline()
 	_pipelineInfo.pViewportState = &_viewportState;
 	_pipelineInfo.pRasterizationState = &_rasterizer;
 	_pipelineInfo.pMultisampleState = &_multisampling;
-	_pipelineInfo.pDepthStencilState = nullptr;
+	_pipelineInfo.pDepthStencilState = &_depthStencil;
 	_pipelineInfo.pColorBlendState = &_colorBlending;
 	_pipelineInfo.pDynamicState = nullptr;
 	_pipelineInfo.layout = pipelineLayout;
@@ -573,27 +586,43 @@ void cs::ChinaEngine::CreateRenderPass()
 	_colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	_colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
+	VkAttachmentDescription _depthAttachment{};
+	_depthAttachment.format = FindDepthFormat();
+	_depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	_depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	_depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	_depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	_depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	_depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	_depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
 	VkAttachmentReference _colorAttachmentRef{};
 	_colorAttachmentRef.attachment = 0;
 	_colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkAttachmentReference _depthAttachmentRef{};
+	_depthAttachmentRef.attachment = 1;
+	_depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 	VkSubpassDescription _subpass{};
 	_subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	_subpass.colorAttachmentCount = 1;
 	_subpass.pColorAttachments = &_colorAttachmentRef;
+	_subpass.pDepthStencilAttachment = &_depthAttachmentRef;
 
 	VkSubpassDependency _dependency{};
 	_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	_dependency.dstSubpass = 0;
-	_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	_dependency.srcAccessMask = 0;
-	_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
+	std::array<VkAttachmentDescription, 2> _attachments{ _colorAttachment, _depthAttachment };
 	VkRenderPassCreateInfo _renderPassInfo{};
 	_renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	_renderPassInfo.attachmentCount = 1;
-	_renderPassInfo.pAttachments = &_colorAttachment;
+	_renderPassInfo.attachmentCount = static_cast<uint32_t>(_attachments.size());
+	_renderPassInfo.pAttachments = _attachments.data();
 	_renderPassInfo.subpassCount = 1;
 	_renderPassInfo.pSubpasses = &_subpass;
 	_renderPassInfo.dependencyCount = 1;
@@ -608,13 +637,13 @@ void cs::ChinaEngine::CreateFramebuffers()
 	swapChainFramebuffers.resize(swapChainImageViews.size());
 
 	for (size_t i{ 0 }; i < swapChainImageViews.size(); i++) {
-		VkImageView _attachments[]{ swapChainImageViews[i] };
+		std::array<VkImageView, 2> _attachments{ swapChainImageViews[i], depthImageView };
 
 		VkFramebufferCreateInfo _framebufferInfo{};
 		_framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		_framebufferInfo.renderPass = renderPass;
-		_framebufferInfo.attachmentCount = 1;
-		_framebufferInfo.pAttachments = _attachments;
+		_framebufferInfo.attachmentCount = static_cast<uint32_t>(_attachments.size());
+		_framebufferInfo.pAttachments = _attachments.data();
 		_framebufferInfo.width = swapChainExtent.width;
 		_framebufferInfo.height = swapChainExtent.height;
 		_framebufferInfo.layers = 1;
@@ -635,6 +664,14 @@ void cs::ChinaEngine::CreateCommandPool()
 
 	if (vkCreateCommandPool(device, &_poolInfo, nullptr, &commandPool) != VK_SUCCESS)
 		throw std::runtime_error("[FAIL] :\tFailed to create command pool.");
+}
+
+void cs::ChinaEngine::CreateDepthResources()
+{
+	VkFormat _depthFormat{ FindDepthFormat() };
+
+	CreateImage(swapChainExtent.width, swapChainExtent.height, _depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+	depthImageView = CreateImageView(depthImage, _depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
 void cs::ChinaEngine::CreateTextureImage()
@@ -669,10 +706,7 @@ void cs::ChinaEngine::CreateTextureImage()
 
 void cs::ChinaEngine::CreateTextureImageView()
 {
-	textureImageView = CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
-
-	for (uint32_t i = 0; i < swapChainImages.size(); i++)
-		swapChainImageViews[i] = CreateImageView(swapChainImages[i], swapChainImageFormat);
+	textureImageView = CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
 void cs::ChinaEngine::CreateTextureSampler()
@@ -846,9 +880,12 @@ void cs::ChinaEngine::CreateCommandBuffers()
 		_renderPassInfo.renderArea.offset = { 0, 0 };
 		_renderPassInfo.renderArea.extent = swapChainExtent;
 
-		VkClearValue _clearColor{ {{0.0f, 0.0f, 0.0f, 1.0f}} };
-		_renderPassInfo.clearValueCount = 1;
-		_renderPassInfo.pClearValues = &_clearColor;
+		std::array<VkClearValue, 2> _clearValues{};
+		_clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+		_clearValues[1].depthStencil = { 1.0f, 0 };
+
+		_renderPassInfo.clearValueCount = static_cast<uint32_t>(_clearValues.size());
+		_renderPassInfo.pClearValues = _clearValues.data();
 
 		vkCmdBeginRenderPass(commandBuffers[i], &_renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
@@ -921,14 +958,14 @@ void cs::ChinaEngine::CreateImage(uint32_t width, uint32_t height, VkFormat form
 	vkBindImageMemory(device, image, imageMemory, 0);
 }
 
-VkImageView cs::ChinaEngine::CreateImageView(VkImage image, VkFormat format)
+VkImageView cs::ChinaEngine::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
 {
 	VkImageViewCreateInfo _viewInfo{};
 	_viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	_viewInfo.image = image;
 	_viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 	_viewInfo.format = format;
-	_viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	_viewInfo.subresourceRange.aspectMask = aspectFlags;
 	_viewInfo.subresourceRange.baseMipLevel = 0;
 	_viewInfo.subresourceRange.levelCount = 1;
 	_viewInfo.subresourceRange.baseArrayLayer = 0;
@@ -939,6 +976,37 @@ VkImageView cs::ChinaEngine::CreateImageView(VkImage image, VkFormat format)
 		throw std::runtime_error("[FAIL] :\tFailed to create texture image view.");
 
 	return _imageView;
+}
+
+bool cs::ChinaEngine::HasStencilComponent(VkFormat format)
+{
+	return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+}
+
+VkFormat cs::ChinaEngine::FindDepthFormat()
+{
+	return FindSupportedFormat(
+		{ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+		VK_IMAGE_TILING_OPTIMAL,
+		VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+	);
+}
+
+VkFormat cs::ChinaEngine::FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+{
+	for (VkFormat format : candidates)
+	{
+		VkFormatProperties _props;
+		vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &_props);
+
+		if (tiling == VK_IMAGE_TILING_LINEAR && (_props.linearTilingFeatures & features) == features)
+			return format;
+		else if (tiling == VK_IMAGE_TILING_OPTIMAL && (_props.optimalTilingFeatures & features) == features)
+			return format;
+	}
+
+	// extremely unlikely, unless the graphics card is really old...
+	throw std::runtime_error("[FAIL] :\tFailed to find supported format.");
 }
 
 void cs::ChinaEngine::UpdateUniformBuffer(uint32_t currentImage)
@@ -1075,16 +1143,14 @@ void cs::ChinaEngine::TransitionImageLayout(VkImage image, VkFormat format, VkIm
 	VkPipelineStageFlags _sourceStage;
 	VkPipelineStageFlags _destinationStage;
 
-	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-	{
+	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
 		_barrier.srcAccessMask = 0;
 		_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
 		_sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		_destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-	{
+	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
 		_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
@@ -1119,6 +1185,7 @@ void cs::ChinaEngine::RecreateSwapChain()
 	CreateImageViews();
 	CreateRenderPass();
 	CreateGraphicsPipeline();
+	CreateDepthResources();
 	CreateFramebuffers();
 	CreateUniformBuffers();
 	CreateDescriptorPool();
@@ -1130,6 +1197,10 @@ void cs::ChinaEngine::RecreateSwapChain()
 
 void cs::ChinaEngine::CleanupSwapChain()
 {
+	vkDestroyImageView(device, depthImageView, nullptr);
+	vkDestroyImage(device, depthImage, nullptr);
+	vkFreeMemory(device, depthImageMemory, nullptr);
+
 	for (auto framebuffer : swapChainFramebuffers)
 		vkDestroyFramebuffer(device, framebuffer, nullptr);
 
@@ -1436,7 +1507,7 @@ std::array<VkVertexInputAttributeDescription, 3> cs::Vertex::GetAttributeDescrip
 	std::array<VkVertexInputAttributeDescription, 3> _attributeDescriptions{};
 	_attributeDescriptions[0].binding = 0;
 	_attributeDescriptions[0].location = 0;
-	_attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+	_attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
 	_attributeDescriptions[0].offset = offsetof(Vertex, position);
 
 	_attributeDescriptions[1].binding = 0;

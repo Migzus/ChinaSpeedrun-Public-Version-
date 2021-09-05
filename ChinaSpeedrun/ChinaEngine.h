@@ -26,8 +26,7 @@ namespace cs
 
 	struct Vertex
 	{
-		Vector2 position;
-		Vector3 color;
+		Vector3 position, color;
 		Vector2 texCoord;
 
 		static VkVertexInputBindingDescription GetBindingDescription();
@@ -73,15 +72,21 @@ namespace cs
 
 		const std::vector<Vertex> vertices
 		{
-			{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-			{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-			{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-			{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+			{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+			{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+			{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+			{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+
+			{{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+			{{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+			{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+			{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
 		};
 
 		const std::vector<uint16_t> indices
 		{
-			0, 1, 2, 2, 3, 0
+			0, 1, 2, 2, 3, 0,
+			4, 5, 6, 6, 7, 4
 		};
 
 		const uint32_t WIDTH{ 800 };
@@ -102,11 +107,11 @@ namespace cs
 		std::vector<VkBuffer> uniformBuffers;
 		std::vector<VkDeviceMemory> uniformBuffersMemory;
 
-		VkImageView textureImageView;
+		VkImageView textureImageView, depthImageView;
 		VkSampler textureSampler;
-		VkImage textureImage;
+		VkImage textureImage, depthImage;
 		VkDescriptorPool descriptorPool;
-		VkDeviceMemory vertexBufferMemory, indexBufferMemory, textureImageMemory;
+		VkDeviceMemory vertexBufferMemory, indexBufferMemory, textureImageMemory, depthImageMemory;
 		VkBuffer vertexBuffer, indexBuffer;
 		VkCommandPool commandPool;
 		VkPipeline graphicsPipeline;
@@ -141,6 +146,7 @@ namespace cs
 		void CreateRenderPass();
 		void CreateFramebuffers();
 		void CreateCommandPool();
+		void CreateDepthResources();
 		void CreateTextureImage();
 		void CreateTextureImageView();
 		void CreateTextureSampler();
@@ -153,8 +159,11 @@ namespace cs
 		void CreateSyncObjects();
 
 		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-		VkImageView CreateImageView(VkImage image, VkFormat format);
+		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 
+		bool HasStencilComponent(VkFormat format);
+		VkFormat FindDepthFormat();
+		VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 		void UpdateUniformBuffer(uint32_t currentImage);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 		VkCommandBuffer BeginSingleTimeCommands();
