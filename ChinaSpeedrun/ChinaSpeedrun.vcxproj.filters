@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{01a99ab6-8f18-4774-8ca8-03d9a5679908}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -21,16 +24,22 @@
     <ClCompile Include="ChinaEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Mathf.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="engine\Input.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Mathf.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Mathf.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="engine\Input.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Mathf.h">
+      <Filter>Engine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
