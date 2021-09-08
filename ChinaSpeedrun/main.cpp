@@ -4,8 +4,12 @@
 
 /// <summary>
 /// 
-///		The Vulkan code was part help by this tutorial : https://vulkan-tutorial.com/en 
+///		The Vulkan code was part help by this tutorial :
+///		https://vulkan-tutorial.com/en (Tutorial by Alexander Overvoorde)
+/// 
 ///		Otherwise the base Vulkan code was modified by Mads Gjengaar and Jarle Kluge
+/// 
+/// ---------------------------------------------------------------------------------
 /// 
 ///		What license should we use? MIT maybe?
 /// 

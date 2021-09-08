@@ -159,11 +159,25 @@
     <ClCompile Include="engine\Input.cpp" />
     <ClCompile Include="engine\Mathf.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshRenderer.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Vertex.cpp" />
+    <ClCompile Include="VulkanEngineRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
     <ClInclude Include="engine\Input.h" />
     <ClInclude Include="engine\Mathf.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshRenderer.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="Vertex.h" />
+    <ClInclude Include="VulkanEngineRenderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

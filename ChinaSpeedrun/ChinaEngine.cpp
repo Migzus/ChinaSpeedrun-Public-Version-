@@ -38,6 +38,7 @@ void cs::ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int width, i
 void cs::ChinaEngine::Run()
 {
 	InitWindow();
+	EngineInit();
 	InitVulkan();
 	MainLoop();
 	Cleanup();
@@ -79,6 +80,39 @@ void cs::ChinaEngine::InitVulkan()
 	CreateDescriptorSets();
 	CreateCommandBuffers();
 	CreateSyncObjects();
+}
+
+void cs::ChinaEngine::EngineInit()
+{
+	shader = new Shader({ "../Resources/shaders/vert.spv", "../Resources/shaders/frag.spv" });
+	material = new Material(shader);
+
+	Mesh* _mesh1{ Mesh::CreateDefaultCube({0.1f, 0.1f, 1.0f}) };
+	Mesh* _mesh2{ Mesh::CreateDefaultPlane({0.5f, 0.5f}) };
+
+	_mesh1->materials.push_back(material);
+	_mesh2->materials.push_back(material);
+
+	meshes.push_back(_mesh1);
+	meshes.push_back(_mesh2);
+
+	MeshRenderer* _renderer1{ new MeshRenderer(_mesh1) };
+	MeshRenderer* _renderer2{ new MeshRenderer(_mesh2) };
+
+	_renderer1->ubo = new UniformBufferObject;
+	_renderer2->ubo = new UniformBufferObject;
+
+	_renderer1->ubo->model = glm::translate(Matrix4x4(1.0f), Vector3(0.0f, 0.0f, 0.0f));
+	_renderer1->ubo->view = glm::lookAt(Vector3(2.0f, 2.0f, 2.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, 1.0f));
+	_renderer1->ubo->proj = glm::perspective(glm::radians(45.0f), WIDTH / (float)HEIGHT, 0.1f, 10.0f);
+	_renderer1->ubo->proj[1][1] *= -1;
+
+	_renderer2->ubo->model = glm::translate(Matrix4x4(1.0f), Vector3(0.0f, 0.0f, 0.0f));
+	_renderer2->ubo->view = _renderer1->ubo->view;
+	_renderer2->ubo->proj = _renderer1->ubo->proj;
+
+	objects.push_back(_renderer1);
+	objects.push_back(_renderer2);
 }
 
 void cs::ChinaEngine::MainLoop()
@@ -193,9 +227,21 @@ void cs::ChinaEngine::Cleanup()
 	vkDestroySurfaceKHR(instance, surface, nullptr);
 	vkDestroyInstance(instance, nullptr);
 	
+	EngineExit();
+
 	glfwDestroyWindow(window);
 
 	glfwTerminate();
+}
+
+void cs::ChinaEngine::EngineExit()
+{
+	for (auto mesh : meshes)
+		delete mesh;
+
+	delete material;
+	delete shader;
+	delete texture;
 }
 
 void cs::ChinaEngine::CreateInstance()
@@ -339,6 +385,8 @@ void cs::ChinaEngine::CreateLogicalDevice()
 
 void cs::ChinaEngine::CreateSwapChain()
 {
+	// a copy of the resource(object) for each frame in the swap chain
+
 	SwapChainSupportDetails _swapChainSupport{ QuerySwapChainSupport(physicalDevice) };
 
 	VkSurfaceFormatKHR _surfaceFormat{ ChooseSwapSurfaceFormat(_swapChainSupport.formats) };
@@ -403,28 +451,37 @@ void cs::ChinaEngine::CreateImageViews()
 
 void cs::ChinaEngine::CreateDescriptorSetLayout()
 {
-	VkDescriptorSetLayoutBinding _uboLayoutBinding{};
-	_uboLayoutBinding.binding = 0;
-	_uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	_uboLayoutBinding.descriptorCount = 1;
-	_uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	_uboLayoutBinding.pImmutableSamplers = nullptr;
+	// make layouts per object
 
-	VkDescriptorSetLayoutBinding _samplerLayoutBinding{};
-	_samplerLayoutBinding.binding = 1;
-	_samplerLayoutBinding.descriptorCount = 1;
-	_samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	_samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-	_samplerLayoutBinding.pImmutableSamplers = nullptr;
+	descriptorSetLayouts.resize(objects.size());
 
-	std::array<VkDescriptorSetLayoutBinding, 2> _bindings{ _uboLayoutBinding, _samplerLayoutBinding };
-	VkDescriptorSetLayoutCreateInfo _layoutInfo{};
-	_layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	_layoutInfo.bindingCount = static_cast<uint32_t>(_bindings.size());
-	_layoutInfo.pBindings = _bindings.data();
+	for (size_t i{ 0 }; i < objects.size(); i++)
+	{
+		// bind the matricies
+		VkDescriptorSetLayoutBinding _uboLayoutBinding{};
+		_uboLayoutBinding.binding = 0; // what binding slot are we using -> layout(binding = ???) uniform ...
+		_uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		_uboLayoutBinding.descriptorCount = 1;
+		_uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // what shader type will we look for
+		_uboLayoutBinding.pImmutableSamplers = nullptr;
 
-	if (vkCreateDescriptorSetLayout(device, &_layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to create descriptor set layout.");
+		// bind the texture
+		VkDescriptorSetLayoutBinding _samplerLayoutBinding{};
+		_samplerLayoutBinding.binding = 1;
+		_samplerLayoutBinding.descriptorCount = 1;
+		_samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		_samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		_samplerLayoutBinding.pImmutableSamplers = nullptr;
+
+		std::array<VkDescriptorSetLayoutBinding, 2> _bindings{ _uboLayoutBinding, _samplerLayoutBinding };
+		VkDescriptorSetLayoutCreateInfo _layoutInfo{};
+		_layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		_layoutInfo.bindingCount = static_cast<uint32_t>(_bindings.size());
+		_layoutInfo.pBindings = _bindings.data();
+
+		if (vkCreateDescriptorSetLayout(device, &_layoutInfo, nullptr, &descriptorSetLayouts[i]) != VK_SUCCESS)
+			throw std::runtime_error("[FAIL] :\tFailed to create descriptor set layout.");
+	}
 }
 
 void cs::ChinaEngine::CreateGraphicsPipeline()
@@ -541,8 +598,8 @@ void cs::ChinaEngine::CreateGraphicsPipeline()
 
 	VkPipelineLayoutCreateInfo _pipelineLayoutInfo{};
 	_pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	_pipelineLayoutInfo.setLayoutCount = 1;
-	_pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+	_pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+	_pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 	_pipelineLayoutInfo.pushConstantRangeCount = 0;
 	_pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
@@ -734,15 +791,29 @@ void cs::ChinaEngine::CreateTextureSampler()
 
 void cs::ChinaEngine::CreateVertexBuffer()
 {
-	VkDeviceSize _bufferSize{ sizeof(vertices[0]) * vertices.size() };
+	VkDeviceSize _bufferSize{ 0 };
+
+	for (auto mesh : meshes)
+		_bufferSize += sizeof(Vertex) * mesh->GetVertices().size();
 
 	VkBuffer _stagingBuffer;
 	VkDeviceMemory _stagingBufferMemory;
 	CreateBuffer(_bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
 
-	void* _data;
-	vkMapMemory(device, _stagingBufferMemory, 0, _bufferSize, 0, &_data);
-	memcpy(_data, vertices.data(), (size_t)_bufferSize);
+	VkDeviceSize _prevOffset{ 0 }, _currentDataSize{ 0 };
+	
+	for (auto mesh : meshes)
+	{
+		_currentDataSize = sizeof(Vertex) * mesh->GetVertices().size();
+
+		void* _data;
+		vkMapMemory(device, _stagingBufferMemory, _prevOffset, _bufferSize, 0, &_data);
+		memcpy(_data, mesh->GetVertices().data(), (size_t)_currentDataSize);
+
+		mesh->vertexBufferOffset = _prevOffset;
+		_prevOffset += _currentDataSize;
+	}
+
 	vkUnmapMemory(device, _stagingBufferMemory);
 
 	CreateBuffer(_bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
@@ -754,15 +825,29 @@ void cs::ChinaEngine::CreateVertexBuffer()
 
 void cs::ChinaEngine::CreateIndexBuffer()
 {
-	VkDeviceSize _bufferSize{ sizeof(indices[0]) * indices.size() };
+	VkDeviceSize _bufferSize{ 0 };
+
+	for (auto mesh : meshes)
+		_bufferSize += sizeof(uint16_t) * mesh->GetIndices().size();
 
 	VkBuffer _stagingBuffer;
 	VkDeviceMemory _stagingBufferMemory;
 	CreateBuffer(_bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
 
-	void* _data;
-	vkMapMemory(device, _stagingBufferMemory, 0, _bufferSize, 0, &_data);
-	memcpy(_data, indices.data(), (size_t)_bufferSize);
+	VkDeviceSize _prevOffset{ 0 }, _currentDataSize{ 0 };
+	// allocate all meshes
+	for (auto mesh : meshes)
+	{
+		_currentDataSize = sizeof(uint16_t) * mesh->GetIndices().size();
+
+		void* _data;
+		vkMapMemory(device, _stagingBufferMemory, _prevOffset, _bufferSize, 0, &_data);
+		memcpy(_data, mesh->GetIndices().data(), (size_t)_currentDataSize);
+
+		mesh->indexBufferOffset = _prevOffset;
+		_prevOffset += _currentDataSize;
+	}
+	
 	vkUnmapMemory(device, _stagingBufferMemory);
 
 	CreateBuffer(_bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
@@ -775,7 +860,7 @@ void cs::ChinaEngine::CreateIndexBuffer()
 
 void cs::ChinaEngine::CreateUniformBuffers()
 {
-	VkDeviceSize _bufferSize{ sizeof(UniformBufferObject) };
+	VkDeviceSize _bufferSize{ sizeof(UniformBufferObject) * objects.size() }; // for now we do this
 
 	uniformBuffers.resize(swapChainImages.size());
 	uniformBuffersMemory.resize(swapChainImages.size());
@@ -786,68 +871,83 @@ void cs::ChinaEngine::CreateUniformBuffers()
 
 void cs::ChinaEngine::CreateDescriptorPool()
 {
-	std::array<VkDescriptorPoolSize, 2> poolSizes{};
-	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
-	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
-	// here we can bind more descriptor pools
-	// might also want to also prepare stuff in CreateDescriptorSetLayout()
+	descriptorPools.resize(objects.size());
 
-	VkDescriptorPoolCreateInfo _poolInfo{};
-	_poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	_poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-	_poolInfo.pPoolSizes = poolSizes.data();
-	_poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());
+	for (size_t i{ 0 }; i < objects.size(); i++)
+	{
+		std::array<VkDescriptorPoolSize, 2> poolSizes{};
+		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+		// here we can bind more descriptor pools
+		// might also want to also prepare stuff in CreateDescriptorSetLayout()
 
-	if (vkCreateDescriptorPool(device, &_poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to create descriptor pool.");
+		VkDescriptorPoolCreateInfo _poolInfo{};
+		_poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		_poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+		_poolInfo.pPoolSizes = poolSizes.data();
+		_poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());
+
+		if (vkCreateDescriptorPool(device, &_poolInfo, nullptr, &descriptorPools[i]) != VK_SUCCESS)
+			throw std::runtime_error("[FAIL] :\tFailed to create descriptor pool.");
+	}
 }
 
 void cs::ChinaEngine::CreateDescriptorSets()
 {
-	std::vector<VkDescriptorSetLayout> _layouts(swapChainImages.size(), descriptorSetLayout);
-	VkDescriptorSetAllocateInfo _allocInfo{};
-	_allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	_allocInfo.descriptorPool = descriptorPool;
-	_allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size());
-	_allocInfo.pSetLayouts = _layouts.data();
+	descriptorSetsPerObj.resize(objects.size());
 
-	descriptorSets.resize(swapChainImages.size());
-	if (vkAllocateDescriptorSets(device, &_allocInfo, descriptorSets.data()) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to allocate descriptor sets.");
-
-	for (size_t i{ 0 }; i < swapChainImages.size(); i++)
+	// do this per object
+	for (size_t j{ 0 }; j < objects.size(); j++)
 	{
-		VkDescriptorBufferInfo _bufferInfo{};
-		_bufferInfo.buffer = uniformBuffers[i];
-		_bufferInfo.offset = 0;
-		_bufferInfo.range = sizeof(UniformBufferObject);
+		std::vector<VkDescriptorSetLayout> _layouts(swapChainImages.size(), descriptorSetLayouts[j]);
+		VkDescriptorSetAllocateInfo _allocInfo{};
+		_allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		_allocInfo.descriptorPool = descriptorPools[j];
+		_allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size());
+		_allocInfo.pSetLayouts = _layouts.data();
 
-		VkDescriptorImageInfo _imageInfo{};
-		_imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		_imageInfo.imageView = textureImageView;
-		_imageInfo.sampler = textureSampler;
+		descriptorSetsPerObj[j].resize(swapChainImages.size());
+		if (vkAllocateDescriptorSets(device, &_allocInfo, descriptorSetsPerObj[j].data()) != VK_SUCCESS)
+			throw std::runtime_error("[FAIL] :\tFailed to allocate descriptor sets.");
 
-		std::array<VkWriteDescriptorSet, 2> _descriptorWrites{};
+		for (size_t i{ 0 }; i < swapChainImages.size(); i++)
+		{
+			// we need to make according info depending on what the shader requires of us.
 
-		_descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		_descriptorWrites[0].dstSet = descriptorSets[i];
-		_descriptorWrites[0].dstBinding = 0;
-		_descriptorWrites[0].dstArrayElement = 0;
-		_descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		_descriptorWrites[0].descriptorCount = 1;
-		_descriptorWrites[0].pBufferInfo = &_bufferInfo;
+			// here we need to make individual places in the buffer, so that per. object we can move them independently
+			// without moving one object and everything moves
+			VkDescriptorBufferInfo _bufferInfo{};
+			_bufferInfo.buffer = uniformBuffers[i];
+			_bufferInfo.offset = sizeof(UniformBufferObject) * j;
+			_bufferInfo.range = sizeof(UniformBufferObject);
 
-		_descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		_descriptorWrites[1].dstSet = descriptorSets[i];
-		_descriptorWrites[1].dstBinding = 1;
-		_descriptorWrites[1].dstArrayElement = 0;
-		_descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		_descriptorWrites[1].descriptorCount = 1;
-		_descriptorWrites[1].pImageInfo = &_imageInfo;
+			VkDescriptorImageInfo _imageInfo{};
+			_imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			_imageInfo.imageView = textureImageView;
+			_imageInfo.sampler = textureSampler;
 
-		vkUpdateDescriptorSets(device, static_cast<uint32_t>(_descriptorWrites.size()), _descriptorWrites.data(), 0, nullptr);
+			std::array<VkWriteDescriptorSet, 2> _descriptorWrites{};
+
+			_descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			_descriptorWrites[0].dstSet = descriptorSetsPerObj[j][i];
+			_descriptorWrites[0].dstBinding = 0;
+			_descriptorWrites[0].dstArrayElement = 0;
+			_descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			_descriptorWrites[0].descriptorCount = 1;
+			_descriptorWrites[0].pBufferInfo = &_bufferInfo;
+
+			_descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			_descriptorWrites[1].dstSet = descriptorSetsPerObj[j][i];
+			_descriptorWrites[1].dstBinding = 1;
+			_descriptorWrites[1].dstArrayElement = 0;
+			_descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			_descriptorWrites[1].descriptorCount = 1;
+			_descriptorWrites[1].pImageInfo = &_imageInfo;
+
+			vkUpdateDescriptorSets(device, static_cast<uint32_t>(_descriptorWrites.size()), _descriptorWrites.data(), 0, nullptr);
+		}
 	}
 }
 
@@ -891,13 +991,24 @@ void cs::ChinaEngine::CreateCommandBuffers()
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
 		VkBuffer _vertexBuffers[]{ vertexBuffer };
-		VkDeviceSize _offsets[]{ 0 };
-		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, _vertexBuffers, _offsets);
-		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+		// we need a for-loop in order to draw all of the meshes... (a for-loop per object perhaps?)
+		// offsets for the vertices goes below
+		// out from the current object we retrive ubo(descriptor sets) info, index and vertex offests
+		size_t j{ 0 };
+		for (auto object : objects)
+		{
+			VkDeviceSize _offsets[]{ object->mesh->vertexBufferOffset };
+			vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, _vertexBuffers, _offsets);
+			vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, object->mesh->indexBufferOffset, VK_INDEX_TYPE_UINT16);
+			// here we need to know the offset of the descriptor of the shader we're using per. object // &object->GetDescriptorSet()
+			vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSetsPerObj[j][i], 0, nullptr);
 
-		vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
-		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-		
+			// the current mesh index, with its indices goes down below
+			vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(object->mesh->GetIndices().size()), 1, 0, 0, 0);
+			
+			j++;
+		}
+
 		vkCmdEndRenderPass(commandBuffers[i]);
 
 		if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
@@ -1016,15 +1127,21 @@ void cs::ChinaEngine::UpdateUniformBuffer(uint32_t currentImage)
 	auto _currentTime{ std::chrono::high_resolution_clock::now() };
 	float _time{ std::chrono::duration<float, std::chrono::seconds::period>(_currentTime - _startTime).count() };
 
-	UniformBufferObject _ubo{};
-	_ubo.model = glm::rotate(Matrix4x4(1.0f), _time * glm::radians(90.0f), Vector3(0.0f, 0.0f, 1.0f));
-	_ubo.view = glm::lookAt(Vector3(2.0f, 2.0f, 2.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, 1.0f));
-	_ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
-	_ubo.proj[1][1] *= -1;
+	objects[0]->ubo->model = glm::rotate(Matrix4x4(1.0f), _time * glm::radians(90.0f), Vector3(0.0f, 1.0f, 1.0f));
+	objects[1]->ubo->model = glm::rotate(glm::translate(Matrix4x4(1.0f), Vector3(-0.4f, 0.0f, 0.0f)), _time * glm::radians(90.0f), Vector3(0.0f, 0.0f, -1.0f));
 
-	void* _data;
-	vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(_ubo), 0, &_data);
-	memcpy(_data, &_ubo, sizeof(_ubo));
+	VkDeviceSize _prevOffset{ 0 };
+	const VkDeviceSize _uniformBufferObjectSize{ sizeof(UniformBufferObject) };
+	for (auto object : objects)
+	{
+		void* _data;
+		vkMapMemory(device, uniformBuffersMemory[currentImage], _prevOffset, _uniformBufferObjectSize, 0, &_data);
+		memcpy(_data, &(*object->ubo), _uniformBufferObjectSize);
+
+		_prevOffset += _uniformBufferObjectSize;
+		// maybe set the offset in the object somewhere...
+	}
+
 	vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
 }
 
@@ -1057,7 +1174,7 @@ void cs::ChinaEngine::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, 
 	_bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	if (vkCreateBuffer(device, &_bufferInfo, nullptr, &buffer) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to create vertex buffer.");
+		throw std::runtime_error("[FAIL] :\tFailed to create buffer.");
 
 	VkMemoryRequirements _memRequirements;
 	vkGetBufferMemoryRequirements(device, buffer, &_memRequirements);
@@ -1068,7 +1185,7 @@ void cs::ChinaEngine::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, 
 	_allocInfo.memoryTypeIndex = FindMemoryType(_memRequirements.memoryTypeBits, properties);
 
 	if (vkAllocateMemory(device, &_allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to allocate vertex buffer memory.");
+		throw std::runtime_error("[FAIL] :\tFailed to allocate buffer memory.");
 
 	vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
@@ -1482,7 +1599,7 @@ void cs::ChinaEngine::DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebug
 
 VKAPI_ATTR VkBool32 VKAPI_CALL cs::ChinaEngine::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-	std::cerr << "[INFO] :\t Validation layers: " << pCallbackData->pMessage << '\n';
+	//std::cerr << "[INFO] :\t Validation layers: " << pCallbackData->pMessage << '\n';
 
 	return VK_FALSE;
 }
@@ -1490,35 +1607,4 @@ VKAPI_ATTR VkBool32 VKAPI_CALL cs::ChinaEngine::DebugCallback(VkDebugUtilsMessag
 bool cs::QueueFamilyIndices::IsComplete()
 {
 	return graphicsFamily.has_value() && presentFamily.has_value();
-}
-
-VkVertexInputBindingDescription cs::Vertex::GetBindingDescription()
-{
-	VkVertexInputBindingDescription _bindingDescription{};
-	_bindingDescription.binding = 0;
-	_bindingDescription.stride = sizeof(Vertex);
-	_bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-	return _bindingDescription;
-}
-
-std::array<VkVertexInputAttributeDescription, 3> cs::Vertex::GetAttributeDescriptions()
-{
-	std::array<VkVertexInputAttributeDescription, 3> _attributeDescriptions{};
-	_attributeDescriptions[0].binding = 0;
-	_attributeDescriptions[0].location = 0;
-	_attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-	_attributeDescriptions[0].offset = offsetof(Vertex, position);
-
-	_attributeDescriptions[1].binding = 0;
-	_attributeDescriptions[1].location = 1;
-	_attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-	_attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-	_attributeDescriptions[2].binding = 0;
-	_attributeDescriptions[2].location = 2;
-	_attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-	_attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
-
-	return _attributeDescriptions;
 }

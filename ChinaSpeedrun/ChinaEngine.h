@@ -16,21 +16,14 @@
 #include <array>
 
 #include "engine/Mathf.h"
+#include "MeshRenderer.h"
+#include "Texture.h"
 
 namespace cs
 {
 	struct UniformBufferObject
 	{
 		Matrix4x4 model, view, proj;
-	};
-
-	struct Vertex
-	{
-		Vector3 position, color;
-		Vector2 texCoord;
-
-		static VkVertexInputBindingDescription GetBindingDescription();
-		static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions();
 	};
 
 	struct QueueFamilyIndices
@@ -51,6 +44,8 @@ namespace cs
 	class ChinaEngine
 	{
 	public:
+		const int MAX_FRAMES_IN_FLIGHT{ 2 };
+
 		static std::vector<char> ReadFile(const std::string& filename);
 		static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
 
@@ -58,7 +53,6 @@ namespace cs
 	protected:
 
 	private:
-		const int MAX_FRAMES_IN_FLIGHT{ 2 };
 		const std::string APP_NAME{ "China Speedrun" };
 		const std::string ENGINE_NAME{ "ChinaEngine" };
 		const std::vector<const char*> validationLayers{ "VK_LAYER_KHRONOS_validation" };
@@ -70,7 +64,13 @@ namespace cs
 		const bool enableValidationLayers{ true };
 #endif
 
-		const std::vector<Vertex> vertices
+		Shader* shader;
+		Material* material;
+		Texture* texture;
+		std::vector<Mesh*> meshes;
+		std::vector<MeshRenderer*> objects;
+
+		/*const std::vector<Vertex> vertices
 		{
 			{{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
 			{{1.0f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
@@ -87,7 +87,7 @@ namespace cs
 		{
 			0, 1, 2, 2, 3, 0,
 			4, 5, 6, 6, 7, 4
-		};
+		};*/
 
 		const uint32_t WIDTH{ 800 };
 		const uint32_t HEIGHT{ 600 };
@@ -107,16 +107,20 @@ namespace cs
 		std::vector<VkBuffer> uniformBuffers;
 		std::vector<VkDeviceMemory> uniformBuffersMemory;
 
+		std::vector<VkDescriptorPool> descriptorPools;                  // TEMP
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts;        // TEMP
+		std::vector<std::vector<VkDescriptorSet>> descriptorSetsPerObj; // TEMP
+
 		VkImageView textureImageView, depthImageView;
 		VkSampler textureSampler;
 		VkImage textureImage, depthImage;
-		VkDescriptorPool descriptorPool;
+		VkDescriptorPool descriptorPool; // more of these too
 		VkDeviceMemory vertexBufferMemory, indexBufferMemory, textureImageMemory, depthImageMemory;
 		VkBuffer vertexBuffer, indexBuffer;
 		VkCommandPool commandPool;
 		VkPipeline graphicsPipeline;
 		VkRenderPass renderPass;
-		VkDescriptorSetLayout descriptorSetLayout;
+		VkDescriptorSetLayout descriptorSetLayout; // hmmm we need layouts per object... not one
 		VkPipelineLayout pipelineLayout;
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
@@ -130,9 +134,11 @@ namespace cs
 
 		void InitWindow();
 		void InitVulkan();
+		void EngineInit();
 		void MainLoop();
 		void DrawFrame();
 		void Cleanup();
+		void EngineExit();
 
 		void CreateInstance();
 		void SetupDebugMessenger();
