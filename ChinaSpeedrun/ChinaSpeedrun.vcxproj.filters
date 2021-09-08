@@ -16,6 +16,9 @@
     <Filter Include="Engine">
       <UniqueIdentifier>{01a99ab6-8f18-4774-8ca8-03d9a5679908}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\imgui">
+      <UniqueIdentifier>{8a3c2d58-e710-4865-a34a-38e40d697270}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -30,6 +33,7 @@
     <ClCompile Include="engine\Mathf.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+<<<<<<< HEAD
     <ClCompile Include="Vertex.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
@@ -50,6 +54,28 @@
     </ClCompile>
     <ClCompile Include="MeshRenderer.cpp">
       <Filter>Source Files</Filter>
+=======
+    <ClCompile Include="..\Libraries\imgui\src\imgui.cpp">
+      <Filter>Resource Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\imgui\src\imgui_demo.cpp">
+      <Filter>Resource Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\imgui\src\imgui_draw.cpp">
+      <Filter>Resource Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\imgui\src\imgui_impl_glfw.cpp">
+      <Filter>Resource Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\imgui\src\imgui_impl_vulkan.cpp">
+      <Filter>Resource Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\imgui\src\imgui_tables.cpp">
+      <Filter>Resource Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\imgui\src\imgui_widgets.cpp">
+      <Filter>Resource Files\imgui</Filter>
+>>>>>>> adc586c19190a77e0ab64feed009fba613bbb8f7
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

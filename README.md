@@ -1,13 +1,14 @@
 # China Speedrun Engine
 
+* This readme file is a work in progress.<br>
+
 The China Speedrun Engine is a bullethell engine, designed to make games in the shmup genre.<br>
 It's lightweight, fast and have a great bullet capacity.
 Foreas, it will use GPU collisions for the bullets.<br>
 It's component based.<br>
 The bullets are also verse in its features.
 
-
-This readme file is a work in progress.<br>
+<br><br>
 Just to quickly sum up what one has to do in order to compile-and-run this code, you need the following:
 
 
@@ -21,3 +22,8 @@ Libraries used:<br>
 GLFW<br>
 GLM<br>
 The stb collection<br>
+imgui<br>
+OpenAL<br>
+TinyOBJLoader<br>
+<br>
+(Links to their github pages will be added soon)
