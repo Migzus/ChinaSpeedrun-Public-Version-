@@ -13,10 +13,12 @@ typedef glm::vec4 Vector4;
 typedef glm::mat3 Matrix3x3;
 typedef glm::mat4 Matrix4x4;
 
-class Mathf
+namespace cs
 {
-public:
+	class Mathf
+	{
+	public:
 
-private:
-};
-
+	private:
+	};
+}

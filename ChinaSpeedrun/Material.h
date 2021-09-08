@@ -1,11 +1,12 @@
 #pragma once
 
-#include "Shader.h"
-
-class Material
+namespace cs
 {
-public:
-	Shader* shader;
+	class Material
+	{
+	public:
+		class Shader* shader;
 
-	Material(Shader* newShader);
-};
+		Material(Shader* newShader);
+	};
+}

@@ -3,10 +3,13 @@
 #include <vector>
 #include <string>
 
-class Shader
+namespace cs
 {
-public:
-	Shader(std::vector<std::string> paths);
-private:
-	//std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-};
+	class Shader
+	{
+	public:
+		Shader(std::vector<std::string> paths);
+	private:
+		//std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+	};
+}

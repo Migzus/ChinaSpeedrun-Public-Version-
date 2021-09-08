@@ -1,5 +1,7 @@
 #include "Material.h"
 
-Material::Material(Shader* newShader) :
+#include "Shader.h"
+
+cs::Material::Material(Shader* newShader) :
 	shader{newShader}
 {}

@@ -2,15 +2,18 @@
 
 #include <iterator>
 
-Mesh::Mesh() :
+#include "Material.h"
+#include "Vertex.h"
+
+cs::Mesh::Mesh() :
 	vertices{}, indices{}
 {}
 
-Mesh::Mesh(std::vector<Vertex> vertexArray, std::vector<uint16_t> indexArray) :
+cs::Mesh::Mesh(std::vector<Vertex> vertexArray, std::vector<uint16_t> indexArray) :
 	vertices{vertexArray}, indices{indexArray}
 {}
 
-Mesh* Mesh::CreateDefaultPlane(const Vector2 extent)
+cs::Mesh* cs::Mesh::CreateDefaultPlane(const Vector2 extent)
 {
 	const std::vector<Vertex> _vertices
 	{
@@ -28,7 +31,7 @@ Mesh* Mesh::CreateDefaultPlane(const Vector2 extent)
 	return new Mesh(_vertices, _indices);
 }
 
-Mesh* Mesh::CreateDefaultCube(const Vector3 extent)
+cs::Mesh* cs::Mesh::CreateDefaultCube(const Vector3 extent)
 {
 	const std::vector<Vertex> _vertices
 	{
@@ -55,26 +58,39 @@ Mesh* Mesh::CreateDefaultCube(const Vector3 extent)
 	return new Mesh(_vertices, _indices);
 }
 
-Mesh* Mesh::CreateDefaultIcoSphere(const uint8_t subdivisions, const float radius)
+cs::Mesh* cs::Mesh::CreateDefaultIcoSphere(const uint8_t subdivisions, const float radius)
 {
-	std::vector<Vertex> _vertices{};
+	std::vector<cs::Vertex> _vertices{};
 	std::vector<uint16_t> _indices{};
 
 	return new Mesh(_vertices, _indices);
 }
 
-void Mesh::SetMesh(std::vector<Vertex> vertexArray, std::vector<uint16_t> indexArray)
+void cs::Mesh::SetMesh(std::vector<cs::Vertex> vertexArray, std::vector<uint16_t> indexArray)
 {
 	vertices = vertexArray;
 	indices = indexArray;
 }
 
-std::vector<Vertex> const& Mesh::GetVertices() const
+std::vector<cs::Vertex> const& cs::Mesh::GetVertices() const
 {
 	return vertices;
 }
 
-std::vector<uint16_t> const& Mesh::GetIndices() const
+std::vector<uint16_t> const& cs::Mesh::GetIndices() const
 {
 	return indices;
 }
+
+/*
+bool Mesh::operator==(const Mesh& otherMesh)
+{
+	// these compairasons only compare sizes... not actual data
+	return vertices == otherMesh.GetVertices() && indices == otherMesh.GetIndices();
+}
+
+bool Mesh::operator!=(const Mesh& otherMesh)
+{
+	return !(vertices == otherMesh.GetVertices() && indices == otherMesh.GetIndices());
+}
+*/

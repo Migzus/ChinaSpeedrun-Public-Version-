@@ -1,113 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Engine">
-      <UniqueIdentifier>{01a99ab6-8f18-4774-8ca8-03d9a5679908}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Resource Files\imgui">
-      <UniqueIdentifier>{8a3c2d58-e710-4865-a34a-38e40d697270}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="..\Libraries\imgui\src\imgui.cpp" />
+    <ClCompile Include="..\Libraries\imgui\src\imgui_demo.cpp" />
+    <ClCompile Include="..\Libraries\imgui\src\imgui_draw.cpp" />
+    <ClCompile Include="..\Libraries\imgui\src\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\Libraries\imgui\src\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="..\Libraries\imgui\src\imgui_tables.cpp" />
+    <ClCompile Include="..\Libraries\imgui\src\imgui_widgets.cpp" />
+    <ClCompile Include="ChinaEngine.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshRenderer.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Vertex.cpp" />
+    <ClCompile Include="VulkanEngineRenderer.cpp" />
+    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Mathf.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ChinaEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\Input.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\Mathf.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-<<<<<<< HEAD
-    <ClCompile Include="Vertex.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Shader.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Material.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="VulkanEngineRenderer.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Texture.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshRenderer.cpp">
-      <Filter>Source Files</Filter>
-=======
-    <ClCompile Include="..\Libraries\imgui\src\imgui.cpp">
-      <Filter>Resource Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\imgui\src\imgui_demo.cpp">
-      <Filter>Resource Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\imgui\src\imgui_draw.cpp">
-      <Filter>Resource Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\imgui\src\imgui_impl_glfw.cpp">
-      <Filter>Resource Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\imgui\src\imgui_impl_vulkan.cpp">
-      <Filter>Resource Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\imgui\src\imgui_tables.cpp">
-      <Filter>Resource Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\imgui\src\imgui_widgets.cpp">
-      <Filter>Resource Files\imgui</Filter>
->>>>>>> adc586c19190a77e0ab64feed009fba613bbb8f7
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="ChinaEngine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Mesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\Input.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\Mathf.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Vertex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VulkanEngineRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Texture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClInclude Include="ChinaEngine.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshRenderer.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="Vertex.h" />
+    <ClInclude Include="VulkanEngineRenderer.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="Mathf.h" />
+    <ClInclude Include="ChinaCoreHeader.h" />
   </ItemGroup>
 </Project>

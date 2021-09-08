@@ -3,7 +3,7 @@
 //#include "vulkan/vulkan.h"
 #include "ChinaEngine.h" // will move all vulkan logic in a separate class, current work around
 
-Shader::Shader(std::vector<std::string> paths)
+cs::Shader::Shader(std::vector<std::string> paths)
 {
 	for (size_t i{ 0 }; i < paths.size(); i++)
 	{

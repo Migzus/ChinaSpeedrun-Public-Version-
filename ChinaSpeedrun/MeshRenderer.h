@@ -8,7 +8,8 @@
 /// 
 /// </summary>
 
-#include "Mesh.h"
+#include <vulkan/vulkan.h>
+#include <vector>
 
 // this will inherit from Component (because an object can have a mesh that renders on screen)
 namespace cs
@@ -16,9 +17,11 @@ namespace cs
 	class MeshRenderer
 	{
 	public:
-		Mesh* mesh;
-		struct UniformBufferObject* ubo;
-		std::vector<VkDescriptorSet> descriptorSets; // make enough duplicates when inisializing this object
+		class Mesh* mesh;
+		struct UniformBufferObject* ubo;             // TEMP
+		VkDeviceSize uboOffset;                      // TEMP
+		VkDescriptorPool descriptorPool;             // TEMP
+		std::vector<VkDescriptorSet> descriptorSets; // TEMP
 
 		MeshRenderer();
 		MeshRenderer(Mesh* newMesh);

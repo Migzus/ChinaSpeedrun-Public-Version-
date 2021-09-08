@@ -19,11 +19,9 @@
 using namespace cs;
 
 int main() {
-    ChinaEngine engine;
-
 	try
 	{
-		engine.Run();
+		ChinaEngine::Run();
 	}
 	catch (const std::exception& e)
 	{

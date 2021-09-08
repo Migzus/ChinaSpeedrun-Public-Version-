@@ -1,5 +1,7 @@
 #include "MeshRenderer.h"
 
+#include "Mesh.h"
+
 cs::MeshRenderer::MeshRenderer() :
     mesh{ nullptr }
 {}
