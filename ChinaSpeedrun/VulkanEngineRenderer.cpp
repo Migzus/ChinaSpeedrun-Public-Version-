@@ -90,8 +90,6 @@ void VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
 
 	vkDestroyBuffer(device, _stagingBuffer, nullptr);
 	vkFreeMemory(device, _stagingBufferMemory, nullptr);
-
-	std::cout << currentVertexOffset << " vertex offset.\n";
 }
 
 void VulkanEngineRenderer::AllocateTexture(Texture* texture)
@@ -145,6 +143,7 @@ void VulkanEngineRenderer::Create(int newWidth, int newHeight, const char* appTi
 
 	InitWindow();
 	InitVulkan();
+	//InitImGui();
 }
 
 void cs::VulkanEngineRenderer::GetViewportSize(int& widthRef, int& heightRef) const
@@ -171,8 +170,6 @@ void cs::VulkanEngineRenderer::InitWindow()
 
 void cs::VulkanEngineRenderer::InitVulkan()
 {
-	std::cout << vertexBufferSize << '\n';
-
 	CreateInstance();
 	SetupDebugMessenger();
 	CreateSurface();
@@ -337,24 +334,23 @@ void cs::VulkanEngineRenderer::InitImGui()
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGuiIO& _io{ ImGui::GetIO() }; (void)_io;
 
-	auto _window{ GetWindow() };
-	ImGui_ImplGlfw_InitForVulkan(_window, false);
+	ImGui_ImplGlfw_InitForVulkan(window, false);
 
 	// Manually set the glfw key callbacks
 	/*
 		Some of these will disappear over time as the input class'
 		functionality and features get added
 	*/
-	glfwSetWindowFocusCallback(_window, ImGui_ImplGlfw_WindowFocusCallback);
-	glfwSetCursorEnterCallback(_window, ImGui_ImplGlfw_CursorEnterCallback);
-	glfwSetMouseButtonCallback(_window, ImGui_ImplGlfw_MouseButtonCallback);
-	glfwSetScrollCallback(_window, ImGui_ImplGlfw_ScrollCallback);
-	glfwSetCharCallback(_window, ImGui_ImplGlfw_CharCallback);
+	glfwSetWindowFocusCallback(window, ImGui_ImplGlfw_WindowFocusCallback);
+	glfwSetCursorEnterCallback(window, ImGui_ImplGlfw_CursorEnterCallback);
+	glfwSetMouseButtonCallback(window, ImGui_ImplGlfw_MouseButtonCallback);
+	glfwSetScrollCallback(window, ImGui_ImplGlfw_ScrollCallback);
+	glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
 	glfwSetMonitorCallback(ImGui_ImplGlfw_MonitorCallback);
 
-	ImGui_ImplVulkan_InitInfo _initInfo = {};
+	ImGui_ImplVulkan_InitInfo _initInfo{};
 	_initInfo.Instance = instance;
 	_initInfo.PhysicalDevice = physicalDevice;
 	_initInfo.Device = GetDevice();
@@ -362,8 +358,8 @@ void cs::VulkanEngineRenderer::InitImGui()
 	_initInfo.Queue = graphicsQueue;
 	_initInfo.PipelineCache = VK_NULL_HANDLE;
 	_initInfo.DescriptorPool = VK_NULL_HANDLE;
-	_initInfo.MinImageCount = 2;
-	_initInfo.ImageCount = 2;
+	_initInfo.MinImageCount = MAX_FRAMES_IN_FLIGHT;
+	_initInfo.ImageCount = MAX_FRAMES_IN_FLIGHT + 1;
 	_initInfo.Allocator = nullptr;
 	ImGui_ImplVulkan_Init(&_initInfo, renderPass);
 }

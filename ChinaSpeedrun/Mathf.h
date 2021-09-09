@@ -19,6 +19,8 @@ typedef glm::vec4 Vector4;
 typedef glm::mat3 Matrix3x3;
 typedef glm::mat4 Matrix4x4;
 
+typedef glm::quat Quaternion;
+
 //typedef M_PI PI;
 //typedef M_PI_2 TAU;
 
@@ -29,6 +31,11 @@ namespace cs
 	public:
 		constexpr static float PI{ (float)M_PI };
 		constexpr static float TAU{ (float)M_PI * 2.0f };
+
+		// Clamps the value within the specified range
+		static void Clamp(float& value, float min, float max);
+		// Clamps the value back to the other end of the specified range, pluss excess value is returned
+		static void LoopClamp(float& value, float min, float max);
 	private:
 	};
 }

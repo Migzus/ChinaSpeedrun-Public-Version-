@@ -103,6 +103,8 @@ namespace cs
 
 		void InitWindow();
 		void InitVulkan();
+		void InitImGui();
+		void ImGuiFrame(); // depending on availability needs, we might make this public
 		void Cleanup();
 
 		void CreateInstance();
