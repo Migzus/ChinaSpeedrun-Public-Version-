@@ -21,6 +21,7 @@ namespace cs
 		static std::vector<class MeshRenderer*> const& GetObjects();
 		static std::vector<class Mesh*> const& GetMeshes();
 		static void InstanceObject(Mesh* mesh, class Material* material);
+		static float AspectRatio();
 
 	private:
 		static VulkanEngineRenderer renderer;

@@ -19,6 +19,7 @@
     <ClCompile Include="VulkanEngineRenderer.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Mathf.cpp" />
+    <ClCompile Include="Color.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -32,5 +33,6 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="Mathf.h" />
     <ClInclude Include="ChinaCoreHeader.h" />
+    <ClInclude Include="Color.h" />
   </ItemGroup>
 </Project>

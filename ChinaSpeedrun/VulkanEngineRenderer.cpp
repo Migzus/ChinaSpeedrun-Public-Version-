@@ -1,6 +1,5 @@
 #include "VulkanEngineRenderer.h"
 
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include <cstring>
@@ -14,7 +13,7 @@
 #include "Vertex.h"
 //#include "Shader.h"
 //#include "Material.h"
-//#include "Texture.h"
+#include "Texture.h"
 #include "Mesh.h"
 #include "MeshRenderer.h"
 #include "ChinaEngine.h"
@@ -91,7 +90,25 @@ void VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
 
 void VulkanEngineRenderer::AllocateTexture(Texture* texture)
 {
+	/*VkBuffer _stagingBuffer;
+	VkDeviceMemory _stagingBufferMemory;
+	CreateBuffer(textureBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
 
+	void* _data;
+	vkMapMemory(device, _stagingBufferMemory, 0, _imageSize, 0, &_data);
+	memcpy(_data, texture->GetRawPixels(), static_cast<size_t>(texture->GetTextureByteSize()));
+	vkUnmapMemory(device, _stagingBufferMemory);
+
+	//stbi_image_free(texture->pixels);
+
+	CreateImage(_texWidth, _texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+
+	TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	CopyBufferToImage(_stagingBuffer, textureImage, static_cast<uint32_t>(_texWidth), static_cast<uint32_t>(_texHeight));
+	TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+	vkDestroyBuffer(device, _stagingBuffer, nullptr);
+	vkFreeMemory(device, _stagingBufferMemory, nullptr);*/
 }
 
 void VulkanEngineRenderer::AllocateShader(Shader* shader)
@@ -241,7 +258,7 @@ void cs::VulkanEngineRenderer::DrawFrame()
 
 void cs::VulkanEngineRenderer::Redraw()
 {
-	RecreateSwapChain();
+	CreateCommandBuffers();
 }
 
 float cs::VulkanEngineRenderer::AspectRatio() const
@@ -848,82 +865,12 @@ void cs::VulkanEngineRenderer::CreateTextureSampler()
 
 void cs::VulkanEngineRenderer::CreateVertexBuffer()
 {
-	//VkDeviceSize _bufferSize{ 0 };
-
-	CreateBuffer(UINT16_MAX, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
-
-	//VkBuffer _stagingBuffer;
-	//VkDeviceMemory _stagingBufferMemory;
-	//CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
-	/*
-	VkDeviceSize _prevOffset{ 0 }, _currentDataSize{ 0 };
-
-	for (auto mesh : ChinaEngine::GetMeshes())
-	{
-		_currentDataSize = sizeof(Vertex) * mesh->GetVertices().size();
-
-		void* _data;
-		vkMapMemory(device, _stagingBufferMemory, _prevOffset, _bufferSize, 0, &_data);
-		memcpy(_data, mesh->GetVertices().data(), (size_t)_currentDataSize);
-
-		mesh->vertexBufferOffset = _prevOffset;
-		_prevOffset += _currentDataSize;
-	}
-
-	vkUnmapMemory(device, _stagingBufferMemory);
-
-	CreateBuffer(_bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
-	CopyBuffer(_stagingBuffer, vertexBuffer, _bufferSize);
-
-	vkDestroyBuffer(device, _stagingBuffer, nullptr);
-	vkFreeMemory(device, _stagingBufferMemory, nullptr);*/
+	CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 }
 
 void cs::VulkanEngineRenderer::CreateIndexBuffer()
 {
-	/*VkDeviceSize _bufferSize{ 0 };
-
-	// make the size of the buffer just enough to fit all of the indices for all our models
-	// we just do this for now, but in the future we will have a set size for the buffer
-	for (auto mesh : ChinaEngine::GetMeshes())
-		_bufferSize += sizeof(uint16_t) * mesh->GetIndices().size();*/
-
-	//VkBuffer _stagingBuffer;
-	//VkDeviceMemory _stagingBufferMemory;
-
-	//CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
-	CreateBuffer(UINT16_MAX, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
-	//CopyBuffer(_stagingBuffer, indexBuffer, indexBufferSize);
-
-	//vkDestroyBuffer(device, _stagingBuffer, nullptr);
-	//vkFreeMemory(device, _stagingBufferMemory, nullptr);
-
-	//VkBuffer _stagingBuffer;
-	//VkDeviceMemory _stagingBufferMemory;
-	//CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
-
-	/*VkDeviceSize _prevOffset{ 0 }, _currentDataSize{ 0 };
-	// allocate all meshes
-	// in the future separate this into another function so we can instance new meshes in-game
-	for (auto mesh : ChinaEngine::GetMeshes())
-	{
-		_currentDataSize = sizeof(uint16_t) * mesh->GetIndices().size();
-
-		void* _data;
-		vkMapMemory(device, _stagingBufferMemory, _prevOffset, _bufferSize, 0, &_data);
-		memcpy(_data, mesh->GetIndices().data(), (size_t)_currentDataSize);
-
-		mesh->indexBufferOffset = _prevOffset;
-		_prevOffset += _currentDataSize;
-	}
-
-	vkUnmapMemory(device, _stagingBufferMemory);
-
-	CreateBuffer(_bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
-	CopyBuffer(_stagingBuffer, indexBuffer, _bufferSize);
-
-	vkDestroyBuffer(device, _stagingBuffer, nullptr);
-	vkFreeMemory(device, _stagingBufferMemory, nullptr);*/
+	CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
 }
 
 void cs::VulkanEngineRenderer::CreateUniformBuffers()
@@ -1185,34 +1132,11 @@ VkFormat cs::VulkanEngineRenderer::FindSupportedFormat(const std::vector<VkForma
 
 void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 {
-	static auto _startTime{ std::chrono::high_resolution_clock::now() };
-
-	auto _currentTime{ std::chrono::high_resolution_clock::now() };
-	float _time{ std::chrono::duration<float, std::chrono::seconds::period>(_currentTime - _startTime).count() };
-
-	VkDeviceSize _prevOffset{ 0 };
-	const VkDeviceSize _uniformBufferObjectSize{ sizeof(UniformBufferObject) };
-
-	uint16_t _index{ 0 };
 	for (auto object : ChinaEngine::GetObjects())
 	{
-		// we will not be doing component-independent-logic like this... NO WAY
-		if (_index == 0)
-			object->ubo->model = glm::rotate(Matrix4x4(1.0f), _time * glm::radians(90.0f), Vector3(0.0f, 1.0f, 1.0f));
-		else if (_index == 1)
-			object->ubo->model = glm::rotate(glm::translate(Matrix4x4(1.0f), Vector3(-0.4f, 0.0f, 0.0f)), _time * glm::radians(90.0f), Vector3(0.0f, 0.0f, -1.0f));
-
-		object->ubo->proj = glm::perspective(glm::radians(45.0f), AspectRatio(), 0.1f, 10.0f);
-		object->ubo->proj[1][1] *= -1;
-
 		void* _data;
-		vkMapMemory(device, uniformBuffersMemory[currentImage], _prevOffset, _uniformBufferObjectSize, 0, &_data);
-		memcpy(_data, &(*object->ubo), _uniformBufferObjectSize);
-
-		_prevOffset += _uniformBufferObjectSize;
-		// maybe set the offset in the object somewhere...
-
-		_index++;
+		vkMapMemory(device, uniformBuffersMemory[currentImage], object->uboOffset, object->GetUBOSize(), 0, &_data);
+		memcpy(_data, &(*object->ubo), object->GetUBOSize());
 	}
 
 	vkUnmapMemory(device, uniformBuffersMemory[currentImage]);

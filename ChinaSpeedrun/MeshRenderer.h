@@ -26,6 +26,9 @@ namespace cs
 		MeshRenderer();
 		MeshRenderer(Mesh* newMesh);
 
+		void Update(size_t index);
+		uint16_t GetUBOSize() const;
+
 		const std::vector<VkDescriptorSet>& GetDescriptorSet() const;
 
 	private:

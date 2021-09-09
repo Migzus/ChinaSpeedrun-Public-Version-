@@ -54,6 +54,7 @@ void ChinaEngine::Run()
 	renderer.Redraw();
 
 	MainLoop();
+	EngineExit();
 }
 
 std::vector<MeshRenderer*> const& ChinaEngine::GetObjects()
@@ -71,10 +72,18 @@ void ChinaEngine::InstanceObject(Mesh* mesh, Material* material)
 
 }
 
+float cs::ChinaEngine::AspectRatio()
+{
+	return renderer.AspectRatio();
+}
+
 void ChinaEngine::EngineInit()
 {
 	Shader* _shader{ new Shader({ "../Resources/shaders/vert.spv", "../Resources/shaders/frag.spv" }) };
 	Material* _material{ new Material(_shader) };
+
+	Texture* _vargFlush{ new Texture("../Resources/textures/varg_flush.png") };
+	Texture* _junkoGyate{ new Texture("../Resources/textures/junko_gyate.png") };
 
 	Mesh* _mesh1{ Mesh::CreateDefaultCube({0.1f, 0.1f, 1.0f}) };
 	Mesh* _mesh2{ Mesh::CreateDefaultPlane({0.5f, 0.5f}) };
@@ -113,6 +122,10 @@ void ChinaEngine::MainLoop()
 	while (!glfwWindowShouldClose(renderer.GetWindow()))
 	{
 		glfwPollEvents();
+
+		for (size_t i{ 0 }; i < objects.size(); i++)
+			objects[i]->Update(i);
+
 		renderer.DrawFrame();
 	}
 

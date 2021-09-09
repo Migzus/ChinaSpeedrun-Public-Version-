@@ -163,6 +163,7 @@
     <ClCompile Include="..\Libraries\imgui\src\imgui_tables.cpp" />
     <ClCompile Include="..\Libraries\imgui\src\imgui_widgets.cpp" />
     <ClCompile Include="ChinaEngine.cpp" />
+    <ClCompile Include="Color.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />
@@ -177,6 +178,7 @@
   <ItemGroup>
     <ClInclude Include="ChinaCoreHeader.h" />
     <ClInclude Include="ChinaEngine.h" />
+    <ClInclude Include="Color.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mathf.h" />
