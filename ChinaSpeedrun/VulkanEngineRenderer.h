@@ -22,6 +22,8 @@ namespace cs
 	class VulkanEngineRenderer
 	{
 	public:
+		VulkanEngineRenderer();
+
 		static void FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight);
 
 		void AllocateMesh(class Mesh* mesh);
@@ -35,6 +37,7 @@ namespace cs
 		void Create(int newWidth, int newHeight, const char* appTitle);
 		void GetViewportSize(int& widthRef, int& heightRef) const;
 		void DrawFrame();
+		void Redraw(); // TEMP func
 
 		float AspectRatio() const;
 
@@ -72,6 +75,10 @@ namespace cs
 		std::vector<VkBuffer> uniformBuffers;
 		std::vector<VkDeviceMemory> uniformBuffersMemory;
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+
+		// might make a struct, and store this in a vector... who knows
+		VkDeviceSize textureBufferSize, vertexBufferSize, indexBufferSize;
+		VkDeviceSize currentTextureOffset, currentVertexOffset, currentIndexOffset;
 
 		VkImageView textureImageView, depthImageView;
 		VkSampler textureSampler;

@@ -46,6 +46,13 @@ void ChinaEngine::Run()
 {
 	EngineInit();
 	renderer.Create(800, 600, "China Speedrun");
+
+	for (auto mesh : meshes)
+		renderer.AllocateMesh(mesh);
+
+	// Temporary solution to a visual glitch
+	renderer.Redraw();
+
 	MainLoop();
 }
 
@@ -57,6 +64,11 @@ std::vector<MeshRenderer*> const& ChinaEngine::GetObjects()
 std::vector<Mesh*> const& ChinaEngine::GetMeshes()
 {
 	return meshes;
+}
+
+void ChinaEngine::InstanceObject(Mesh* mesh, Material* material)
+{
+
 }
 
 void ChinaEngine::EngineInit()
