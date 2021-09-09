@@ -37,6 +37,7 @@ namespace cs
 		static std::vector<class Components*> components;
 
 		static void EngineInit();
+		static void InitInput();
 		static void MainLoop();
 		static void EngineExit();
 	};

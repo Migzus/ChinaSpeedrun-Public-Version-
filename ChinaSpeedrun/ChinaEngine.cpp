@@ -10,6 +10,8 @@
 #include "MeshRenderer.h"
 #include "VulkanEngineRenderer.h"
 
+#include "Input.h"
+
 using namespace cs;
 
 VulkanEngineRenderer ChinaEngine::renderer;
@@ -52,6 +54,8 @@ void ChinaEngine::Run()
 
 	// Temporary solution to a visual glitch
 	renderer.Redraw();
+
+	InitInput();
 
 	MainLoop();
 	EngineExit();
@@ -117,6 +121,16 @@ void ChinaEngine::EngineInit()
 	objects.push_back(_renderer2);
 }
 
+void cs::ChinaEngine::InitInput()
+{
+	glfwSetKeyCallback(renderer.GetWindow(), Input::GlfwKeyfunCallback);
+	Input::AddMapping("accept", GLFW_KEY_ENTER);
+	Input::AddMapping("up", GLFW_KEY_UP);
+	Input::AddMapping("down", GLFW_KEY_DOWN);
+	Input::AddMapping("left", GLFW_KEY_LEFT);
+	Input::AddMapping("right", GLFW_KEY_RIGHT);
+}
+
 void ChinaEngine::MainLoop()
 {
 	while (!glfwWindowShouldClose(renderer.GetWindow()))
@@ -127,6 +141,7 @@ void ChinaEngine::MainLoop()
 			objects[i]->Update(i);
 
 		renderer.DrawFrame();
+		Input::FinishFrame();
 	}
 
 	vkDeviceWaitIdle(renderer.GetDevice());
