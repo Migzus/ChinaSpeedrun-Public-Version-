@@ -1,6 +1,6 @@
 #include "ChinaEngine.h"
 
-//#include <chrono>
+#include <tiny_obj_loader.h>
 
 #include "Vertex.h"
 #include "Shader.h"
@@ -67,9 +67,24 @@ std::vector<Mesh*> const& ChinaEngine::GetMeshes()
 	return meshes;
 }
 
-void ChinaEngine::InstanceObject(Mesh* mesh, Material* material)
+MeshRenderer* ChinaEngine::InstanceObject(Mesh* mesh, Material* material, const Vector3 position)
 {
+	if (mesh == nullptr)
+		return nullptr;
 
+	MeshRenderer* _newObject{ new MeshRenderer };
+
+	// for now we just push one material, but we'll add support for more later
+	_newObject->mesh = mesh;
+	_newObject->materials.push_back(material);
+	_newObject->uboOffset = sizeof(UniformBufferObject) * objects.size(); // haha.. we won't do this in the future... what if we wanted to delete objects... it would be devastating
+	_newObject->ubo->model = glm::translate(Matrix4x4(1.0f), position);
+	_newObject->ubo->view = glm::lookAt(Vector3(2.0f, 2.0f, 2.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, 1.0f));
+
+	meshes.push_back(mesh);
+	objects.push_back(_newObject);
+
+	return _newObject;
 }
 
 float cs::ChinaEngine::AspectRatio()
@@ -77,44 +92,103 @@ float cs::ChinaEngine::AspectRatio()
 	return renderer.AspectRatio();
 }
 
+Mesh* cs::ChinaEngine::IsDuplicateMesh(std::string filename)
+{
+	for (auto mesh : meshes)
+		if (filename == mesh->GetResourcePath())
+			return mesh;
+
+	return nullptr;
+}
+
+Mesh* cs::ChinaEngine::LoadOBJ(std::string filename)
+{
+	Mesh* _outMesh{ IsDuplicateMesh(filename) };
+
+	if (_outMesh == nullptr)
+	{
+		_outMesh = new Mesh;
+
+		tinyobj::attrib_t _attributes;
+		std::vector<tinyobj::shape_t> _shapes;
+		std::vector<tinyobj::material_t> _materials;
+		std::string _warning, _error;
+
+		if (!tinyobj::LoadObj(&_attributes, &_shapes, &_materials, &_warning, &_error, filename.c_str()))
+		{
+			std::cout << "[ERROR]\t: " << _warning + _error << '\n';
+			delete _outMesh;
+			return nullptr;
+		}
+
+		std::vector<Vertex> _vertices;
+		std::vector<uint32_t> _indices;
+		// by using an unordered_map we can remove duplicates
+		std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+
+		for (const auto& shape : _shapes)
+		{
+			for (const auto& index : shape.mesh.indices)
+			{
+				Vertex _vertex{};
+
+				_vertex.position =
+				{
+					_attributes.vertices[3 * index.vertex_index + 0],
+					_attributes.vertices[3 * index.vertex_index + 1],
+					_attributes.vertices[3 * index.vertex_index + 2]
+				};
+
+				_vertex.texCoord =
+				{
+					_attributes.texcoords[2 * index.texcoord_index + 0],
+					1.0f - _attributes.texcoords[2 * index.texcoord_index + 1]
+				};
+
+				_vertex.color = { 1.0f, 1.0f, 1.0f };
+
+				//_vertices.push_back(_vertex);
+				//_indices.push_back(_indices.size());
+
+				// 93,312 verts
+				// 18,176 verts
+				// we avoid 75,136 vertices on suzanne's model
+
+				if (uniqueVertices.count(_vertex) == 0)
+				{
+					uniqueVertices[_vertex] = static_cast<uint32_t>(_vertices.size());
+					_vertices.push_back(_vertex);
+				}
+
+				_indices.push_back(uniqueVertices[_vertex]);
+			}
+		}
+
+		_outMesh->SetMesh(_vertices, _indices);
+	}
+
+	return _outMesh;
+}
+
 void ChinaEngine::EngineInit()
 {
+	// these are just here to display the dependency resources and components will be in the future
 	Shader* _shader{ new Shader({ "../Resources/shaders/vert.spv", "../Resources/shaders/frag.spv" }) };
 	Material* _material{ new Material(_shader) };
 
+	// these make no difference when spawning an object... yet
+	// meaning you can't assign these textures to any models...
 	Texture* _vargFlush{ new Texture("../Resources/textures/varg_flush.png") };
 	Texture* _junkoGyate{ new Texture("../Resources/textures/junko_gyate.png") };
 
 	Mesh* _mesh1{ Mesh::CreateDefaultCube({0.1f, 0.1f, 1.0f}) };
 	Mesh* _mesh2{ Mesh::CreateDefaultPlane({0.5f, 0.5f}) };
+	Mesh* _mesh3{ LoadOBJ("../Resources/models/suzanne.obj") };
 
-	_mesh1->materials.push_back(_material);
-	_mesh2->materials.push_back(_material);
-
-	meshes.push_back(_mesh1);
-	meshes.push_back(_mesh2);
-
-	MeshRenderer* _renderer1{ new MeshRenderer(_mesh1) };
-	MeshRenderer* _renderer2{ new MeshRenderer(_mesh2) };
-
-	_renderer1->ubo = new UniformBufferObject;
-	_renderer2->ubo = new UniformBufferObject;
-
-	_renderer1->ubo->model = glm::translate(Matrix4x4(1.0f), Vector3(0.0f, 0.0f, 0.0f));
-	_renderer1->ubo->view = glm::lookAt(Vector3(2.0f, 2.0f, 2.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, 1.0f));
-	_renderer1->ubo->proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 10.0f);
-	_renderer1->ubo->proj[1][1] *= -1;
-
-	_renderer2->ubo->model = glm::translate(Matrix4x4(1.0f), Vector3(0.0f, 0.0f, 0.0f));
-	_renderer2->ubo->view = _renderer1->ubo->view;
-	_renderer2->ubo->proj = _renderer1->ubo->proj;
-
-	// currently we assign this ourselves, but we will move it into an automatic offset assginer
-	_renderer1->uboOffset = 0;
-	_renderer2->uboOffset = sizeof(UniformBufferObject);
-
-	objects.push_back(_renderer1);
-	objects.push_back(_renderer2);
+	// for now we're just creating objects like this... will change this in the future
+	InstanceObject(_mesh1, _material, Vector3(-1.3f, 0.0f, 1.2f));
+	InstanceObject(_mesh2, _material, Vector3(-0.45f, 0.7f, 0.0f));
+	InstanceObject(_mesh3, _material, Vector3(0.0f, 1.0f, 0.0f));
 }
 
 void ChinaEngine::MainLoop()

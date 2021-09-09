@@ -1,12 +1,13 @@
 #pragma once
 
+#include "Resource.h"
+
 #include <vulkan/vulkan.h>
-#include <string>
 #include <vector>
 
 namespace cs
 {
-	class Texture
+	class Texture : public Resource
 	{
 	public:
 		Texture(std::string fileName, int usedChannels = 4);

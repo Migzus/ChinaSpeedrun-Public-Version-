@@ -1,9 +1,15 @@
 #pragma once
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 typedef glm::vec1 Vector1;
 typedef glm::vec2 Vector2;
@@ -13,12 +19,16 @@ typedef glm::vec4 Vector4;
 typedef glm::mat3 Matrix3x3;
 typedef glm::mat4 Matrix4x4;
 
+//typedef M_PI PI;
+//typedef M_PI_2 TAU;
+
 namespace cs
 {
 	class Mathf
 	{
 	public:
-
+		constexpr static float PI{ (float)M_PI };
+		constexpr static float TAU{ (float)M_PI * 2.0f };
 	private:
 	};
 }

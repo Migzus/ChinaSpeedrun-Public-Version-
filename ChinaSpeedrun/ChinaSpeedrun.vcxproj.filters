@@ -20,6 +20,8 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Mathf.cpp" />
     <ClCompile Include="Color.cpp" />
+    <ClCompile Include="Resource.cpp" />
+    <ClCompile Include="Component.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -34,5 +36,7 @@
     <ClInclude Include="Mathf.h" />
     <ClInclude Include="ChinaCoreHeader.h" />
     <ClInclude Include="Color.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="Component.h" />
   </ItemGroup>
 </Project>

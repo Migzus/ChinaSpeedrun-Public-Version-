@@ -20,8 +20,10 @@ namespace cs
 		static void Run();
 		static std::vector<class MeshRenderer*> const& GetObjects();
 		static std::vector<class Mesh*> const& GetMeshes();
-		static void InstanceObject(Mesh* mesh, class Material* material);
+		static MeshRenderer* InstanceObject(Mesh* mesh, class Material* material, const Vector3 position);
 		static float AspectRatio();
+		static Mesh* IsDuplicateMesh(std::string filename);
+		static Mesh* LoadOBJ(std::string filename);
 
 	private:
 		static VulkanEngineRenderer renderer;
@@ -34,7 +36,7 @@ namespace cs
 		// resources would be textures, models, audio files and so on
 		static std::vector<class Resource*> resources;
 		// components would be something like a Transform, MeshRenderer and so on (things to effect resources)
-		static std::vector<class Components*> components;
+		static std::vector<class Component*> components;
 
 		static void EngineInit();
 		static void MainLoop();

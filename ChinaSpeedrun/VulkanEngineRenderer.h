@@ -24,6 +24,8 @@ namespace cs
 	public:
 		VulkanEngineRenderer();
 
+		constexpr static unsigned int MAX_BUFFER_SIZE{ UINT32_MAX / 16 };
+
 		static void FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight);
 
 		void AllocateMesh(class Mesh* mesh);
