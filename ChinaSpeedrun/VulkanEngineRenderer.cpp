@@ -18,6 +18,10 @@
 #include "MeshRenderer.h"
 #include "ChinaEngine.h"
 
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
+#include "imgui.h"
+
 using namespace cs;
 
 cs::VulkanEngineRenderer::VulkanEngineRenderer() :
@@ -320,6 +324,57 @@ void cs::VulkanEngineRenderer::Cleanup()
 	glfwDestroyWindow(window);
 
 	glfwTerminate();
+}
+
+void cs::VulkanEngineRenderer::InitImGui()
+{
+	/*
+		In addition to being linked to GLFW, imgui also needs access to
+		some Vulkan things. And by things I mean it probably needs some
+		render surfaces or something in order to have something to render on
+		in the first place.
+	*/
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	auto _window{ GetWindow() };
+	ImGui_ImplGlfw_InitForVulkan(_window, false);
+
+	// Manually set the glfw key callbacks
+	/*
+		Some of these will disappear over time as the input class'
+		functionality and features get added
+	*/
+	glfwSetWindowFocusCallback(_window, ImGui_ImplGlfw_WindowFocusCallback);
+	glfwSetCursorEnterCallback(_window, ImGui_ImplGlfw_CursorEnterCallback);
+	glfwSetMouseButtonCallback(_window, ImGui_ImplGlfw_MouseButtonCallback);
+	glfwSetScrollCallback(_window, ImGui_ImplGlfw_ScrollCallback);
+	glfwSetCharCallback(_window, ImGui_ImplGlfw_CharCallback);
+	glfwSetMonitorCallback(ImGui_ImplGlfw_MonitorCallback);
+
+	ImGui_ImplVulkan_InitInfo _initInfo = {};
+	_initInfo.Instance = instance;
+	_initInfo.PhysicalDevice = physicalDevice;
+	_initInfo.Device = GetDevice();
+	_initInfo.QueueFamily = FindQueueFamilies(physicalDevice).graphicsFamily.value();
+	_initInfo.Queue = graphicsQueue;
+	_initInfo.PipelineCache = VK_NULL_HANDLE;
+	_initInfo.DescriptorPool = VK_NULL_HANDLE;
+	_initInfo.MinImageCount = 2;
+	_initInfo.ImageCount = 2;
+	_initInfo.Allocator = nullptr;
+	ImGui_ImplVulkan_Init(&_initInfo, renderPass);
+}
+
+void cs::VulkanEngineRenderer::ImGuiFrame()
+{
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	ImGui::ShowDemoWindow();
+	ImGui::Render();
 }
 
 void cs::VulkanEngineRenderer::CreateInstance()

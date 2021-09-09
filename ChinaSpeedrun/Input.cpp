@@ -32,7 +32,7 @@ void Input::GlfwKeyfunCallback(GLFWwindow* window, int keycode, int scancode, in
 	}
 }
 
-void Input::Update()
+void Input::FinishFrame()
 {
 	for (auto& k : input)
 	{
