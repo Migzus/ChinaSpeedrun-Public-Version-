@@ -107,9 +107,6 @@ namespace cs
 		void ImGuiFrame(); // depending on availability needs, we might make this public
 		void Cleanup();
 
-		void InitImGui();
-		void ImGuiFrame();
-
 		void CreateInstance();
 		void SetupDebugMessenger();
 		void CreateSurface();

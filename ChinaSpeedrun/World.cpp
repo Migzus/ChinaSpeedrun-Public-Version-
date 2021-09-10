@@ -53,11 +53,3 @@ void cs::World::Step()
 
 	}*/
 }
-
-cs::CameraComponent& cs::World::GetCameraComponent()
-{
-	auto _view = registry.view<CameraComponent>();
-	for (auto _entity : _view) {
-		return _view.get<CameraComponent>(_entity);
-	}
-}

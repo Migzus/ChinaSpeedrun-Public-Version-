@@ -55,6 +55,8 @@
     <ClCompile Include="..\Libraries\imgui\src\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="Component.cpp" />
+    <ClCompile Include="Resource.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -90,6 +92,8 @@
     <ClInclude Include="TransformComponent.h">
       <Filter>ecs</Filter>
     </ClInclude>
+    <ClInclude Include="Component.h" />
+    <ClInclude Include="Resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

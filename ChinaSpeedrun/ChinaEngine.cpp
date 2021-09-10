@@ -220,12 +220,6 @@ void ChinaEngine::MainLoop()
 
 		world->Step();
 
-		CameraComponent& cc = world->GetCameraComponent();
-		for (auto _obj : objects) {
-			_obj->ubo->proj = cc.proj *= -1;
-			_obj->ubo->view = cc.view;
-		}
-
 		for (size_t i{ 0 }; i < objects.size(); i++)
 			objects[i]->Update(i);
 

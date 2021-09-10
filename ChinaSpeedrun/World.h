@@ -10,7 +10,6 @@ namespace cs {
 		World();
 		void Step();
 		entt::registry registry;
-		struct CameraComponent& GetCameraComponent();
 	};
 
 }

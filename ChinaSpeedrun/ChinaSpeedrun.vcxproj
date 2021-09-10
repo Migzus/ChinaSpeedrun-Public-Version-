@@ -176,6 +176,7 @@
     <ClCompile Include="MeshRenderer.cpp" />
     <ClCompile Include="MovementComponent.cpp" />
     <ClCompile Include="MovementSystem.cpp" />
+    <ClCompile Include="Resource.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TransformComponent.cpp" />
@@ -198,6 +199,7 @@
     <ClInclude Include="MeshRenderer.h" />
     <ClInclude Include="MovementComponent.h" />
     <ClInclude Include="MovementSystem.h" />
+    <ClInclude Include="Resource.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TransformComponent.h" />
