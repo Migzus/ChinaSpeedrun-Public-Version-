@@ -8,15 +8,18 @@
 /// 
 /// </summary>
 
+#include "Component.h"
+
 #include <vulkan/vulkan.h>
 #include <vector>
 
 // this will inherit from Component (because an object can have a mesh that renders on screen)
 namespace cs
 {
-	class MeshRenderer
+	class MeshRenderer : public Component
 	{
 	public:
+		std::vector<class Material*> materials;
 		class Mesh* mesh;
 		struct UniformBufferObject* ubo;             // TEMP
 		VkDeviceSize uboOffset;                      // TEMP
@@ -30,6 +33,8 @@ namespace cs
 		uint16_t GetUBOSize() const;
 
 		const std::vector<VkDescriptorSet>& GetDescriptorSet() const;
+
+		~MeshRenderer();
 
 	private:
 	};

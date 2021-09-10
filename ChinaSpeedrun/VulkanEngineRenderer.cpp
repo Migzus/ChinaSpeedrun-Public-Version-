@@ -25,7 +25,7 @@
 using namespace cs;
 
 cs::VulkanEngineRenderer::VulkanEngineRenderer() :
-	textureBufferSize{ UINT16_MAX }, vertexBufferSize{ UINT16_MAX }, indexBufferSize{ UINT16_MAX },
+	textureBufferSize{ MAX_BUFFER_SIZE }, vertexBufferSize{ MAX_BUFFER_SIZE }, indexBufferSize{ MAX_BUFFER_SIZE },
 	currentTextureOffset{ 0 }, currentVertexOffset{ 0 }, currentIndexOffset{ 0 }
 {}
 
@@ -42,7 +42,7 @@ void VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
 	// Test to see if we exceed the current buffer capacities, of both the vertex buffer and index buffer sizes
 
 	VkDeviceSize _newVertexOffset{ currentVertexOffset + sizeof(Vertex) * mesh->GetVertices().size() },
-		_newIndexOffset{ currentIndexOffset + sizeof(uint16_t) * mesh->GetIndices().size() };
+		_newIndexOffset{ currentIndexOffset + sizeof(uint32_t) * mesh->GetIndices().size() };
 
 	if (_newVertexOffset > vertexBufferSize || _newIndexOffset > indexBufferSize)
 	{
@@ -79,7 +79,7 @@ void VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
 
 	void* _indexData;
 	vkMapMemory(device, _stagingBufferMemory, currentIndexOffset, indexBufferSize - currentIndexOffset, 0, &_indexData);
-	memcpy(_indexData, mesh->GetIndices().data(), (size_t)(sizeof(uint16_t) * mesh->GetIndices().size()));
+	memcpy(_indexData, mesh->GetIndices().data(), (size_t)(sizeof(uint32_t) * mesh->GetIndices().size()));
 
 	mesh->indexBufferOffset = currentIndexOffset;
 	currentIndexOffset = _newIndexOffset;
@@ -143,6 +143,7 @@ void VulkanEngineRenderer::Create(int newWidth, int newHeight, const char* appTi
 
 	InitWindow();
 	InitVulkan();
+	//InitImGui();
 }
 
 void cs::VulkanEngineRenderer::GetViewportSize(int& widthRef, int& heightRef) const
@@ -333,24 +334,23 @@ void cs::VulkanEngineRenderer::InitImGui()
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGuiIO& _io{ ImGui::GetIO() }; (void)_io;
 
-	auto _window{ GetWindow() };
-	ImGui_ImplGlfw_InitForVulkan(_window, false);
+	ImGui_ImplGlfw_InitForVulkan(window, false);
 
 	// Manually set the glfw key callbacks
 	/*
 		Some of these will disappear over time as the input class'
 		functionality and features get added
 	*/
-	glfwSetWindowFocusCallback(_window, ImGui_ImplGlfw_WindowFocusCallback);
-	glfwSetCursorEnterCallback(_window, ImGui_ImplGlfw_CursorEnterCallback);
-	glfwSetMouseButtonCallback(_window, ImGui_ImplGlfw_MouseButtonCallback);
-	glfwSetScrollCallback(_window, ImGui_ImplGlfw_ScrollCallback);
-	glfwSetCharCallback(_window, ImGui_ImplGlfw_CharCallback);
+	glfwSetWindowFocusCallback(window, ImGui_ImplGlfw_WindowFocusCallback);
+	glfwSetCursorEnterCallback(window, ImGui_ImplGlfw_CursorEnterCallback);
+	glfwSetMouseButtonCallback(window, ImGui_ImplGlfw_MouseButtonCallback);
+	glfwSetScrollCallback(window, ImGui_ImplGlfw_ScrollCallback);
+	glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
 	glfwSetMonitorCallback(ImGui_ImplGlfw_MonitorCallback);
 
-	ImGui_ImplVulkan_InitInfo _initInfo = {};
+	ImGui_ImplVulkan_InitInfo _initInfo{};
 	_initInfo.Instance = instance;
 	_initInfo.PhysicalDevice = physicalDevice;
 	_initInfo.Device = GetDevice();
@@ -358,8 +358,8 @@ void cs::VulkanEngineRenderer::InitImGui()
 	_initInfo.Queue = graphicsQueue;
 	_initInfo.PipelineCache = VK_NULL_HANDLE;
 	_initInfo.DescriptorPool = VK_NULL_HANDLE;
-	_initInfo.MinImageCount = 2;
-	_initInfo.ImageCount = 2;
+	_initInfo.MinImageCount = MAX_FRAMES_IN_FLIGHT;
+	_initInfo.ImageCount = MAX_FRAMES_IN_FLIGHT + 1;
 	_initInfo.Allocator = nullptr;
 	ImGui_ImplVulkan_Init(&_initInfo, renderPass);
 }
@@ -1066,7 +1066,7 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 		{
 			VkDeviceSize _offsets[]{ object->mesh->vertexBufferOffset };
 			vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, _vertexBuffers, _offsets);
-			vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, object->mesh->indexBufferOffset, VK_INDEX_TYPE_UINT16);
+			vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, object->mesh->indexBufferOffset, VK_INDEX_TYPE_UINT32);
 			// here we need to know the offset of the descriptor of the shader we're using per. object // &object->GetDescriptorSet()
 			vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &object->descriptorSets[i], 0, nullptr);
 

@@ -10,9 +10,12 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
+#define TINYOBJLOADER_IMPLEMENTATION
+
 #include <optional>
 #include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <array>
+#include <unordered_map>

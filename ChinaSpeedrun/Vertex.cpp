@@ -1,5 +1,7 @@
 #include "Vertex.h"
 
+using namespace cs;
+
 VkVertexInputBindingDescription cs::Vertex::GetBindingDescription()
 {
 	VkVertexInputBindingDescription _bindingDescription{};
@@ -29,4 +31,9 @@ std::array<VkVertexInputAttributeDescription, 3> cs::Vertex::GetAttributeDescrip
 	_attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 
 	return _attributeDescriptions;
+}
+
+bool cs::Vertex::operator==(const Vertex& other) const
+{
+	return position == other.position && color == other.color && texCoord == other.texCoord;
 }
