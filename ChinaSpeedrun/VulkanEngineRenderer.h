@@ -103,6 +103,9 @@ namespace cs
 		void InitVulkan();
 		void Cleanup();
 
+		void InitImGui();
+		void ImGuiFrame();
+
 		void CreateInstance();
 		void SetupDebugMessenger();
 		void CreateSurface();

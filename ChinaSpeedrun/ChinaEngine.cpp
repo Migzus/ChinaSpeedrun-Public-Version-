@@ -11,9 +11,13 @@
 #include "VulkanEngineRenderer.h"
 
 #include "Input.h"
+#include "World.h"
+#include "MovementComponent.h"
+#include "CameraComponent.h"
 
 using namespace cs;
 
+World* ChinaEngine::world;
 VulkanEngineRenderer ChinaEngine::renderer;
 std::vector<Shader*> ChinaEngine::shaders;
 std::vector<Material*> ChinaEngine::materials;
@@ -83,6 +87,8 @@ float cs::ChinaEngine::AspectRatio()
 
 void ChinaEngine::EngineInit()
 {
+	world = new World;
+
 	Shader* _shader{ new Shader({ "../Resources/shaders/vert.spv", "../Resources/shaders/frag.spv" }) };
 	Material* _material{ new Material(_shader) };
 
@@ -125,6 +131,8 @@ void cs::ChinaEngine::InitInput()
 {
 	glfwSetKeyCallback(renderer.GetWindow(), Input::GlfwKeyfunCallback);
 	Input::AddMapping("accept", GLFW_KEY_ENTER);
+	Input::AddMapping("space", GLFW_KEY_SPACE);
+	Input::AddMapping("shift", GLFW_KEY_LEFT_SHIFT);
 	Input::AddMapping("up", GLFW_KEY_UP);
 	Input::AddMapping("down", GLFW_KEY_DOWN);
 	Input::AddMapping("left", GLFW_KEY_LEFT);
@@ -136,6 +144,14 @@ void ChinaEngine::MainLoop()
 	while (!glfwWindowShouldClose(renderer.GetWindow()))
 	{
 		glfwPollEvents();
+
+		world->Step();
+
+		CameraComponent& cc = world->GetCameraComponent();
+		for (auto _obj : objects) {
+			_obj->ubo->proj = cc.proj *= -1;
+			_obj->ubo->view = cc.view;
+		}
 
 		for (size_t i{ 0 }; i < objects.size(); i++)
 			objects[i]->Update(i);

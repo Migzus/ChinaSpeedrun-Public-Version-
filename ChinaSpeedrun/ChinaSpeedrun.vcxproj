@@ -124,7 +124,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.182.0\Include;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\include;$(SolutionDir)\Libraries\glm;$(SolutionDir)\Libraries\openal\include;$(SolutionDir)\Libraries\stb-master;$(SolutionDir)\Libraries\imgui\include;$(SolutionDir)\Libraries\tiny-obj-loader</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.182.0\Include;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\include;$(SolutionDir)\Libraries\glm;$(SolutionDir)\Libraries\openal\include;$(SolutionDir)\Libraries\stb-master;$(SolutionDir)\Libraries\imgui\include;$(SolutionDir)\Libraries\tiny-obj-loader;$(SolutionDir)\Libraries\entt</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -142,7 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.182.0\Include;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\include;$(SolutionDir)\Libraries\glm;$(SolutionDir)\Libraries\openal\include;$(SolutionDir)\Libraries\stb-master;$(SolutionDir)\Libraries\imgui\include;$(SolutionDir)\Libraries\tiny-obj-loader</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.182.0\Include;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\include;$(SolutionDir)\Libraries\glm;$(SolutionDir)\Libraries\openal\include;$(SolutionDir)\Libraries\stb-master;$(SolutionDir)\Libraries\imgui\include;$(SolutionDir)\Libraries\tiny-obj-loader;$(SolutionDir)\Libraries\entt</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -162,32 +162,46 @@
     <ClCompile Include="..\Libraries\imgui\src\imgui_impl_vulkan.cpp" />
     <ClCompile Include="..\Libraries\imgui\src\imgui_tables.cpp" />
     <ClCompile Include="..\Libraries\imgui\src\imgui_widgets.cpp" />
+    <ClCompile Include="CameraComponent.cpp" />
+    <ClCompile Include="CameraSystem.cpp" />
     <ClCompile Include="ChinaEngine.cpp" />
     <ClCompile Include="Color.cpp" />
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="InputComponent.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mathf.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshRenderer.cpp" />
+    <ClCompile Include="MovementComponent.cpp" />
+    <ClCompile Include="MovementSystem.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TransformComponent.cpp" />
     <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="VulkanEngineRenderer.cpp" />
+    <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CameraComponent.h" />
+    <ClInclude Include="CameraSystem.h" />
     <ClInclude Include="ChinaCoreHeader.h" />
     <ClInclude Include="ChinaEngine.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="InputComponent.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mathf.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshRenderer.h" />
+    <ClInclude Include="MovementComponent.h" />
+    <ClInclude Include="MovementSystem.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TransformComponent.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="VulkanEngineRenderer.h" />
+    <ClInclude Include="World.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
