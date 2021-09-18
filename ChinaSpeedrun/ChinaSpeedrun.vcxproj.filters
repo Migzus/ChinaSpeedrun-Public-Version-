@@ -57,6 +57,9 @@
     </ClCompile>
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="Resource.cpp" />
+    <ClCompile Include="AudioSystem.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -94,6 +97,9 @@
     </ClInclude>
     <ClInclude Include="Component.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="AudioSystem.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

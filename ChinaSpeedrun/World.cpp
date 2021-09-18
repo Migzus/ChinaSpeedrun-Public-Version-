@@ -9,21 +9,14 @@
 #include "MovementSystem.h"
 
 cs::World::World() {
-	entt::entity _entity = registry.create();
+	/*entt::entity _entity = registry.create();
 	registry.emplace<CameraComponent>(_entity);
 	registry.emplace<TransformComponent>(_entity);
-	registry.emplace<MovementComponent>(_entity);
+	registry.emplace<MovementComponent>(_entity);*/
 }
 
 void cs::World::Step()
 {
-	auto _view = registry.view<MovementComponent, TransformComponent>();
-	for (auto _entity : _view) {
-		MovementSystem::HandleMovement(
-			_view.get<MovementComponent>(_entity),
-			_view.get<TransformComponent>(_entity));
-	}
-
 	/*
 	auto _group = registry.group<MovementComponent>(entt::get<TransformComponent>);
 	for (auto _entity : _group) {
