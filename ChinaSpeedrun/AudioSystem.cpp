@@ -4,6 +4,20 @@
 #include <AL/alc.h>
 #include <AudioFile.h>
 
+AudioBufferBlob::AudioBufferBlob() : index{ 0 }
+{
+	for (unsigned i = 0; i < max; i++) {
+		buffer[i] = 0;
+	}
+}
+
+AudioSourceBlob::AudioSourceBlob() : index{ 0 }
+{
+	for (unsigned i = 0; i < max; i++) {
+		source[i] = 0;
+	}
+}
+
 #define OpenAL_ErrorCheck(message)\
 {\
 	ALenum error = alGetError();\
@@ -19,6 +33,13 @@ AudioSystem::AudioSystem() {
 	Init();
 }
 
+AudioSystem::~AudioSystem()
+{
+	alcMakeContextCurrent(nullptr);
+	alcDestroyContext(context);
+	alcCloseDevice(device);
+}
+
 void AudioSystem::Init()
 {
 	device = alcOpenDevice(nullptr);
@@ -30,55 +51,68 @@ void AudioSystem::Init()
 	else {
 		return;
 	}
-
-	{
-		AudioFile<float> file;
-		file.load("../resources/sounds/koto.wav");
-		/*std::cout << file.isMono() << " " << file.isStereo() << " " << file.getSampleRate() << " " << file.getBitDepth() << " " << file.getLengthInSeconds() << " " << file.getNumChannels() << " " << file.getNumSamplesPerChannel() << std::endl;
-		std::cout << sizeof(file) << "\n" << sizeof(file.samples) << "\n" << sizeof(file.samples[0]) << "\n" << sizeof(file.samples[0][0]) << "\n";
-		std::cout << file.samples.size() << " " << file.samples[0].size() << "\n";*/
-		
-		ALenum format;
-
-		if (file.isMono()) {
-			if (file.getBitDepth() == 8) {
-				format = AL_FORMAT_MONO8;
-			}
-			else {
-				format = AL_FORMAT_MONO16;
-			}
-		}
-		else {
-			if (file.getBitDepth() == 8) {
-				format = AL_FORMAT_STEREO8;
-			}
-			else {
-				format = AL_FORMAT_STEREO16;
-			}
-		}
-
-		std::vector<uint8_t> bufferData;
-
-		file.convertPCMToBuffer(bufferData);
-
-		std::cout << bufferData.size() << std::endl;
-
-		alGenBuffers(1, &buffer);
-		PrintIfError();
-		alec(alBufferData(buffer, AL_FORMAT_STEREO16, bufferData.data(), bufferData.size(), file.getSampleRate()));
-		PrintIfError();
-	}
 	
-	alec(alGenSources(1, &source));
-	alec(alSourcei(source, AL_BUFFER, buffer));
-	alec(alSourcePlay(source));
+	alec(alGenBuffers(buffer.max, buffer.buffer));
+	alec(alGenSources(source.max, source.source));
+	
+	Load("../resources/sounds/koto.wav");
 }
 
-void AudioSystem::PrintIfError()
-{
-	if ((error = alGetError()) != AL_NO_ERROR) {
-		std::cerr << "Error: " << error << std::endl;
+void AudioSystem::Load(std::string path) {
+
+	if (buffer.index + 1 >= buffer.max) {
+		std::cerr << "AudioSystem error: " << "Not enough buffers" << std::endl;
+		return;
 	}
+
+	AudioFile<float> file;
+	file.load(path);
+
+	ALenum format;
+
+	if (file.isMono()) {
+		if (file.getBitDepth() == 8) {
+			format = AL_FORMAT_MONO8;
+		}
+		else {
+			format = AL_FORMAT_MONO16;
+		}
+	}
+	else {
+		if (file.getBitDepth() == 8) {
+			format = AL_FORMAT_STEREO8;
+		}
+		else {
+			format = AL_FORMAT_STEREO16;
+		}
+	}
+
+	std::vector<uint8_t> bufferData;
+
+	file.convertPCMToBuffer(bufferData);
+
+	alec(alBufferData(buffer[buffer.index], AL_FORMAT_STEREO16, bufferData.data(), bufferData.size(), file.getSampleRate()));
+
+	auto pathToName = [](const std::string &path) {
+		const unsigned lastSlash = path.rfind('/');
+		const unsigned lastDot = path.rfind('.');
+		return path.substr(lastSlash + 1, lastDot - lastSlash - 1);
+	};
+
+	soundMap.insert({ pathToName(path), buffer.index });
+
+	buffer.index++;
+}
+
+void AudioSystem::Play(std::string name)
+{
+	unsigned const _bi = soundMap[name];
+
+	alSourcei(source[source.index], AL_BUFFER, buffer[_bi]);
+
+	alSourcePlay(source[source.index]);
+
+	source.index = (source.index + 1) % source.max;
 }
 
 #undef alec

@@ -162,6 +162,7 @@
     <ClCompile Include="..\Libraries\imgui\src\imgui_impl_vulkan.cpp" />
     <ClCompile Include="..\Libraries\imgui\src\imgui_tables.cpp" />
     <ClCompile Include="..\Libraries\imgui\src\imgui_widgets.cpp" />
+    <ClCompile Include="AudioComponent.cpp" />
     <ClCompile Include="AudioSystem.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="CameraSystem.cpp" />
@@ -186,6 +187,7 @@
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AudioComponent.h" />
     <ClInclude Include="AudioSystem.h" />
     <ClInclude Include="CameraComponent.h" />
     <ClInclude Include="CameraSystem.h" />

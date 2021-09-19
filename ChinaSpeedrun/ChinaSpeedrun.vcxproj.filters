@@ -60,6 +60,9 @@
     <ClCompile Include="AudioSystem.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
+    <ClCompile Include="AudioComponent.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -98,6 +101,9 @@
     <ClInclude Include="Component.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="AudioSystem.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioComponent.h">
       <Filter>ecs</Filter>
     </ClInclude>
   </ItemGroup>

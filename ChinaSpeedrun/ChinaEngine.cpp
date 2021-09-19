@@ -17,6 +17,8 @@
 
 using namespace cs;
 
+#include "AudioSystem.h"
+
 World* ChinaEngine::world;
 VulkanEngineRenderer ChinaEngine::renderer;
 std::vector<Shader*> ChinaEngine::shaders;
@@ -214,9 +216,16 @@ void cs::ChinaEngine::InitInput()
 
 void ChinaEngine::MainLoop()
 {
+	AudioSystem as;
+
 	while (!glfwWindowShouldClose(renderer.GetWindow()))
 	{
+
 		glfwPollEvents();
+
+		if (Input::GetActionPressed("accept")) {
+			as.Play("koto");
+		}
 
 		world->Step();
 
