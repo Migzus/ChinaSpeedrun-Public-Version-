@@ -13,9 +13,15 @@
 #include "VulkanEngineRenderer.h"
 
 #include "Input.h"
+#include "World.h"
+#include "MovementComponent.h"
+#include "CameraComponent.h"
 
 using namespace cs;
 
+#include "AudioSystem.h"
+
+World* ChinaEngine::world;
 VulkanEngineRenderer ChinaEngine::renderer;
 std::vector<Shader*> ChinaEngine::shaders;
 std::vector<Material*> ChinaEngine::materials;
@@ -178,7 +184,8 @@ Mesh* cs::ChinaEngine::LoadOBJ(std::string filename)
 
 void ChinaEngine::EngineInit()
 {
-	// these are just here to display the dependency resources and components will be in the future
+	world = new World;
+
 	Shader* _shader{ new Shader({ "../Resources/shaders/vert.spv", "../Resources/shaders/frag.spv" }) };
 	Material* _material{ new Material(_shader) };
 
@@ -203,6 +210,8 @@ void cs::ChinaEngine::InitInput()
 {
 	glfwSetKeyCallback(renderer.GetWindow(), Input::GlfwKeyfunCallback);
 	Input::AddMapping("accept", GLFW_KEY_ENTER);
+	Input::AddMapping("space", GLFW_KEY_SPACE);
+	Input::AddMapping("shift", GLFW_KEY_LEFT_SHIFT);
 	Input::AddMapping("up", GLFW_KEY_UP);
 	Input::AddMapping("down", GLFW_KEY_DOWN);
 	Input::AddMapping("left", GLFW_KEY_LEFT);
@@ -211,9 +220,18 @@ void cs::ChinaEngine::InitInput()
 
 void cs::ChinaEngine::MainLoop()
 {
+	AudioSystem as;
+
 	while (!glfwWindowShouldClose(renderer.GetWindow()))
 	{
+
 		glfwPollEvents();
+
+		if (Input::GetActionPressed("accept")) {
+			as.Play("koto");
+		}
+
+		world->Step();
 
 		for (size_t i{ 0 }; i < objects.size(); i++)
 			objects[i]->Update(i);
