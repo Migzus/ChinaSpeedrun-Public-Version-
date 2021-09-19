@@ -2,6 +2,8 @@
 
 #include <tiny_obj_loader.h>
 
+#include "ResourceManager.h"
+
 #include "Vertex.h"
 #include "Shader.h"
 #include "Material.h"
@@ -193,6 +195,8 @@ void ChinaEngine::EngineInit()
 	InstanceObject(_mesh1, _material, Vector3(-1.3f, 0.0f, 1.2f));
 	InstanceObject(_mesh2, _material, Vector3(-0.45f, 0.7f, 0.0f));
 	InstanceObject(_mesh3, _material, Vector3(0.0f, 1.0f, 0.0f));
+
+	Texture* _texture{ ResourceManager::Load<Texture>("../Resources/textures/varg_flush.png") };
 }
 
 void cs::ChinaEngine::InitInput()
@@ -205,7 +209,7 @@ void cs::ChinaEngine::InitInput()
 	Input::AddMapping("right", GLFW_KEY_RIGHT);
 }
 
-void ChinaEngine::MainLoop()
+void cs::ChinaEngine::MainLoop()
 {
 	while (!glfwWindowShouldClose(renderer.GetWindow()))
 	{
@@ -221,7 +225,7 @@ void ChinaEngine::MainLoop()
 	vkDeviceWaitIdle(renderer.GetDevice());
 }
 
-void ChinaEngine::EngineExit()
+void cs::ChinaEngine::EngineExit()
 {
 	for (auto object : objects)
 		delete object;

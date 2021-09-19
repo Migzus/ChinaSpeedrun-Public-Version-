@@ -12,7 +12,7 @@ namespace cs
 	class Mesh : public Resource
 	{
 	public:
-		VkDeviceSize vertexBufferOffset, indexBufferOffset;
+		VkDeviceSize vertexBufferOffset, vertexSize, indexBufferOffset, indexSize;
 
 		Mesh();
 		Mesh(std::vector<class Vertex> vertexArray, std::vector<uint32_t> indexArray);
@@ -26,6 +26,8 @@ namespace cs
 		std::vector<uint32_t> const& GetIndices() const;
 
 	private:
+		// will remove this in the future
+		// it is deprecated
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
 	};
