@@ -1501,8 +1501,6 @@ void cs::VulkanEngineRenderer::RecreateSwapChain()
 	CreateDescriptorSets();
 	CreateCommandBuffers();
 
-	imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
-
 	ImGuiRenderPass();
 	ImGuiFramebuffers();
 	ImGuiCommandPool();
@@ -1510,6 +1508,8 @@ void cs::VulkanEngineRenderer::RecreateSwapChain()
 	ImGuiCommandBuffers();
 
 	ImGui_ImplVulkan_SetMinImageCount(static_cast<uint32_t>(swapChainImages.size()));
+	
+	imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
 }
 
 void cs::VulkanEngineRenderer::CleanupSwapChain()
