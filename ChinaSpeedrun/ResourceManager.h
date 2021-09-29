@@ -17,4 +17,10 @@ namespace cs
 		static class Scene* LoadScene(const std::string filename);
 		static std::vector<uint8_t> LoadRaw(const std::string filename);
 	};
+
+	template<typename T>
+	inline T* ResourceManager::Load(const std::string filename)
+	{
+		return nullptr;
+	}
 }

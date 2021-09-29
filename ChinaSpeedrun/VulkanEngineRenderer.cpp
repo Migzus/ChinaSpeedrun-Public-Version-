@@ -8,8 +8,6 @@
 #include <cstdint>
 #include <algorithm>
 
-#include <chrono>
-
 #include "Vertex.h"
 //#include "Shader.h"
 //#include "Material.h"
@@ -17,10 +15,6 @@
 #include "Mesh.h"
 #include "MeshRenderer.h"
 #include "ChinaEngine.h"
-
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_vulkan.h"
-#include "imgui.h"
 
 using namespace cs;
 
@@ -143,7 +137,7 @@ void VulkanEngineRenderer::Create(int newWidth, int newHeight, const char* appTi
 
 	InitWindow();
 	InitVulkan();
-	//InitImGui();
+	InitImGui();
 }
 
 void cs::VulkanEngineRenderer::GetViewportSize(int& widthRef, int& heightRef) const
@@ -208,7 +202,7 @@ void cs::VulkanEngineRenderer::DrawFrame()
 		return;
 	}
 	else if (_result != VK_SUCCESS && _result != VK_SUBOPTIMAL_KHR)
-		throw std::runtime_error("[FAIL] :\tFailed to acquire swap chain image.");
+		throw std::runtime_error("[FAIL]\t: Failed to acquire swap chain image.");
 
 	if (imagesInFlight[_imageIndex] != VK_NULL_HANDLE)
 		vkWaitForFences(device, 1, &imagesInFlight[_imageIndex], VK_TRUE, UINT64_MAX);
@@ -217,16 +211,46 @@ void cs::VulkanEngineRenderer::DrawFrame()
 
 	UpdateUniformBuffer(_imageIndex);
 
+	// -------------------------------------------------------------------------------------------------------
+	// ImGui dynamic DrawCommands (Maybe if we wanted we could hash these calls, and call set new draw calls whenever the ui needs to update)
+
+	vkResetCommandPool(device, imGuiCommandPool, 0);
+	VkCommandBufferBeginInfo _beginInfo{};
+	_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	_beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	vkBeginCommandBuffer(imGuiCommandBuffers[_imageIndex], &_beginInfo);
+
+	VkClearValue _clearValue{ 0.0f, 0.0f, 0.0f, 1.0f };
+	VkRenderPassBeginInfo _renderPassInfo{};
+	_renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	_renderPassInfo.renderPass = imGuiRenderPass;
+	_renderPassInfo.framebuffer = imGuiFramebuffers[_imageIndex];
+	_renderPassInfo.renderArea.offset = { 0, 0 };
+	_renderPassInfo.renderArea.extent = swapChainExtent;
+	_renderPassInfo.clearValueCount = 1;
+	_renderPassInfo.pClearValues = &_clearValue;
+
+	vkCmdBeginRenderPass(imGuiCommandBuffers[_imageIndex], &_renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imGuiCommandBuffers[_imageIndex]);
+
+	vkCmdEndRenderPass(imGuiCommandBuffers[_imageIndex]);
+	if (vkEndCommandBuffer(imGuiCommandBuffers[_imageIndex]) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL]\t: Failed to record ImGui command buffer.");
+
+	// -------------------------------------------------------------------------------------------------------
+
 	VkSubmitInfo _submitInfo{};
 	_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
+	VkCommandBuffer _commandBuffers[]{ commandBuffers[_imageIndex], imGuiCommandBuffers[_imageIndex] };
 	VkSemaphore _waitSemaphores[]{ imageAvailableSemaphores[currentFrame] };
 	VkPipelineStageFlags _waitStages[]{ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	_submitInfo.waitSemaphoreCount = 1;
 	_submitInfo.pWaitSemaphores = _waitSemaphores;
 	_submitInfo.pWaitDstStageMask = _waitStages;
-	_submitInfo.commandBufferCount = 1;
-	_submitInfo.pCommandBuffers = &commandBuffers[_imageIndex];
+	_submitInfo.commandBufferCount = IM_ARRAYSIZE(_commandBuffers);
+	_submitInfo.pCommandBuffers = _commandBuffers;
 
 	VkSemaphore _signalSemaphores[]{ renderFinishedSemaphores[currentFrame] };
 	_submitInfo.signalSemaphoreCount = 1;
@@ -235,7 +259,7 @@ void cs::VulkanEngineRenderer::DrawFrame()
 	vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
 	if (vkQueueSubmit(graphicsQueue, 1, &_submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to submit draw command buffer.");
+		throw std::runtime_error("[FAIL]\t: Failed to submit draw command buffer.");
 
 	VkPresentInfoKHR _presentInfo{};
 	_presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -256,7 +280,7 @@ void cs::VulkanEngineRenderer::DrawFrame()
 		RecreateSwapChain();
 	}
 	else if (_result != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to present swap chain image.");
+		throw std::runtime_error("[FAIL]\t: Failed to present swap chain image.");
 
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
@@ -264,6 +288,11 @@ void cs::VulkanEngineRenderer::DrawFrame()
 void cs::VulkanEngineRenderer::Redraw()
 {
 	CreateCommandBuffers();
+}
+
+VkDevice const& cs::VulkanEngineRenderer::GetDevice()
+{
+	return device;
 }
 
 float cs::VulkanEngineRenderer::AspectRatio() const
@@ -276,14 +305,20 @@ GLFWwindow* cs::VulkanEngineRenderer::GetWindow()
 	return window;
 }
 
-VkDevice& cs::VulkanEngineRenderer::GetDevice()
-{
-	return device;
-}
-
 void cs::VulkanEngineRenderer::Cleanup()
 {
 	CleanupSwapChain();
+
+	// --------------------------------------------------------------------------
+	//     ImGui Stuff that we call when we end the program
+
+	ImGui_ImplVulkan_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	vkDestroyDescriptorPool(device, imGuiDescriptorPool, nullptr);
+
+	// --------------------------------------------------------------------------
 
 	vkDestroySampler(device, textureSampler, nullptr);
 	vkDestroyImageView(device, textureImageView, nullptr);
@@ -293,7 +328,7 @@ void cs::VulkanEngineRenderer::Cleanup()
 
 	// destroy the descriptorSetLayout for all objects
 	for (size_t i{ 0 }; i < ChinaEngine::GetObjects().size(); i++)
-	vkDestroyDescriptorSetLayout(device, descriptorSetLayouts[i], nullptr);
+		vkDestroyDescriptorSetLayout(device, descriptorSetLayouts[i], nullptr);
 
 	vkDestroyBuffer(device, indexBuffer, nullptr);
 	vkFreeMemory(device, indexBufferMemory, nullptr);
@@ -323,54 +358,157 @@ void cs::VulkanEngineRenderer::Cleanup()
 	glfwTerminate();
 }
 
+void cs::VulkanEngineRenderer::ImGuiRenderPass()
+{
+	VkAttachmentDescription _attachment{};
+	_attachment.format = swapChainImageFormat;
+	_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+	_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	_attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	VkAttachmentReference _colorAttachment{};
+	_colorAttachment.attachment = 0;
+	_colorAttachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkSubpassDescription _subpass{};
+	_subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	_subpass.colorAttachmentCount = 1;
+	_subpass.pColorAttachments = &_colorAttachment;
+
+	VkSubpassDependency _dependency{};
+	_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	_dependency.dstSubpass = 0;
+	_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	_dependency.srcAccessMask = 0;
+	_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+	VkRenderPassCreateInfo _info{};
+	_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	_info.attachmentCount = 1;
+	_info.pAttachments = &_attachment;
+	_info.subpassCount = 1;
+	_info.pSubpasses = &_subpass;
+	_info.dependencyCount = 1;
+	_info.pDependencies = &_dependency;
+
+	if (vkCreateRenderPass(device, &_info, nullptr, &imGuiRenderPass) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL]\t: Could not create ImGui render pass.");
+}
+
+void cs::VulkanEngineRenderer::ImGuiFramebuffers()
+{
+	imGuiFramebuffers.resize(swapChainImageViews.size());
+
+	for (size_t i{ 0 }; i < imGuiFramebuffers.size(); i++)
+	{
+		VkFramebufferCreateInfo _framebufferInfo{};
+		_framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		_framebufferInfo.renderPass = imGuiRenderPass;
+		_framebufferInfo.attachmentCount = 1;
+		_framebufferInfo.pAttachments = &swapChainImageViews[i];
+		_framebufferInfo.width = swapChainExtent.width;
+		_framebufferInfo.height = swapChainExtent.height;
+		_framebufferInfo.layers = 1;
+
+		if (vkCreateFramebuffer(device, &_framebufferInfo, nullptr, &imGuiFramebuffers[i]) != VK_SUCCESS)
+			throw std::runtime_error("[FAIL]\t: Failed to create ImGui framebuffer.");
+	}
+}
+
+void cs::VulkanEngineRenderer::ImGuiDescriptorPool()
+{
+	uint32_t _swapChainSize{ static_cast<uint32_t>(swapChainImages.size()) };
+
+	VkDescriptorPoolSize _poolSizes[]
+	{
+		{ VK_DESCRIPTOR_TYPE_SAMPLER, _swapChainSize },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, _swapChainSize },
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, _swapChainSize },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, _swapChainSize },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, _swapChainSize },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, _swapChainSize },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, _swapChainSize },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, _swapChainSize },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, _swapChainSize },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, _swapChainSize },
+		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, _swapChainSize }
+	};
+
+	VkDescriptorPoolCreateInfo _poolInfo{};
+	_poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	_poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	_poolInfo.poolSizeCount = IM_ARRAYSIZE(_poolSizes) * _swapChainSize;
+	_poolInfo.pPoolSizes = _poolSizes;
+	_poolInfo.maxSets = _swapChainSize;
+
+	if (vkCreateDescriptorPool(device, &_poolInfo, nullptr, &imGuiDescriptorPool) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL]\t: Failed to create ImGui descriptor pool.");
+}
+
+void cs::VulkanEngineRenderer::ImGuiCommandPool()
+{
+	QueueFamilyIndices _queueFamilyIndices{ FindQueueFamilies(physicalDevice) };
+
+	VkCommandPoolCreateInfo _poolInfo{};
+	_poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	_poolInfo.queueFamilyIndex = _queueFamilyIndices.graphicsFamily.value();
+	_poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+	if (vkCreateCommandPool(device, &_poolInfo, nullptr, &imGuiCommandPool) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL]\t: Failed to create ImGui command pool.");
+}
+
+void cs::VulkanEngineRenderer::ImGuiCommandBuffers()
+{
+	imGuiCommandBuffers.resize(swapChainImageViews.size());
+
+	VkCommandBufferAllocateInfo _commandBufferAllocateInfo{};
+	_commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	_commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	_commandBufferAllocateInfo.commandPool = imGuiCommandPool;
+	_commandBufferAllocateInfo.commandBufferCount = static_cast<uint32_t>(imGuiCommandBuffers.size());
+
+	if (vkAllocateCommandBuffers(device, &_commandBufferAllocateInfo, imGuiCommandBuffers.data()) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL]\t: Failed to allocate ImGui command buffers.");
+}
+
 void cs::VulkanEngineRenderer::InitImGui()
 {
-	/*
-		In addition to being linked to GLFW, imgui also needs access to
-		some Vulkan things. And by things I mean it probably needs some
-		render surfaces or something in order to have something to render on
-		in the first place.
-	*/
+	ImGuiRenderPass();
+	ImGuiFramebuffers();
+	ImGuiCommandPool();
+	ImGuiDescriptorPool();
+	ImGuiCommandBuffers();
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& _io{ ImGui::GetIO() }; (void)_io;
 
-	ImGui_ImplGlfw_InitForVulkan(window, false);
+	ImGui::StyleColorsDark();
 
-	// Manually set the glfw key callbacks
-	/*
-		Some of these will disappear over time as the input class'
-		functionality and features get added
-	*/
-	glfwSetWindowFocusCallback(window, ImGui_ImplGlfw_WindowFocusCallback);
-	glfwSetCursorEnterCallback(window, ImGui_ImplGlfw_CursorEnterCallback);
-	glfwSetMouseButtonCallback(window, ImGui_ImplGlfw_MouseButtonCallback);
-	glfwSetScrollCallback(window, ImGui_ImplGlfw_ScrollCallback);
-	glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
-	glfwSetMonitorCallback(ImGui_ImplGlfw_MonitorCallback);
-
+	ImGui_ImplGlfw_InitForVulkan(window, true);
 	ImGui_ImplVulkan_InitInfo _initInfo{};
 	_initInfo.Instance = instance;
 	_initInfo.PhysicalDevice = physicalDevice;
-	_initInfo.Device = GetDevice();
+	_initInfo.Device = device;
 	_initInfo.QueueFamily = FindQueueFamilies(physicalDevice).graphicsFamily.value();
 	_initInfo.Queue = graphicsQueue;
 	_initInfo.PipelineCache = VK_NULL_HANDLE;
-	_initInfo.DescriptorPool = VK_NULL_HANDLE;
-	_initInfo.MinImageCount = MAX_FRAMES_IN_FLIGHT;
-	_initInfo.ImageCount = MAX_FRAMES_IN_FLIGHT + 1;
-	_initInfo.Allocator = nullptr;
-	ImGui_ImplVulkan_Init(&_initInfo, renderPass);
-}
+	_initInfo.DescriptorPool = imGuiDescriptorPool;
+	_initInfo.Allocator = VK_NULL_HANDLE;
+	_initInfo.MinImageCount = static_cast<uint32_t>(swapChainImages.size());
+	_initInfo.ImageCount = static_cast<uint32_t>(swapChainImages.size());
+	_initInfo.CheckVkResultFn = nullptr;
+	ImGui_ImplVulkan_Init(&_initInfo, imGuiRenderPass);
 
-void cs::VulkanEngineRenderer::ImGuiFrame()
-{
-	ImGui_ImplVulkan_NewFrame();
-	ImGui_ImplGlfw_NewFrame();
-	ImGui::NewFrame();
-	ImGui::ShowDemoWindow();
-	ImGui::Render();
+	VkCommandBuffer _commandBuffer{ BeginSingleTimeCommands() };
+	ImGui_ImplVulkan_CreateFontsTexture(_commandBuffer);
+	EndSingleTimeCommands(_commandBuffer);
 }
 
 void cs::VulkanEngineRenderer::CreateInstance()
@@ -429,7 +567,7 @@ void cs::VulkanEngineRenderer::SetupDebugMessenger()
 void cs::VulkanEngineRenderer::CreateSurface()
 {
 	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to create window surface.");
+		throw std::runtime_error("[FAIL]\t: Failed to create window surface.");
 }
 
 void cs::VulkanEngineRenderer::PickPhysicalDevice()
@@ -501,9 +639,7 @@ void cs::VulkanEngineRenderer::CreateLogicalDevice()
 		_createInfo.ppEnabledLayerNames = validationLayers.data();
 	}
 	else
-	{
 		_createInfo.enabledLayerCount = 0;
-	}
 
 	if (vkCreateDevice(physicalDevice, &_createInfo, nullptr, &device) != VK_SUCCESS)
 		throw std::runtime_error("[FAIL] :\tFailed to create logical device.");
@@ -514,8 +650,6 @@ void cs::VulkanEngineRenderer::CreateLogicalDevice()
 
 void cs::VulkanEngineRenderer::CreateSwapChain()
 {
-	// a copy of the resource(object) for each frame in the swap chain
-
 	SwapChainSupportDetails _swapChainSupport{ QuerySwapChainSupport(physicalDevice) };
 
 	VkSurfaceFormatKHR _surfaceFormat{ ChooseSwapSurfaceFormat(_swapChainSupport.formats) };
@@ -560,7 +694,7 @@ void cs::VulkanEngineRenderer::CreateSwapChain()
 	_createInfo.oldSwapchain = VK_NULL_HANDLE;
 
 	if (vkCreateSwapchainKHR(device, &_createInfo, nullptr, &swapChain) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to create swap chain.");
+		throw std::runtime_error("[FAIL]\t: Failed to create swap chain.");
 
 	vkGetSwapchainImagesKHR(device, swapChain, &_imageCount, nullptr);
 	swapChainImages.resize(_imageCount);
@@ -799,9 +933,9 @@ void cs::VulkanEngineRenderer::CreateRenderPass()
 	VkSubpassDependency _dependency{};
 	_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	_dependency.dstSubpass = 0;
-	_dependency.srcAccessMask = 0;
 	_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	_dependency.srcAccessMask = 0;
 	_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
 	std::array<VkAttachmentDescription, 2> _attachments{ _colorAttachment, _depthAttachment };
@@ -815,14 +949,15 @@ void cs::VulkanEngineRenderer::CreateRenderPass()
 	_renderPassInfo.pDependencies = &_dependency;
 
 	if (vkCreateRenderPass(device, &_renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to create render pass.");
+		throw std::runtime_error("[FAIL]\t: Failed to create render pass.");
 }
 
 void cs::VulkanEngineRenderer::CreateFramebuffers()
 {
 	swapChainFramebuffers.resize(swapChainImageViews.size());
 
-	for (size_t i{ 0 }; i < swapChainImageViews.size(); i++) {
+	for (size_t i{ 0 }; i < swapChainImageViews.size(); i++)
+	{
 		std::array<VkImageView, 2> _attachments{ swapChainImageViews[i], depthImageView };
 
 		VkFramebufferCreateInfo _framebufferInfo{};
@@ -835,7 +970,7 @@ void cs::VulkanEngineRenderer::CreateFramebuffers()
 		_framebufferInfo.layers = 1;
 
 		if (vkCreateFramebuffer(device, &_framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS)
-			throw std::runtime_error("failed to create framebuffer!");
+			throw std::runtime_error("[FAIL]\t: Failed to create framebuffer.");
 	}
 }
 
@@ -849,7 +984,7 @@ void cs::VulkanEngineRenderer::CreateCommandPool()
 	_poolInfo.flags = 0;
 
 	if (vkCreateCommandPool(device, &_poolInfo, nullptr, &commandPool) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to create command pool.");
+		throw std::runtime_error("[FAIL]\t: Failed to create command pool.");
 }
 
 void cs::VulkanEngineRenderer::CreateDepthResources()
@@ -867,7 +1002,7 @@ void cs::VulkanEngineRenderer::CreateTextureImage()
 	VkDeviceSize _imageSize{ static_cast<uint64_t>(_texWidth * _texHeight * 4) }; // 4 color channels (r, g, b, a)
 
 	if (!_pixels)
-		throw std::runtime_error("[FAIL] :\tFailed to load texture image.");
+		throw std::runtime_error("[FAIL]\t:Failed to load texture image.");
 
 	VkBuffer _stagingBuffer;
 	VkDeviceMemory _stagingBufferMemory;
@@ -941,21 +1076,23 @@ void cs::VulkanEngineRenderer::CreateUniformBuffers()
 
 void cs::VulkanEngineRenderer::CreateDescriptorPool()
 {
+	// we have to give each object their own descriptor pool, for now.
+	// we may use the same descriptor pool for each object if every object is completely the same
+	uint32_t _swapChainSize{ static_cast<uint32_t>(swapChainImages.size()) };
+
 	for (auto object : ChinaEngine::GetObjects())
 	{
-		std::array<VkDescriptorPoolSize, 2> poolSizes{};
-		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
-		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
-		// here we can bind more descriptor pools
-		// might also want to also prepare stuff in CreateDescriptorSetLayout()
+		VkDescriptorPoolSize _poolSizes[]
+		{
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, _swapChainSize },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, _swapChainSize }
+		};
 
 		VkDescriptorPoolCreateInfo _poolInfo{};
 		_poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		_poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-		_poolInfo.pPoolSizes = poolSizes.data();
-		_poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());
+		_poolInfo.poolSizeCount = IM_ARRAYSIZE(_poolSizes);
+		_poolInfo.pPoolSizes = _poolSizes;
+		_poolInfo.maxSets = _swapChainSize;
 
 		if (vkCreateDescriptorPool(device, &_poolInfo, nullptr, &object->descriptorPool) != VK_SUCCESS)
 			throw std::runtime_error("[FAIL] :\tFailed to create descriptor pool.");
@@ -1025,21 +1162,22 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 
 	VkCommandBufferAllocateInfo _allocInfo{};
 	_allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	_allocInfo.commandPool = commandPool;
 	_allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	_allocInfo.commandPool = commandPool;
 	_allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
 
 	if (vkAllocateCommandBuffers(device, &_allocInfo, commandBuffers.data()) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to allocate command buffers.");
+		throw std::runtime_error("[FAIL]\t: Failed to allocate command buffers.");
 
-	for (size_t i{ 0 }; i < commandBuffers.size(); i++) {
+	for (size_t i{ 0 }; i < commandBuffers.size(); i++)
+	{
 		VkCommandBufferBeginInfo _beginInfo{};
 		_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		_beginInfo.flags = 0;
 		_beginInfo.pInheritanceInfo = nullptr;
 
 		if (vkBeginCommandBuffer(commandBuffers[i], &_beginInfo) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL] :\tFailed to begin recording command buffer.");
+			throw std::runtime_error("[FAIL]\t: Failed to begin recording command buffer.");
 
 		VkRenderPassBeginInfo _renderPassInfo{};
 		_renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1058,16 +1196,15 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 		vkCmdBeginRenderPass(commandBuffers[i], &_renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-		VkBuffer _vertexBuffers[]{ vertexBuffer };
-		// we need a for-loop in order to draw all of the meshes... (a for-loop per object perhaps?)
-		// offsets for the vertices goes below
-		// out from the current object we retrive ubo(descriptor sets) info, index and vertex offests
 		for (auto object : ChinaEngine::GetObjects())
 		{
-			VkDeviceSize _offsets[]{ object->mesh->vertexBufferOffset };
-			vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, _vertexBuffers, _offsets);
+			// NOTE : In the future, when we use multi instance with vkCmdDrawIndexed.
+			//        We want to go in to each object that has their own spcialized Vulkan commands
+			//        We will do it with the bullet rendering / sprite rendering and just adjust the
+			//        sizes through shaders
+
+			vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, &vertexBuffer, &object->mesh->vertexBufferOffset);
 			vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, object->mesh->indexBufferOffset, VK_INDEX_TYPE_UINT32);
-			// here we need to know the offset of the descriptor of the shader we're using per. object // &object->GetDescriptorSet()
 			vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &object->descriptorSets[i], 0, nullptr);
 
 			// the current mesh index, with its indices goes down below
@@ -1077,7 +1214,7 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 		vkCmdEndRenderPass(commandBuffers[i]);
 
 		if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL] :\tFailed to record command buffer.");
+			throw std::runtime_error("[FAIL]\t: Failed to record command buffer.");
 	}
 }
 
@@ -1149,7 +1286,7 @@ VkImageView cs::VulkanEngineRenderer::CreateImageView(VkImage image, VkFormat fo
 
 	VkImageView _imageView;
 	if (vkCreateImageView(device, &_viewInfo, nullptr, &_imageView) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to create texture image view.");
+		throw std::runtime_error("[FAIL]\t: Failed to create texture image view.");
 
 	return _imageView;
 }
@@ -1189,6 +1326,9 @@ void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 {
 	for (auto object : ChinaEngine::GetObjects())
 	{
+		if (!object->active)
+			continue;
+
 		void* _data;
 		vkMapMemory(device, uniformBuffersMemory[currentImage], object->uboOffset, object->GetUBOSize(), 0, &_data);
 		memcpy(_data, &(*object->ubo), object->GetUBOSize());
@@ -1362,6 +1502,14 @@ void cs::VulkanEngineRenderer::RecreateSwapChain()
 	CreateCommandBuffers();
 
 	imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
+
+	ImGuiRenderPass();
+	ImGuiFramebuffers();
+	ImGuiCommandPool();
+	ImGuiDescriptorPool();
+	ImGuiCommandBuffers();
+
+	ImGui_ImplVulkan_SetMinImageCount(static_cast<uint32_t>(swapChainImages.size()));
 }
 
 void cs::VulkanEngineRenderer::CleanupSwapChain()
@@ -1392,6 +1540,14 @@ void cs::VulkanEngineRenderer::CleanupSwapChain()
 
 	for (auto object : ChinaEngine::GetObjects())
 		vkDestroyDescriptorPool(device, object->descriptorPool, nullptr);
+
+	for (auto framebuffer : imGuiFramebuffers)
+		vkDestroyFramebuffer(device, framebuffer, nullptr);
+
+	vkDestroyRenderPass(device, imGuiRenderPass, nullptr);
+
+	vkFreeCommandBuffers(device, imGuiCommandPool, static_cast<uint32_t>(imGuiCommandBuffers.size()), imGuiCommandBuffers.data());
+	vkDestroyCommandPool(device, imGuiCommandPool, nullptr);
 }
 
 VkShaderModule cs::VulkanEngineRenderer::CreateShaderModule(const std::vector<char>& code)

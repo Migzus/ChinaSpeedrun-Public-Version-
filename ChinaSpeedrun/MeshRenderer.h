@@ -19,6 +19,7 @@ namespace cs
 	class MeshRenderer : public Component
 	{
 	public:
+		bool active;								 // TEMP 
 		std::vector<class Material*> materials;
 		class Mesh* mesh;
 		struct UniformBufferObject* ubo;             // TEMP

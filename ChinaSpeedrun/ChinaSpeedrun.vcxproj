@@ -164,6 +164,7 @@
     <ClCompile Include="..\Libraries\imgui\src\imgui_widgets.cpp" />
     <ClCompile Include="AudioComponent.cpp" />
     <ClCompile Include="AudioSystem.cpp" />
+    <ClCompile Include="BulletManagerComponent.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="CameraSystem.cpp" />
     <ClCompile Include="ChinaEngine.cpp" />
@@ -181,6 +182,7 @@
     <ClCompile Include="Resource.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Time.cpp" />
     <ClCompile Include="TransformComponent.cpp" />
     <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="VulkanEngineRenderer.cpp" />
@@ -189,6 +191,7 @@
   <ItemGroup>
     <ClInclude Include="AudioComponent.h" />
     <ClInclude Include="AudioSystem.h" />
+    <ClInclude Include="BulletManagerComponent.h" />
     <ClInclude Include="CameraComponent.h" />
     <ClInclude Include="CameraSystem.h" />
     <ClInclude Include="ChinaCoreHeader.h" />
@@ -206,6 +209,7 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="Time.h" />
     <ClInclude Include="TransformComponent.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="VulkanEngineRenderer.h" />

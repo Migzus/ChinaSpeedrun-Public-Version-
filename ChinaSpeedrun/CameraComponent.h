@@ -2,13 +2,22 @@
 
 #include "Mathf.h"
 
-namespace cs {
+namespace cs
+{
+    enum class ProjectionView
+    {
+        PERSPECTIVE,
+        ORTHOGRAPHIC
+    };
+
     struct CameraComponent
     {
-        CameraComponent();
         float angle, aspect, close, distant;
-        Matrix4x4 proj, view;
+        ProjectionView projection;
         Vector3 forward, up, right;
         Vector3 position;
+        Matrix4x4 proj, view;
+
+        CameraComponent();
     };
 }

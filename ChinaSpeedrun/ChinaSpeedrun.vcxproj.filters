@@ -63,6 +63,10 @@
     <ClCompile Include="AudioComponent.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
+    <ClCompile Include="BulletManagerComponent.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="Time.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -106,6 +110,10 @@
     <ClInclude Include="AudioComponent.h">
       <Filter>ecs</Filter>
     </ClInclude>
+    <ClInclude Include="BulletManagerComponent.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="Time.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

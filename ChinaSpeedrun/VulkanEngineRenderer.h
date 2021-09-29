@@ -2,6 +2,10 @@
 
 #include "ChinaCoreHeader.h"
 
+#ifndef NDEBUG
+#define IMGUI_VULKAN_DEBUG_REPORT
+#endif
+
 namespace cs
 {
 	struct QueueFamilyIndices
@@ -40,11 +44,11 @@ namespace cs
 		void GetViewportSize(int& widthRef, int& heightRef) const;
 		void DrawFrame();
 		void Redraw(); // TEMP func
+		VkDevice const& GetDevice();
 
 		float AspectRatio() const;
 
 		GLFWwindow* GetWindow();
-		VkDevice& GetDevice();
 
 		~VulkanEngineRenderer();
 
@@ -82,6 +86,13 @@ namespace cs
 		VkDeviceSize textureBufferSize, vertexBufferSize, indexBufferSize;
 		VkDeviceSize currentTextureOffset, currentVertexOffset, currentIndexOffset;
 
+		// Spesific to ImGui Stuff
+		VkRenderPass imGuiRenderPass;
+		VkDescriptorPool imGuiDescriptorPool;
+		VkCommandPool imGuiCommandPool;
+		std::vector<VkCommandBuffer> imGuiCommandBuffers;
+		std::vector<VkFramebuffer> imGuiFramebuffers;
+
 		VkImageView textureImageView, depthImageView;
 		VkSampler textureSampler;
 		VkImage textureImage, depthImage;
@@ -104,8 +115,13 @@ namespace cs
 		void InitWindow();
 		void InitVulkan();
 		void InitImGui();
-		void ImGuiFrame(); // depending on availability needs, we might make this public
 		void Cleanup();
+
+		void ImGuiRenderPass();
+		void ImGuiFramebuffers();
+		void ImGuiDescriptorPool();
+		void ImGuiCommandPool();
+		void ImGuiCommandBuffers();
 
 		void CreateInstance();
 		void SetupDebugMessenger();
