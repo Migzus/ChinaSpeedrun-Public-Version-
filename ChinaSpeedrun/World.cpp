@@ -8,14 +8,14 @@
 #include "MovementComponent.h"
 #include "MovementSystem.h"
 
-cs::World::World() {
+World::World() {
 	/*entt::entity _entity = registry.create();
 	registry.emplace<CameraComponent>(_entity);
 	registry.emplace<TransformComponent>(_entity);
 	registry.emplace<MovementComponent>(_entity);*/
 }
 
-void cs::World::Step()
+void World::Step()
 {
 	/*
 	auto _group = registry.group<MovementComponent>(entt::get<TransformComponent>);

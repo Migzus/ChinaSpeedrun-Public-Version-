@@ -1,11 +1,11 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
+#include <vector>
 
 #include "Mathf.h"
 #include "Resource.h"
-
-#include <vector>
+#include "Vertex.h"
 
 namespace cs
 {
@@ -15,7 +15,7 @@ namespace cs
 		VkDeviceSize vertexBufferOffset, vertexSize, indexBufferOffset, indexSize;
 
 		Mesh();
-		Mesh(std::vector<class Vertex> vertexArray, std::vector<uint32_t> indexArray);
+		Mesh(std::vector<class cs::Vertex> vertexArray, std::vector<uint32_t> indexArray);
 
 		static Mesh* CreateDefaultPlane(const Vector2 extent = Vector2(1.0f, 1.0f));
 		static Mesh* CreateDefaultCube(const Vector3 extent = Vector3(1.0f, 1.0f, 1.0f));

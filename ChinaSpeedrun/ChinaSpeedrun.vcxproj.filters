@@ -67,6 +67,7 @@
       <Filter>ecs</Filter>
     </ClCompile>
     <ClCompile Include="Time.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -114,6 +115,7 @@
       <Filter>ecs</Filter>
     </ClInclude>
     <ClInclude Include="Time.h" />
+    <ClInclude Include="ResourceManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

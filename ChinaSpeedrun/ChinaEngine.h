@@ -14,9 +14,8 @@ namespace cs
 	class ChinaEngine
 	{
 	public:
-		static class World* world;
+		//static class World* world;
 		static class VulkanEngineRenderer const& GetVulkanRenderer();
-		static std::vector<char> ReadFile(const std::string& filename);
 
 		static void Run();
 		static std::vector<class MeshRenderer*> const& GetObjects();

@@ -35,7 +35,7 @@ void cs::MeshRenderer::Update(size_t index)
 	// this is a workaround the minimization problem, we give this perspective calculation a 0 aspect ratio value, the calculation results in a 0 division error
 	// another way to prevent this is to store the latest valid aspect ratio and store that, then use that
 	// or lastly, calculate the aspect ratio only when the window changes (not when any of the window aspects are 0)
-	if (ChinaEngine::AspectRatio() > 0)
+	if (ChinaEngine::AspectRatio() > 0.0f)
 		ubo->proj = glm::perspective(Mathf::PI * 0.25f, ChinaEngine::AspectRatio(), 0.1f, 10.0f);
 	ubo->proj[1][1] *= -1;
 }

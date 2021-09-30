@@ -1,13 +1,13 @@
 #include "Shader.h"
 
 //#include "vulkan/vulkan.h"
-#include "ChinaEngine.h" // will move all vulkan logic in a separate class, current work around
+//#include "ChinaEngine.h" // will move all vulkan logic in a separate class, current work around
 
 cs::Shader::Shader(std::vector<std::string> paths)
 {
 	for (size_t i{ 0 }; i < paths.size(); i++)
 	{
-		auto _shaderCode{ cs::ChinaEngine::ReadFile(paths[i]) };
+		//auto _shaderCode{ cs::ChinaEngine::ReadFile(paths[i]) };
 
 
 

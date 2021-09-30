@@ -22,7 +22,7 @@
 
 using namespace cs;
 
-World* ChinaEngine::world;
+//World* ChinaEngine::world;
 VulkanEngineRenderer ChinaEngine::renderer;
 std::vector<Shader*> ChinaEngine::shaders;
 std::vector<Material*> ChinaEngine::materials;
@@ -33,24 +33,6 @@ std::vector<MeshRenderer*> ChinaEngine::objects;
 VulkanEngineRenderer const& ChinaEngine::GetVulkanRenderer()
 {
 	return renderer;
-}
-
-std::vector<char> ChinaEngine::ReadFile(const std::string& filename)
-{
-	std::ifstream _file{ filename, std::ios::ate | std::ios::binary };
-
-	if (!_file.is_open())
-		throw std::runtime_error("[FAIL] :\tFailed to open " + filename);
-
-	size_t _fileSize{ (size_t)_file.tellg() };
-	std::vector<char> _buffer(_fileSize);
-
-	_file.seekg(0);
-	_file.read(_buffer.data(), _fileSize);
-
-	_file.close();
-
-	return _buffer;
 }
 
 void ChinaEngine::Run()
@@ -188,7 +170,7 @@ Mesh* cs::ChinaEngine::LoadOBJ(std::string filename)
 
 void ChinaEngine::EngineInit()
 {
-	world = new World;
+	//world = new World;
 
 	Shader* _shader{ new Shader({ "../Resources/shaders/vert.spv", "../Resources/shaders/frag.spv" }) };
 	Material* _material{ new Material(_shader) };
@@ -211,7 +193,8 @@ void ChinaEngine::EngineInit()
 	_obj2->active = false;
 	_obj3->active = true;
 
-	//Texture* _texture{ ResourceManager::Load<Texture>("../Resources/textures/varg_flush.png") };
+	Texture* _texture{ ResourceManager::Load<Texture>("../Resources/textures/varg_flush.png") };
+	Mesh* _mesh{ ResourceManager::Load<Mesh>("../Resources/textures/varg_flush.png") };
 }
 
 void cs::ChinaEngine::InitInput()
@@ -239,7 +222,7 @@ void cs::ChinaEngine::MainLoop()
 		ImGui::NewFrame();
 		ImGui::ShowDemoWindow();
 
-		world->Step();
+		//world->Step();
 
 		for (size_t i{ 0 }; i < objects.size(); i++)
 			objects[i]->Update(i);
@@ -259,15 +242,5 @@ void cs::ChinaEngine::EngineExit()
 	for (auto object : objects)
 		delete object;
 
-	for (auto mesh : meshes)
-		delete mesh;
-
-	for (auto texture : textures)
-		delete texture;
-
-	for (auto material : materials)
-		delete material;
-
-	for (auto shader : shaders)
-		delete shader;
+	ResourceManager::ClearAllResourcePools();
 }

@@ -3,7 +3,6 @@
 #include <iterator>
 
 #include "Material.h"
-#include "Vertex.h"
 
 cs::Mesh::Mesh() :
 	vertices{}, indices{}

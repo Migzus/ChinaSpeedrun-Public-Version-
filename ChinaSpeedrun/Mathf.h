@@ -21,9 +21,6 @@ typedef glm::mat4 Matrix4x4;
 
 typedef glm::quat Quaternion;
 
-//typedef M_PI PI;
-//typedef M_PI_2 TAU;
-
 namespace cs
 {
 	class Mathf
