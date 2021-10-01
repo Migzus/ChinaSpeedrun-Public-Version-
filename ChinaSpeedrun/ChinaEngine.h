@@ -4,8 +4,6 @@
 
 #include "Mathf.h"
 
-#include "World.h"
-
 namespace cs
 {
 	struct UniformBufferObject
@@ -16,7 +14,7 @@ namespace cs
 	class ChinaEngine
 	{
 	public:
-		static class World world;
+		//static class World* world;
 		static class VulkanEngineRenderer const& GetVulkanRenderer();
 
 		static void Run();

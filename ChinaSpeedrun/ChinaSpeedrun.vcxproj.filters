@@ -68,7 +68,6 @@
     </ClCompile>
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
-    <ClCompile Include="MeshRendererSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -117,7 +116,6 @@
     </ClInclude>
     <ClInclude Include="Time.h" />
     <ClInclude Include="ResourceManager.h" />
-    <ClInclude Include="MeshRendererSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

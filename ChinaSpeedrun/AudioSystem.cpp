@@ -1,7 +1,4 @@
 #include "AudioSystem.h"
-#include "AudioComponent.h"
-
-#include "TransformComponent.h"
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -107,7 +104,7 @@ void AudioSystem::Load(std::string path) {
 	buffer.index++;
 }
 
-ALuint AudioSystem::Play(std::string name)
+void AudioSystem::Play(std::string name)
 {
 	unsigned const _bi = soundMap[name];
 
@@ -115,28 +112,7 @@ ALuint AudioSystem::Play(std::string name)
 
 	alSourcePlay(source[source.index]);
 
-	unsigned currentIndex = source.index;
-
 	source.index = (source.index + 1) % source.max;
-
-	return currentIndex;
-}
-
-void AudioSystem::UpdatePlay(AudioComponent& ac)
-{
-	if (ac.play) {
-		ac.play = false;
-		ac.sid = Play(ac.soundName);
-		ac.isPlaying = true;
-		alSource3f(ac.sid, AL_POSITION, 0.f, 0.f, 0.f);
-	}
-}
-
-void AudioSystem::UpdateLocation(AudioComponent& ac, const TransformComponent& tc)
-{
-	if (ac.isPlaying) {
-		alSource3f(ac.sid, AL_POSITION, tc.position.x, tc.position.y, tc.position.z);
-	}
 }
 
 #undef alec
