@@ -26,7 +26,7 @@ void cs::MeshRenderer::Update(size_t index)
 	// when we add support for a script component, then we can talk about
 	// custom logic per entity (this is just a simple workaround)
 	if (index == 0)
-		ubo->model = glm::rotate(Matrix4x4(1.0f), Time::time * glm::radians(90.0f), Vector3(0.0f, 1.0f, 1.0f));
+		ubo->model = glm::rotate(ubo->model, glm::radians(1.0f), Vector3(0.0f, 1.0f, 1.0f));
 	else if (index == 1)
 		ubo->model = glm::rotate(glm::translate(Matrix4x4(1.0f), Vector3(-0.4f, 1.0f, 0.0f)), Time::time * glm::radians(90.0f), Vector3(0.0f, 0.0f, -1.0f));
 	else if (index == 2)

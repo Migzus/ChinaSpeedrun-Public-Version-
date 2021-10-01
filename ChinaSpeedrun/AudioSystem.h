@@ -11,28 +11,34 @@
 #include <string>
 #include <map>
 
+// Forward declare openal uint type
+typedef unsigned int ALuint;
+
 // Potential structs to group important data
 struct AudioBufferBlob {
 public:
-	static constexpr unsigned max{ 10 };
-	unsigned index;
-	unsigned buffer[max];
-	unsigned operator [](unsigned i) const { return buffer[i]; }
-	unsigned& operator [](unsigned i) { return buffer[i]; }
+	static constexpr ALuint max{ 10 };
+	ALuint index;
+	ALuint buffer[max];
+	ALuint operator [](unsigned i) const { return buffer[i]; }
+	ALuint& operator [](unsigned i) { return buffer[i]; }
 	AudioBufferBlob();
 private:
 };
 
 struct AudioSourceBlob {
 public:
-	static constexpr unsigned max{ 100 };
-	unsigned index;
-	unsigned source[max];
-	unsigned operator [](unsigned i) const { return source[i]; }
-	unsigned& operator [](unsigned i) { return source[i]; }
+	static constexpr ALuint max{ 100 };
+	ALuint index;
+	ALuint source[max];
+	ALuint operator [](ALuint i) const { return source[i]; }
+	ALuint& operator [](ALuint i) { return source[i]; }
 	AudioSourceBlob();
 private:
 };
+
+class AudioComponent;
+class TransformComponent;
 
 class AudioSystem
 {
@@ -41,8 +47,9 @@ public:
 	~AudioSystem();
 	void Init();
 	void Load(std::string path);
-	void Play(std::string name);
-
+	ALuint Play(std::string name);
+	void UpdatePlay(AudioComponent& ac);
+	void UpdateLocation(AudioComponent& ac, const TransformComponent& tc);
 private:
 	std::map<std::string, unsigned> soundMap;
 	AudioBufferBlob buffer;

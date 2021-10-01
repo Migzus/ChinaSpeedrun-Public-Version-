@@ -16,13 +16,15 @@
 #include "World.h"
 #include "MovementComponent.h"
 #include "CameraComponent.h"
+#include "AudioComponent.h"
+#include "TransformComponent.h"
 #include "AudioSystem.h"
 
 #include "Time.h"
 
 using namespace cs;
 
-//World* ChinaEngine::world;
+World ChinaEngine::world;
 VulkanEngineRenderer ChinaEngine::renderer;
 std::vector<Shader*> ChinaEngine::shaders;
 std::vector<Material*> ChinaEngine::materials;
@@ -70,7 +72,15 @@ MeshRenderer* ChinaEngine::InstanceObject(Mesh* mesh, Material* material, const 
 	if (mesh == nullptr)
 		return nullptr;
 
-	MeshRenderer* _newObject{ new MeshRenderer };
+	auto _entity{ world.registry.create() };
+
+	MeshRenderer* _newObject{ &world.registry.emplace<MeshRenderer>(_entity) };
+
+	auto _transform = world.registry.emplace<TransformComponent>(_entity);
+
+	_transform.position = position;
+	_transform.scale = Vector3(1.f);
+	_transform.rotation = Vector3(0.f);
 
 	// for now we just push one material, but we'll add support for more later
 	_newObject->mesh = mesh;
@@ -170,8 +180,6 @@ Mesh* cs::ChinaEngine::LoadOBJ(std::string filename)
 
 void ChinaEngine::EngineInit()
 {
-	//world = new World;
-
 	Shader* _shader{ new Shader({ "../Resources/shaders/vert.spv", "../Resources/shaders/frag.spv" }) };
 	Material* _material{ new Material(_shader) };
 
@@ -188,6 +196,11 @@ void ChinaEngine::EngineInit()
 	MeshRenderer* _obj1{ InstanceObject(_mesh1, _material, Vector3(-1.3f, 0.0f, 1.2f)) };
 	MeshRenderer* _obj2{ InstanceObject(_mesh2, _material, Vector3(-0.45f, 0.7f, 0.0f)) };
 	MeshRenderer* _obj3{ InstanceObject(_mesh3, _material, Vector3(0.0f, 1.0f, 0.0f)) };
+
+	world.registry.emplace<AudioComponent>(*world.registry.view<MeshRenderer>().begin());
+
+	auto _view = world.registry.view<MeshRenderer>();
+	world.registry.get(*_view.begin());
 
 	_obj1->active = true;
 	_obj2->active = false;
@@ -222,7 +235,14 @@ void cs::ChinaEngine::MainLoop()
 		ImGui::NewFrame();
 		ImGui::ShowDemoWindow();
 
-		//world->Step();
+		world.Step();
+
+		if (Input::GetActionPressed("accept")) {
+			auto _view = world.registry.view<AudioComponent>();
+			for (auto _entity : _view) {
+				_view.get<AudioComponent>(_entity).play = true;
+			}
+		}
 
 		for (size_t i{ 0 }; i < objects.size(); i++)
 			objects[i]->Update(i);
@@ -239,8 +259,10 @@ void cs::ChinaEngine::MainLoop()
 
 void cs::ChinaEngine::EngineExit()
 {
-	for (auto object : objects)
-		delete object;
+	world.registry.clear();
+
+	/*for (auto object : objects)
+		delete object;*/
 
 	ResourceManager::ClearAllResourcePools();
 }
