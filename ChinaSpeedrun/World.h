@@ -2,10 +2,15 @@
 
 #include <entt/entt.hpp>
 
-class World
+namespace cs
 {
-public:
-	World();
-	void Step();
-	entt::registry registry;
-};
+	class World
+	{
+	public:
+		entt::registry registry;
+		
+		World();
+		
+		void Step();
+	};
+}

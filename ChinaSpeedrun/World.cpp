@@ -2,21 +2,18 @@
 
 #include <iostream>
 
-#include "CameraComponent.h"
-#include "CameraSystem.h"
-#include "TransformComponent.h"
-#include "MovementComponent.h"
-#include "MovementSystem.h"
+#include "Transform.h"
+#include "MeshRenderer.h"
 
-World::World()
+cs::World::World()
 {
 	//entt::entity _entity{ registry.create() };
 	//registry.emplace<CameraComponent>(_entity);
 	//registry.emplace<TransformComponent>(_entity);
-	//registry.emplace<MovementComponent>(_entity);
+	//registry.emplace<MeshRendererComponent>(_entity);
 }
 
-void World::Step()
+void cs::World::Step()
 {
 	/*
 	auto _group = registry.group<MovementComponent>(entt::get<TransformComponent>);

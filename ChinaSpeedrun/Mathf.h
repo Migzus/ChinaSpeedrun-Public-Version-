@@ -21,6 +21,12 @@ typedef glm::mat4 Matrix4x4;
 
 typedef glm::quat Quaternion;
 
+/*
+namespace glm
+{
+	constexpr static Vector3 up{ Vector3(0.0f, 1.0f, 0.0f) };
+}*/
+
 namespace cs
 {
 	class Mathf

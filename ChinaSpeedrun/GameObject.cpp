@@ -38,7 +38,7 @@ void cs::GameObject::QueueFree()
 
 cs::GameObject::~GameObject()
 {
-	QueueFree();
+	
 }
 
 void cs::GameObject::ComponentInit()

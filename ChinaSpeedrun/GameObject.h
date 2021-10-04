@@ -3,8 +3,7 @@
 // This is the object that we can instance in the scene
 // We can attatch any component to this object
 
-#include "entt/entt.hpp"
-
+#include "World.h"
 #include "ChinaEngine.h"
 
 #include <vector>
@@ -39,19 +38,19 @@ namespace cs
 		
 		// Add the spesified component
 		template<class T>
-		void AddComponent();
+		T& AddComponent();
 		// Gets a component of this type
 		template<class T>
-		T* GetComponent(const uint8_t componentSkipCount = 0);
+		T& GetComponent(const uint8_t componentSkipCount = 0);
 		// Gets the component at the specified index (This is the fastes method to get a component)
 		template<class T>
-		T* GetComponentAt(const uint8_t componentIndex);
+		T& GetComponentAt(const uint8_t componentIndex);
 		// Gets all of the components of this type
 		template<class T>
-		std::vector<T*> GetComponents();
+		std::vector<T&> GetComponents();
 		// Removes the selected
 		template<class T>
-		void RemoveComponent(const T* component);
+		void RemoveComponent(const T& component);
 		// Removes all of the components stored
 		void RemoveAllComponents();
 		// Removes all the components of spsified type
@@ -65,31 +64,31 @@ namespace cs
 	};
 
 	template<class T>
-	inline void GameObject::AddComponent()
+	inline T& GameObject::AddComponent()
 	{
-		//ChinaEngine::world.regestry.emplace<T>(entity);
+		return ChinaEngine::world.registry.emplace<T>(entity);
 	}
 
 	template<class T>
-	inline T* GameObject::GetComponent(const uint8_t componentSkipCount)
-	{
-
-	}
-
-	template<class T>
-	inline T* GameObject::GetComponentAt(const uint8_t componentIndex)
+	inline T& GameObject::GetComponent(const uint8_t componentSkipCount)
 	{
 
 	}
 
 	template<class T>
-	inline std::vector<T*> GameObject::GetComponents()
+	inline T& GameObject::GetComponentAt(const uint8_t componentIndex)
 	{
 
 	}
 
 	template<class T>
-	inline void GameObject::RemoveComponent(const T* component)
+	inline std::vector<T&> GameObject::GetComponents()
+	{
+
+	}
+
+	template<class T>
+	inline void GameObject::RemoveComponent(const T& component)
 	{
 
 	}

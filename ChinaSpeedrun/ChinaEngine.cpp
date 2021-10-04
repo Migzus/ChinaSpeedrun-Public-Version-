@@ -12,15 +12,17 @@
 
 #include "Input.h"
 #include "World.h"
-#include "MovementComponent.h"
-#include "CameraComponent.h"
+//#include "MovementComponent.h"
+//#include "CameraComponent.h"
+#include "Transform.h"
 //#include "AudioSystem.h"
 #include "GameObject.h"
 
 #include "Time.h"
 
+cs::World cs::ChinaEngine::world;
 cs::VulkanEngineRenderer cs::ChinaEngine::renderer;
-std::vector<cs::MeshRenderer*> cs::ChinaEngine::objects;
+std::vector<cs::GameObject*> cs::ChinaEngine::objects;
 
 void cs::ChinaEngine::Run()
 {
@@ -30,6 +32,7 @@ void cs::ChinaEngine::Run()
 
 	renderer.Create(800, 600, "China Speedrun");
 
+	// Temporarly pre init all resources (so vulkan can actually use it)
 	ResourceManager::InitializeTest();
 
 	// Temporary solution to a visual glitch
@@ -42,27 +45,23 @@ void cs::ChinaEngine::Run()
 	EngineExit();
 }
 
-std::vector<cs::MeshRenderer*> const& cs::ChinaEngine::GetObjects()
+std::vector<cs::GameObject*> const& cs::ChinaEngine::GetObjects()
 {
 	return objects;
 }
 
-cs::MeshRenderer* cs::ChinaEngine::InstanceObject(Mesh* mesh, Material* material, const Vector3 position)
+cs::GameObject* cs::ChinaEngine::InstanceObject(const char* name, const Vector3 position, const Vector3 rotation, const Vector3 scale)
 {
-	if (mesh == nullptr)
-		return nullptr;
+	GameObject* _newObject{ new GameObject };
+	_newObject->entity = world.registry.create();
+	_newObject->name = name;
 
-	MeshRenderer* _newObject{ new MeshRenderer };
-
-	// for now we just push one material, but we'll add support for more later
-	_newObject->mesh = mesh;
-	_newObject->materials.push_back(material);
-	_newObject->uboOffset = sizeof(UniformBufferObject) * objects.size(); // haha.. we won't do this in the future... what if we wanted to delete objects... it would be devastating
-	_newObject->ubo->model = glm::translate(Matrix4x4(1.0f), position);
-	_newObject->ubo->view = glm::lookAt(Vector3(2.0f, 2.0f, 2.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, 1.0f));
+	TransformComponent& _transform{ _newObject->AddComponent<TransformComponent>() };
+	_transform.position = position;
+	_transform.rotation = rotation;
+	_transform.scale = scale;
 
 	objects.push_back(_newObject);
-
 	return _newObject;
 }
 
@@ -74,29 +73,32 @@ float cs::ChinaEngine::AspectRatio()
 void cs::ChinaEngine::EngineInit()
 {
 	Shader* _shader{ ResourceManager::Load<Shader>("../Resources/shaders/default_shader") };
-	Material* _material{ ResourceManager::Load<Material>("./Resources/materials/test.mat") };
+	Material* _material{ ResourceManager::Load<Material>("../Resources/materials/test.mat") };
+
+	//_material->shader = _shader;
 
 	// these make no difference when spawning an object... yet
 	// meaning you can't assign these textures to any models...
 	Texture* _vargFlush{ ResourceManager::Load<Texture>("../Resources/textures/varg_flush.png") };
 	Texture* _junkoGyate{ ResourceManager::Load<Texture>("../Resources/textures/junko_gyate.png") };
-
-	Mesh* _mesh1{ Mesh::CreateDefaultCube({0.1f, 0.1f, 1.0f}) };
-	Mesh* _mesh2{ Mesh::CreateDefaultPlane({0.5f, 0.5f}) };
-	Mesh* _mesh3{ ResourceManager::Load<Mesh>("../Resources/models/suzanne.obj") };
+	Texture* _chaikaSmile{ ResourceManager::Load<Texture>("../Resources/textures/chaika_smile.png") };
 
 	// for now we're just creating objects like this... will change this in the future
-	MeshRenderer* _obj1{ InstanceObject(_mesh1, _material, Vector3(-1.3f, 0.0f, 1.2f)) };
-	MeshRenderer* _obj2{ InstanceObject(_mesh2, _material, Vector3(-0.45f, 0.7f, 0.0f)) };
-	MeshRenderer* _obj3{ InstanceObject(_mesh3, _material, Vector3(0.0f, 1.0f, 0.0f)) };
+	GameObject* _cube{ InstanceObject("Cube", Vector3(-1.3f, 0.0f, 1.2f)) };
+	GameObject* _plane{ InstanceObject("Plane", Vector3(-0.45f, 0.7f, 0.0f)) };
+	GameObject* _suzanne{ InstanceObject("Suzanne") };
 
-	_obj1->active = true;
-	_obj2->active = true;
-	_obj3->active = true;
+	MeshRendererComponent& _meshRendererCube{ _cube->AddComponent<MeshRendererComponent>() };
+	_meshRendererCube.mesh = Mesh::CreateDefaultCube({ 0.1f, 0.1f, 1.0f });
+	_meshRendererCube.materials.push_back(_material);
 
-	_obj1->name = "Cube";
-	_obj2->name = "Plane";
-	_obj3->name = "Suzanne";
+	MeshRendererComponent& _meshRendererPlane{ _plane->AddComponent<MeshRendererComponent>() };
+	_meshRendererPlane.mesh = Mesh::CreateDefaultPlane({ 0.5f, 0.5f });
+	_meshRendererPlane.materials.push_back(_material);
+
+	MeshRendererComponent& _meshRendererMonke{ _suzanne->AddComponent<MeshRendererComponent>() };
+	_meshRendererMonke.mesh = ResourceManager::Load<Mesh>("../Resources/models/suzanne.obj");
+	_meshRendererMonke.materials.push_back(_material);
 }
 
 void cs::ChinaEngine::ImGuiStyleInit()
@@ -127,7 +129,7 @@ void cs::ChinaEngine::ImGuiDraw()
 	{
 		if (ImGui::TreeNode("Main Scene"))
 		{
-			for (MeshRenderer* object : objects)
+			for (GameObject* object : objects)
 			{
 				ImGui::Text(object->name.c_str());
 				if (ImGui::IsItemHovered())
@@ -158,10 +160,10 @@ void cs::ChinaEngine::MainLoop()
 
 		ImGuiDraw();
 
-		//world->Step();
+		world.Step();
 
-		for (size_t i{ 0 }; i < objects.size(); i++)
-			objects[i]->Update(i);
+		//for (size_t i{ 0 }; i < objects.size(); i++)
+		//	objects[i]->Update();
 
 		renderer.DrawFrame();
 		Input::FinishFrame();

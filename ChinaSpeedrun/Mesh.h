@@ -12,8 +12,8 @@ namespace cs
 	class Mesh : public Resource
 	{
 	public:
-		VkBuffer vertexBufferRef, indexBufferRef;
-		VkDeviceSize vertexBufferOffset, vertexSize, indexBufferOffset, indexSize;
+		friend class VulkanEngineRenderer;
+		friend class MeshRenderer;
 
 		Mesh();
 		Mesh(std::vector<class cs::Vertex> vertexArray, std::vector<uint32_t> indexArray);
@@ -29,8 +29,8 @@ namespace cs
 		std::vector<uint32_t> const& GetIndices() const;
 
 	private:
-		// will remove this in the future
-		// it is deprecated
+		VkBuffer vertexBufferRef, indexBufferRef;
+		VkDeviceSize vertexBufferOffset, vertexSize, indexBufferOffset, indexSize;
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
 	};
