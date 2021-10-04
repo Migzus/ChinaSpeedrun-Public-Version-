@@ -5,3 +5,8 @@
 cs::Material::Material(Shader* newShader) :
 	shader{newShader}
 {}
+
+void cs::Material::Initialize()
+{
+
+}

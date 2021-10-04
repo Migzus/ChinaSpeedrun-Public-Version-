@@ -40,6 +40,16 @@ void cs::MeshRenderer::Update(size_t index)
 	ubo->proj[1][1] *= -1;
 }
 
+void cs::MeshRenderer::VulkanDraw(VkCommandBuffer& commandBuffer, VkPipelineLayout& layout, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer)
+{
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &mesh->vertexBufferOffset);
+	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, mesh->indexBufferOffset, VK_INDEX_TYPE_UINT32);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSets[index], 0, nullptr);
+
+	// the current mesh index, with its indices goes down below
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh->GetIndices().size()), 1, 0, 0, 0);
+}
+
 uint16_t cs::MeshRenderer::GetUBOSize() const
 {
 	return sizeof(UniformBufferObject);

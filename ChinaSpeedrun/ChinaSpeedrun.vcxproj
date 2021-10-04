@@ -169,7 +169,7 @@
     <ClCompile Include="CameraSystem.cpp" />
     <ClCompile Include="ChinaEngine.cpp" />
     <ClCompile Include="Color.cpp" />
-    <ClCompile Include="Component.cpp" />
+    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="InputComponent.cpp" />
     <ClCompile Include="main.cpp" />
@@ -198,7 +198,7 @@
     <ClInclude Include="ChinaCoreHeader.h" />
     <ClInclude Include="ChinaEngine.h" />
     <ClInclude Include="Color.h" />
-    <ClInclude Include="Component.h" />
+    <ClInclude Include="GameObject.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputComponent.h" />
     <ClInclude Include="Material.h" />

@@ -19,9 +19,6 @@
     <ClCompile Include="CameraSystem.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
-    <ClCompile Include="World.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
     <ClCompile Include="MovementComponent.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
@@ -55,7 +52,6 @@
     <ClCompile Include="..\Libraries\imgui\src\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="Component.cpp" />
     <ClCompile Include="Resource.cpp" />
     <ClCompile Include="AudioSystem.cpp">
       <Filter>ecs</Filter>
@@ -68,6 +64,8 @@
     </ClCompile>
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
+    <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -88,9 +86,6 @@
     <ClInclude Include="CameraSystem.h">
       <Filter>ecs</Filter>
     </ClInclude>
-    <ClInclude Include="World.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
     <ClInclude Include="MovementComponent.h">
       <Filter>ecs</Filter>
     </ClInclude>
@@ -103,7 +98,6 @@
     <ClInclude Include="TransformComponent.h">
       <Filter>ecs</Filter>
     </ClInclude>
-    <ClInclude Include="Component.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="AudioSystem.h">
       <Filter>ecs</Filter>
@@ -116,6 +110,8 @@
     </ClInclude>
     <ClInclude Include="Time.h" />
     <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="GameObject.h" />
+    <ClInclude Include="World.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">
