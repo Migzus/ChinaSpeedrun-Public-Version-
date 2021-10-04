@@ -1,6 +1,14 @@
 #include "MeshRenderer.h"
 
+#include "Transform.h"
 #include "Mesh.h"
+#include "ChinaEngine.h"
+#include "World.h"
+
+void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformComponent& transform)
+{
+	meshRenderer.ubo.model = transform.GetMatrixTransform();
+}
 
 void cs::MeshRenderer::VulkanDraw(MeshRendererComponent& meshRenderer, VkCommandBuffer& commandBuffer, VkPipelineLayout& layout, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer)
 {
@@ -10,4 +18,10 @@ void cs::MeshRenderer::VulkanDraw(MeshRendererComponent& meshRenderer, VkCommand
 
 	// the current mesh index, with its indices goes down below
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(meshRenderer.mesh->GetIndices().size()), 1, 0, 0, 0);
+}
+
+cs::MeshRendererComponent::MeshRendererComponent() :
+	mesh{ nullptr }, descriptorSetLayout{ nullptr }, descriptorPool{ nullptr }
+{
+	uboOffset = UniformBufferObject::GetByteSize() * ChinaEngine::world.registry.size<MeshRendererComponent>();
 }

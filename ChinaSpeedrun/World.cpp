@@ -15,11 +15,21 @@ cs::World::World()
 
 void cs::World::Step()
 {
+	auto _objects{ registry.view<MeshRendererComponent, TransformComponent>() };
+	for (auto e : _objects)
+	{
+		auto& _transform{ registry.get<TransformComponent>(e) };
+		auto& _meshRenderer{ registry.get<MeshRendererComponent>(e) };
+
+		Transform::CalculateMatrix(_transform);
+		MeshRenderer::UpdateUBO(_meshRenderer, _transform);
+	}
+
 	/*
-	auto _group = registry.group<MovementComponent>(entt::get<TransformComponent>);
+	auto _group = registry.group<MeshRendererComponent>(entt::get<TransformComponent>);
 	for (auto _entity : _group) {
-		auto& [_movement, _transform] = _group.get<MovementComponent, TransformComponent>(_entity);
-		MovementSystem::HandleMovement(_movement, _transform);
+		auto& [_movement, _transform] = _group.get<MeshRendererComponent, TransformComponent>(_entity);
+		//MovementSystem::HandleMovement(_movement, _transform);
 	}
 	
 	for (int i = 0; i < 10; i++) {

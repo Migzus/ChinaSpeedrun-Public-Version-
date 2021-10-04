@@ -38,7 +38,7 @@ void cs::ChinaEngine::Run()
 	// Temporary solution to a visual glitch
 	renderer.Redraw();
 
-	InitInput();
+	//InitInput();
 	ImGuiStyleInit();
 
 	MainLoop();
@@ -125,6 +125,8 @@ void cs::ChinaEngine::ImGuiDraw()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
+	static GameObject* _activeObject{ nullptr };
+
 	if (ImGui::Begin("Hierarchy"))
 	{
 		if (ImGui::TreeNode("Main Scene"))
@@ -132,8 +134,8 @@ void cs::ChinaEngine::ImGuiDraw()
 			for (GameObject* object : objects)
 			{
 				ImGui::Text(object->name.c_str());
-				if (ImGui::IsItemHovered())
-					ImGui::Text("Hello, I am hovering over %s", object->name.c_str());
+				if (ImGui::IsItemClicked())
+					_activeObject = object;
 			}
 			ImGui::TreePop();
 		}
@@ -143,7 +145,17 @@ void cs::ChinaEngine::ImGuiDraw()
 
 	if (ImGui::Begin("Inspector"))
 	{
-		
+		if (_activeObject != nullptr)
+		{
+			ImGui::Text(_activeObject->name.c_str());
+
+			TransformComponent& _transform{ world.registry.get<TransformComponent>(_activeObject->entity) };
+
+			ImGui::Text("\nTransform");
+			ImGui::InputFloat3("Position", &_transform.position.x);
+			ImGui::InputFloat3("Rotation", &_transform.rotation.x);
+			ImGui::InputFloat3("Scale", &_transform.scale.x);
+		}
 	}
 	ImGui::End();
 

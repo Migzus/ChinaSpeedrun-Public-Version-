@@ -1051,7 +1051,7 @@ void cs::VulkanEngineRenderer::CreateDepthResources()
 void cs::VulkanEngineRenderer::CreateTextureImage()
 {
 	int _texWidth, _texHeight, _texChannels;
-	stbi_uc* _pixels{ stbi_load("../Resources/textures/junko_gyate.png", &_texWidth, &_texHeight, &_texChannels, STBI_rgb_alpha) };
+	stbi_uc* _pixels{ stbi_load("../Resources/textures/chaika_smile.png", &_texWidth, &_texHeight, &_texChannels, STBI_rgb_alpha) };
 	VkDeviceSize _imageSize{ static_cast<uint64_t>(_texWidth * _texHeight * 4) }; // 4 color channels (r, g, b, a)
 
 	if (!_pixels)
@@ -1263,6 +1263,7 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 			// TEMP Solution
 			_meshRenderer.ubo.proj = glm::perspective(Mathf::PI * 0.25f, ChinaEngine::AspectRatio(), 0.1f, 10.0f);
 			_meshRenderer.ubo.view = glm::lookAt(Vector3(2.0f, 2.0f, 2.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, 1.0f));
+			_meshRenderer.ubo.proj[1][1] *= -1.0f;
 
 			MeshRenderer::VulkanDraw(_meshRenderer, commandBuffers[i], pipelineLayout, i, vertexBuffer.buffer, indexBuffer.buffer);
 		}
