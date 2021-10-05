@@ -17,6 +17,7 @@
 #include "Transform.h"
 //#include "AudioSystem.h"
 #include "GameObject.h"
+#include "CameraComponent.h";
 
 #include "Time.h"
 
@@ -38,8 +39,8 @@ void cs::ChinaEngine::Run()
 	// Temporary solution to a visual glitch
 	renderer.Redraw();
 
-	//InitInput();
 	ImGuiStyleInit();
+	InitInput();
 
 	MainLoop();
 	EngineExit();
@@ -99,6 +100,10 @@ void cs::ChinaEngine::EngineInit()
 	MeshRendererComponent& _meshRendererMonke{ _suzanne->AddComponent<MeshRendererComponent>() };
 	_meshRendererMonke.mesh = ResourceManager::Load<Mesh>("../Resources/models/suzanne.obj");
 	_meshRendererMonke.materials.push_back(_material);
+
+	auto _cameraGameObject = new GameObject;
+	_cameraGameObject->entity = world.registry.create();
+	_cameraGameObject->AddComponent<CameraComponent>();
 }
 
 void cs::ChinaEngine::ImGuiStyleInit()

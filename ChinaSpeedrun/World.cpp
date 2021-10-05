@@ -24,12 +24,4 @@ void cs::World::Step()
 		Transform::CalculateMatrix(_transform);
 		MeshRenderer::UpdateUBO(_meshRenderer, _transform);
 	}
-
-	/*
-	auto _group = registry.group<MeshRendererComponent>(entt::get<TransformComponent>);
-	for (auto _entity : _group) {
-		auto& [_movement, _transform] = _group.get<MeshRendererComponent, TransformComponent>(_entity);
-		//MovementSystem::HandleMovement(_movement, _transform);
-	}
-
 }

@@ -56,6 +56,12 @@
     <ClCompile Include="RenderComponent.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraComponent.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -90,6 +96,12 @@
       <Filter>ecs</Filter>
     </ClInclude>
     <ClInclude Include="MeshRenderer.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraComponent.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
       <Filter>ecs</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,5 +1,7 @@
 #include "Input.h"
 
+#include "imgui_impl_glfw.h"
+
 std::map<std::string, Input::Key*> Input::mappings;
 std::map<int, Input::Key*> Input::access;
 std::vector<Input::Key*> Input::input;
@@ -24,6 +26,8 @@ void Input::AddMapping(std::string name, int keycode)
 
 void Input::GlfwKeyfunCallback(GLFWwindow* window, int keycode, int scancode, int action, int mods)
 {
+	ImGui_ImplGlfw_KeyCallback(window, keycode, scancode, action, mods);
+
 	if (access.find(keycode) != access.end())
 	{
 		access.at(keycode)->held |= (action == 1);
