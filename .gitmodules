@@ -1,0 +1,3 @@
+[submodule "Libraries/ImGuizmo"]
+	path = Libraries/ImGuizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo.git
