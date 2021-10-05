@@ -9,6 +9,12 @@ namespace cs
 	public:
 		friend class Camera;
 
+		enum class Projection
+		{
+			ORTHOGRAPHIC,
+			PERSPECTIVE
+		} projection;
+
 		float fov{ 50.0f }, nearPlane{ 0.01f }, farPlane{ 1000.0f };
 
 	private:

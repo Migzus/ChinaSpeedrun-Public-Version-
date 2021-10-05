@@ -3,18 +3,26 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
-class ImGuiLayer
-{
-public:
-	void Init();
-	void Begin();
-	void End();
-	void SetStyle();
+struct ImVec2;
 
-private:
-	VkRenderPass renderPass;
-	VkDescriptorPool descriptorPool;
-	VkCommandPool commandPool;
-	std::vector<VkCommandBuffer> commandBuffers;
-	std::vector<VkFramebuffer> framebuffers;
-};
+namespace cs
+{
+	class ImGuiLayer
+	{
+	public:
+		void Init();
+		void Begin();
+		void End();
+		void SetStyle();
+
+		bool BeginButtonDropDown(const char* label, ImVec2 buttonSize);
+		void EndButtonDropDown();
+
+	private:
+		VkRenderPass renderPass;
+		VkDescriptorPool descriptorPool;
+		VkCommandPool commandPool;
+		std::vector<VkCommandBuffer> commandBuffers;
+		std::vector<VkFramebuffer> framebuffers;
+	};
+}

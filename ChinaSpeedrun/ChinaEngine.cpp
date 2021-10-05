@@ -162,7 +162,7 @@ void cs::ChinaEngine::ImGuiDraw()
 				{
 					TransformComponent& _transform{ world.registry.get<TransformComponent>(_activeObject->entity) };
 
-					ImGui::DragFloat3("Position", &_transform.position.x);
+					ImGui::DragFloat3("Position", &_transform.position.x, 0.1f);
 					ImGui::DragFloat3("Rotation", &_transform.rotationDegrees.x);
 					ImGui::DragFloat3("Scale", &_transform.scale.x);
 
@@ -186,9 +186,12 @@ void cs::ChinaEngine::ImGuiDraw()
 				{
 					CameraComponent& _camera{ world.registry.get<CameraComponent>(_activeObject->entity) };
 
-					ImGui::DragFloat("Field of View", &_camera.fov);
-					ImGui::DragFloat("Near Plane", &_camera.nearPlane);
-					ImGui::DragFloat("Far Plane", &_camera.farPlane);
+					const char* _options[]{ "Projection", "Orthographic" };
+					ImGui::ListBox("Projection", (int*)&_camera.projection, _options, 2);
+
+					ImGui::DragFloat("Field of View", &_camera.fov, 1.0f, 0.1f, 179.0f);
+					ImGui::DragFloat("Near Plane", &_camera.nearPlane, 1.0f, 0.001f);
+					ImGui::DragFloat("Far Plane", &_camera.farPlane, 1.0f);
 
 					ImGui::TreePop();
 				}
