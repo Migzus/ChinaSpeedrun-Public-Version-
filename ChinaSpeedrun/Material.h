@@ -10,5 +10,7 @@ namespace cs
 		class Shader* shader;
 
 		Material(Shader* newShader);
+
+		void Initialize() override;
 	};
 }

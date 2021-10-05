@@ -7,12 +7,13 @@ namespace cs
 	class Resource
 	{
 	public:
+		std::string resourcePath;
+
 		bool operator==(const Resource& other);
 		bool operator!=(const Resource& other);
 
-		std::string const& GetResourcePath() const;
+		virtual void Initialize() = 0;
 
-	protected:
-		std::string resourcePath;
+		std::string const& GetResourcePath() const;
 	};
 }

@@ -33,6 +33,8 @@ namespace cs
 			SAMPLER2D
 		};
 
+		void Initialize() override;
+
 		// we need shader type, 
 		void AssignShaderParam(Type shaderType, DataType dataType);
 

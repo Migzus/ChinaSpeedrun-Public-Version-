@@ -5,7 +5,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
-    <ClCompile Include="MeshRenderer.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Vertex.cpp" />
@@ -13,25 +12,7 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Mathf.cpp" />
     <ClCompile Include="Color.cpp" />
-    <ClCompile Include="CameraComponent.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="CameraSystem.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="World.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="MovementComponent.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="MovementSystem.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="InputComponent.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="TransformComponent.cpp">
+    <ClCompile Include="Transform.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\imgui\src\imgui.cpp">
@@ -55,7 +36,6 @@
     <ClCompile Include="..\Libraries\imgui\src\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="Component.cpp" />
     <ClCompile Include="Resource.cpp" />
     <ClCompile Include="AudioSystem.cpp">
       <Filter>ecs</Filter>
@@ -68,12 +48,19 @@
     </ClCompile>
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
+    <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="World.cpp" />
+    <ClCompile Include="MeshRenderer.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderComponent.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
-    <ClInclude Include="MeshRenderer.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Vertex.h" />
@@ -82,28 +69,9 @@
     <ClInclude Include="Mathf.h" />
     <ClInclude Include="ChinaCoreHeader.h" />
     <ClInclude Include="Color.h" />
-    <ClInclude Include="CameraComponent.h">
+    <ClInclude Include="Transform.h">
       <Filter>ecs</Filter>
     </ClInclude>
-    <ClInclude Include="CameraSystem.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="World.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="MovementComponent.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="MovementSystem.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="InputComponent.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="TransformComponent.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="Component.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="AudioSystem.h">
       <Filter>ecs</Filter>
@@ -116,6 +84,14 @@
     </ClInclude>
     <ClInclude Include="Time.h" />
     <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="GameObject.h" />
+    <ClInclude Include="World.h" />
+    <ClInclude Include="RenderComponent.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshRenderer.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

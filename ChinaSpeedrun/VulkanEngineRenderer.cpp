@@ -1,5 +1,6 @@
 #include "VulkanEngineRenderer.h"
 
+//#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include <cstring>
@@ -16,12 +17,12 @@
 #include "MeshRenderer.h"
 #include "ChinaEngine.h"
 #include "ResourceManager.h"
+#include "World.h"
 
 using namespace cs;
 
 cs::VulkanEngineRenderer::VulkanEngineRenderer() :
-	textureBufferSize{ MAX_BUFFER_SIZE }, vertexBufferSize{ MAX_BUFFER_SIZE }, indexBufferSize{ MAX_BUFFER_SIZE },
-	currentTextureOffset{ 0 }, currentVertexOffset{ 0 }, currentIndexOffset{ 0 }
+	vertexBuffer{ VulkanBufferInfo(MAX_BUFFER_SIZE) }, indexBuffer{ VulkanBufferInfo(MAX_BUFFER_SIZE) }
 {}
 
 void VulkanEngineRenderer::FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight)
@@ -32,17 +33,18 @@ void VulkanEngineRenderer::FramebufferResizeCallback(GLFWwindow* window, int new
 	_app->height = newHeight;
 }
 
-void VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
+void cs::VulkanEngineRenderer::AllocateMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, VkDeviceSize& vertexBufferOffset, VkDeviceSize& indexBufferOffset, VkDeviceSize& vertexSize, VkDeviceSize& indexSize, VkBuffer& vertexBufferRef, VkBuffer& indexBufferRef)
 {
 	// Test to see if we exceed the current buffer capacities, of both the vertex buffer and index buffer sizes
 
-	VkDeviceSize _newVertexOffset{ currentVertexOffset + sizeof(Vertex) * mesh->GetVertices().size() },
-		_newIndexOffset{ currentIndexOffset + sizeof(uint32_t) * mesh->GetIndices().size() };
+	VkDeviceSize _newVertexOffset{ vertexBuffer.dataSize + sizeof(Vertex) * vertices.size() },
+		_newIndexOffset{ indexBuffer.dataSize + sizeof(uint32_t) * indices.size() };
 
-	if (_newVertexOffset > vertexBufferSize || _newIndexOffset > indexBufferSize)
+	if (_newVertexOffset > vertexBuffer.bufferSize || _newIndexOffset > indexBuffer.bufferSize)
 	{
-		std::cout << "[WARNING]\t: Cannot allocate more memory for this model. It is too large. Excess data: " <<
-			(_newVertexOffset - vertexBufferSize) << " (bytes, vertices) " << (_newIndexOffset - indexBufferSize) << " (bytes, indices)\n";
+		std::cout << "[WARNING]\t: Cannot allocate more memory for this model. It is too large. Excess data:\n" <<
+			"\t> " << (_newVertexOffset - vertexBuffer.bufferSize) << "\t(bytes, vertices)\n" <<
+			"\t> " << (_newIndexOffset - indexBuffer.bufferSize) << "\t(bytes, indices)\n";
 		return;
 	}
 
@@ -50,64 +52,71 @@ void VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
 
 	VkBuffer _stagingBuffer;
 	VkDeviceMemory _stagingBufferMemory;
-	CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
-	CopyBuffer(vertexBuffer, _stagingBuffer, vertexBufferSize);
+	CreateBuffer(vertexBuffer.bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
+	CopyBuffer(vertexBuffer.buffer, _stagingBuffer, vertexBuffer.bufferSize);
 
+	vertexSize = sizeof(Vertex) * vertices.size();
 	void* _vertexData;
-	vkMapMemory(device, _stagingBufferMemory, currentVertexOffset, vertexBufferSize - currentVertexOffset, 0, &_vertexData);
-	memcpy(_vertexData, mesh->GetVertices().data(), (size_t)(sizeof(Vertex) * mesh->GetVertices().size()));
+	vkMapMemory(device, _stagingBufferMemory, vertexBuffer.dataSize, vertexBuffer.bufferSize - vertexBuffer.dataSize, 0, &_vertexData);
+	memcpy(_vertexData, vertices.data(), (size_t)vertexSize);
 
-	mesh->vertexBufferOffset = currentVertexOffset;
-	currentVertexOffset = _newVertexOffset;
+	vertexBufferOffset = vertexBuffer.dataSize;
+	vertexBuffer.dataSize = _newVertexOffset;
 
-	vkUnmapMemory(device, vertexBufferMemory);
+	vkUnmapMemory(device, vertexBuffer.bufferMemory);
 
-	CopyBuffer(_stagingBuffer, vertexBuffer, vertexBufferSize);
+	CopyBuffer(_stagingBuffer, vertexBuffer.buffer, vertexBuffer.bufferSize);
 
 	vkDestroyBuffer(device, _stagingBuffer, nullptr);
 	vkFreeMemory(device, _stagingBufferMemory, nullptr);
+
+	vertexBufferRef = vertexBuffer.buffer;
 
 	// INDEX ASSIGNMENT
 
-	CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
-	CopyBuffer(indexBuffer, _stagingBuffer, indexBufferSize);
+	CreateBuffer(indexBuffer.bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
+	CopyBuffer(indexBuffer.buffer, _stagingBuffer, indexBuffer.bufferSize);
 
+	indexSize = sizeof(uint32_t) * indices.size();
 	void* _indexData;
-	vkMapMemory(device, _stagingBufferMemory, currentIndexOffset, indexBufferSize - currentIndexOffset, 0, &_indexData);
-	memcpy(_indexData, mesh->GetIndices().data(), (size_t)(sizeof(uint32_t) * mesh->GetIndices().size()));
+	vkMapMemory(device, _stagingBufferMemory, indexBuffer.dataSize, indexBuffer.bufferSize - indexBuffer.dataSize, 0, &_indexData);
+	memcpy(_indexData, indices.data(), (size_t)indexSize);
 
-	mesh->indexBufferOffset = currentIndexOffset;
-	currentIndexOffset = _newIndexOffset;
+	indexBufferOffset = indexBuffer.dataSize;
+	indexBuffer.dataSize = _newIndexOffset;
 
-	vkUnmapMemory(device, indexBufferMemory);
+	vkUnmapMemory(device, indexBuffer.bufferMemory);
 
-	CopyBuffer(_stagingBuffer, indexBuffer, indexBufferSize);
+	CopyBuffer(_stagingBuffer, indexBuffer.buffer, indexBuffer.bufferSize);
 
 	vkDestroyBuffer(device, _stagingBuffer, nullptr);
 	vkFreeMemory(device, _stagingBufferMemory, nullptr);
+
+	indexBufferRef = indexBuffer.buffer;
 }
 
-void VulkanEngineRenderer::AllocateTexture(Texture* texture)
+void cs::VulkanEngineRenderer::AllocateTexture(const uint8_t* pixels, const uint32_t& mipLevels, const uint32_t& texWidth, const uint32_t& texHeight, VkImage& texture, VkDeviceMemory& textureMemory, VkImageView& textureView)
 {
-	/*VkBuffer _stagingBuffer;
+	VkDeviceSize _imageSize{ static_cast<uint64_t>(texWidth * texHeight * 4) };
+	VkBuffer _stagingBuffer;
 	VkDeviceMemory _stagingBufferMemory;
-	CreateBuffer(textureBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
+	CreateBuffer(_imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
 
 	void* _data;
 	vkMapMemory(device, _stagingBufferMemory, 0, _imageSize, 0, &_data);
-	memcpy(_data, texture->GetRawPixels(), static_cast<size_t>(texture->GetTextureByteSize()));
+	memcpy(_data, pixels, static_cast<size_t>(_imageSize));
 	vkUnmapMemory(device, _stagingBufferMemory);
 
-	//stbi_image_free(texture->pixels);
+	CreateImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, texture, textureMemory);
 
-	CreateImage(_texWidth, _texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
-
-	TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-	CopyBufferToImage(_stagingBuffer, textureImage, static_cast<uint32_t>(_texWidth), static_cast<uint32_t>(_texHeight));
-	TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	TransitionImageLayout(texture, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
+	CopyBufferToImage(_stagingBuffer, texture, texWidth, texHeight);
+	GenerateMipmaps(texture, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels);
 
 	vkDestroyBuffer(device, _stagingBuffer, nullptr);
-	vkFreeMemory(device, _stagingBufferMemory, nullptr);*/
+	vkFreeMemory(device, _stagingBufferMemory, nullptr);
+
+	textureView = CreateImageView(texture, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels);
 }
 
 void VulkanEngineRenderer::AllocateShader(Shader* shader)
@@ -328,14 +337,21 @@ void cs::VulkanEngineRenderer::Cleanup()
 	vkDestroyImage(device, textureImage, nullptr);
 	vkFreeMemory(device, textureImageMemory, nullptr);
 
-	// destroy the descriptorSetLayout for all objects
-	for (size_t i{ 0 }; i < ChinaEngine::GetObjects().size(); i++)
-		vkDestroyDescriptorSetLayout(device, descriptorSetLayouts[i], nullptr);
+	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
+	for (auto e : _renderers)
+	{
+		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
+		vkDestroyDescriptorSetLayout(device, _meshRenderer.descriptorSetLayout, nullptr);
+	}
 
-	vkDestroyBuffer(device, indexBuffer, nullptr);
+	// destroy the descriptorSetLayout for all objects
+	//for (auto object : ChinaEngine::GetObjects())
+	//	vkDestroyDescriptorSetLayout(device, object->descriptorSetLayout, nullptr);
+
+	vkDestroyBuffer(device, indexBuffer.buffer, nullptr);
 	vkFreeMemory(device, indexBufferMemory, nullptr);
 
-	vkDestroyBuffer(device, vertexBuffer, nullptr);
+	vkDestroyBuffer(device, vertexBuffer.buffer, nullptr);
 	vkFreeMemory(device, vertexBufferMemory, nullptr);
 
 	for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -719,10 +735,13 @@ void cs::VulkanEngineRenderer::CreateDescriptorSetLayout()
 {
 	// make layouts per object
 
-	descriptorSetLayouts.resize(ChinaEngine::GetObjects().size());
+	//descriptorSetLayouts.resize(ChinaEngine::GetObjects().size());
 
-	for (size_t i{ 0 }; i < ChinaEngine::GetObjects().size(); i++)
+	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
+	for (auto e : _renderers)
 	{
+		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
+
 		// bind the matricies
 		VkDescriptorSetLayoutBinding _uboLayoutBinding{};
 		_uboLayoutBinding.binding = 0; // what binding slot are we using -> layout(binding = ???) uniform ...
@@ -745,8 +764,8 @@ void cs::VulkanEngineRenderer::CreateDescriptorSetLayout()
 		_layoutInfo.bindingCount = static_cast<uint32_t>(_bindings.size());
 		_layoutInfo.pBindings = _bindings.data();
 
-		if (vkCreateDescriptorSetLayout(device, &_layoutInfo, nullptr, &descriptorSetLayouts[i]) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL] :\tFailed to create descriptor set layout.");
+		if (vkCreateDescriptorSetLayout(device, &_layoutInfo, nullptr, &_meshRenderer.descriptorSetLayout) != VK_SUCCESS)
+			throw std::runtime_error("[FAIL]\t: Failed to create descriptor set layout.");
 	}
 }
 
@@ -862,10 +881,18 @@ void cs::VulkanEngineRenderer::CreateGraphicsPipeline()
 	_colorBlending.blendConstants[2] = 0.0f;
 	_colorBlending.blendConstants[3] = 0.0f;
 
+	std::vector<VkDescriptorSetLayout> _allDescriptorSetLayouts;
+	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
+	for (auto e : _renderers)
+	{
+		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
+		_allDescriptorSetLayouts.push_back(_meshRenderer.descriptorSetLayout);
+	}
+
 	VkPipelineLayoutCreateInfo _pipelineLayoutInfo{};
 	_pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	_pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
-	_pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
+	_pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(_allDescriptorSetLayouts.size());
+	_pipelineLayoutInfo.pSetLayouts = _allDescriptorSetLayouts.data();
 	_pipelineLayoutInfo.pushConstantRangeCount = 0;
 	_pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
@@ -1024,7 +1051,7 @@ void cs::VulkanEngineRenderer::CreateDepthResources()
 void cs::VulkanEngineRenderer::CreateTextureImage()
 {
 	int _texWidth, _texHeight, _texChannels;
-	stbi_uc* _pixels{ stbi_load("../Resources/textures/junko_gyate.png", &_texWidth, &_texHeight, &_texChannels, STBI_rgb_alpha) };
+	stbi_uc* _pixels{ stbi_load("../Resources/textures/chaika_smile.png", &_texWidth, &_texHeight, &_texChannels, STBI_rgb_alpha) };
 	VkDeviceSize _imageSize{ static_cast<uint64_t>(_texWidth * _texHeight * 4) }; // 4 color channels (r, g, b, a)
 
 	if (!_pixels)
@@ -1043,7 +1070,7 @@ void cs::VulkanEngineRenderer::CreateTextureImage()
 
 	stbi_image_free(_pixels);
 
-	CreateImage(_texWidth, _texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+	CreateImage(_texWidth, _texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
 
 	TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
 	CopyBufferToImage(_stagingBuffer, textureImage, static_cast<uint32_t>(_texWidth), static_cast<uint32_t>(_texHeight));
@@ -1083,12 +1110,12 @@ void cs::VulkanEngineRenderer::CreateTextureSampler()
 
 void cs::VulkanEngineRenderer::CreateVertexBuffer()
 {
-	CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+	CreateBuffer(vertexBuffer.bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer.buffer, vertexBuffer.bufferMemory);
 }
 
 void cs::VulkanEngineRenderer::CreateIndexBuffer()
 {
-	CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+	CreateBuffer(indexBuffer.bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer.buffer, indexBuffer.bufferMemory);
 }
 
 void cs::VulkanEngineRenderer::CreateUniformBuffers()
@@ -1108,8 +1135,10 @@ void cs::VulkanEngineRenderer::CreateDescriptorPool()
 	// we may use the same descriptor pool for each object if every object is completely the same
 	uint32_t _swapChainSize{ static_cast<uint32_t>(swapChainImages.size()) };
 
-	for (auto object : ChinaEngine::GetObjects())
+	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
+	for (auto e : _renderers)
 	{
+		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
 		VkDescriptorPoolSize _poolSizes[]
 		{
 			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, _swapChainSize },
@@ -1122,26 +1151,28 @@ void cs::VulkanEngineRenderer::CreateDescriptorPool()
 		_poolInfo.pPoolSizes = _poolSizes;
 		_poolInfo.maxSets = _swapChainSize;
 
-		if (vkCreateDescriptorPool(device, &_poolInfo, nullptr, &object->descriptorPool) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL] :\tFailed to create descriptor pool.");
+		if (vkCreateDescriptorPool(device, &_poolInfo, nullptr, &_meshRenderer.descriptorPool) != VK_SUCCESS)
+			throw std::runtime_error("[FAIL]\t: Failed to create descriptor pool.");
 	}
 }
 
 void cs::VulkanEngineRenderer::CreateDescriptorSets()
 {
 	size_t _index{ 0 };
-	for (auto object : ChinaEngine::GetObjects())
+	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
+	for (auto e : _renderers)
 	{
-		std::vector<VkDescriptorSetLayout> _layouts(swapChainImages.size(), descriptorSetLayouts[_index]);
+		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
+		std::vector<VkDescriptorSetLayout> _layouts(swapChainImages.size(), _meshRenderer.descriptorSetLayout);
 		VkDescriptorSetAllocateInfo _allocInfo{};
 		_allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		_allocInfo.descriptorPool = object->descriptorPool;
+		_allocInfo.descriptorPool = _meshRenderer.descriptorPool;
 		_allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size());
 		_allocInfo.pSetLayouts = _layouts.data();
 
-		object->descriptorSets.resize(swapChainImages.size());
-		if (vkAllocateDescriptorSets(device, &_allocInfo, object->descriptorSets.data()) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL] :\tFailed to allocate descriptor sets.");
+		_meshRenderer.descriptorSets.resize(swapChainImages.size());
+		if (vkAllocateDescriptorSets(device, &_allocInfo, _meshRenderer.descriptorSets.data()) != VK_SUCCESS)
+			throw std::runtime_error("[FAIL]\t: Failed to allocate descriptor sets.");
 
 		for (size_t i{ 0 }; i < swapChainImages.size(); i++)
 		{
@@ -1151,7 +1182,7 @@ void cs::VulkanEngineRenderer::CreateDescriptorSets()
 			// without moving one object and everything moves
 			VkDescriptorBufferInfo _bufferInfo{};
 			_bufferInfo.buffer = uniformBuffers[i];
-			_bufferInfo.offset = object->uboOffset;
+			_bufferInfo.offset = _meshRenderer.uboOffset;
 			_bufferInfo.range = sizeof(UniformBufferObject);
 
 			VkDescriptorImageInfo _imageInfo{};
@@ -1162,7 +1193,7 @@ void cs::VulkanEngineRenderer::CreateDescriptorSets()
 			std::array<VkWriteDescriptorSet, 2> _descriptorWrites{};
 
 			_descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			_descriptorWrites[0].dstSet = object->descriptorSets[i];
+			_descriptorWrites[0].dstSet = _meshRenderer.descriptorSets[i];
 			_descriptorWrites[0].dstBinding = 0;
 			_descriptorWrites[0].dstArrayElement = 0;
 			_descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -1170,7 +1201,7 @@ void cs::VulkanEngineRenderer::CreateDescriptorSets()
 			_descriptorWrites[0].pBufferInfo = &_bufferInfo;
 
 			_descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			_descriptorWrites[1].dstSet = object->descriptorSets[i];
+			_descriptorWrites[1].dstSet = _meshRenderer.descriptorSets[i];
 			_descriptorWrites[1].dstBinding = 1;
 			_descriptorWrites[1].dstArrayElement = 0;
 			_descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1224,21 +1255,19 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 		vkCmdBeginRenderPass(commandBuffers[i], &_renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-		for (auto object : ChinaEngine::GetObjects())
+		auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
+		for (auto e : _renderers)
 		{
-			// NOTE : In the future, when we use multi instance with vkCmdDrawIndexed.
-			//        We want to go in to each object that has their own spcialized Vulkan commands
-			//        We will do it with the bullet rendering / sprite rendering and just adjust the
-			//        sizes through shaders
+			MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
 
-			vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, &vertexBuffer, &object->mesh->vertexBufferOffset);
-			vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, object->mesh->indexBufferOffset, VK_INDEX_TYPE_UINT32);
-			vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &object->descriptorSets[i], 0, nullptr);
+			// TEMP Solution
+			_meshRenderer.ubo.proj = glm::perspective(Mathf::PI * 0.25f, ChinaEngine::AspectRatio(), 0.1f, 10.0f);
+			_meshRenderer.ubo.view = glm::lookAt(Vector3(2.0f, 2.0f, 2.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, 1.0f));
+			_meshRenderer.ubo.proj[1][1] *= -1.0f;
 
-			// the current mesh index, with its indices goes down below
-			vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(object->mesh->GetIndices().size()), 1, 0, 0, 0);
+			MeshRenderer::VulkanDraw(_meshRenderer, commandBuffers[i], pipelineLayout, i, vertexBuffer.buffer, indexBuffer.buffer);
 		}
-
+		
 		vkCmdEndRenderPass(commandBuffers[i]);
 
 		if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
@@ -1447,14 +1476,14 @@ VkFormat cs::VulkanEngineRenderer::FindSupportedFormat(const std::vector<VkForma
 
 void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 {
-	for (auto object : ChinaEngine::GetObjects())
+	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
+	for (auto e : _renderers)
 	{
-		if (!object->active)
-			continue;
+		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
 
 		void* _data;
-		vkMapMemory(device, uniformBuffersMemory[currentImage], object->uboOffset, object->GetUBOSize(), 0, &_data);
-		memcpy(_data, &(*object->ubo), object->GetUBOSize());
+		vkMapMemory(device, uniformBuffersMemory[currentImage], _meshRenderer.uboOffset, UniformBufferObject::GetByteSize(), 0, &_data);
+		memcpy(_data, &_meshRenderer.ubo, UniformBufferObject::GetByteSize());
 	}
 
 	vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
@@ -1666,8 +1695,12 @@ void cs::VulkanEngineRenderer::CleanupSwapChain()
 		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
 	}
 
-	for (auto object : ChinaEngine::GetObjects())
-		vkDestroyDescriptorPool(device, object->descriptorPool, nullptr);
+	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
+	for (auto e : _renderers)
+	{
+		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
+		vkDestroyDescriptorPool(device, _meshRenderer.descriptorPool, nullptr);
+	}
 
 	// ----------------------------------------------------------------------
 	//    Destroy ImGui Stuff
@@ -1939,7 +1972,7 @@ void cs::VulkanEngineRenderer::DestroyDebugUtilsMessengerEXT(VkInstance instance
 
 VKAPI_ATTR VkBool32 VKAPI_CALL cs::VulkanEngineRenderer::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-	//std::cerr << "[INFO] :\t Validation layers: " << pCallbackData->pMessage << '\n';
+	std::cerr << "[INFO] :\t Validation layers: " << pCallbackData->pMessage << '\n';
 
 	return VK_FALSE;
 }
@@ -1948,3 +1981,7 @@ bool cs::QueueFamilyIndices::IsComplete()
 {
 	return graphicsFamily.has_value() && presentFamily.has_value();
 }
+
+cs::VulkanBufferInfo::VulkanBufferInfo(VkDeviceSize newBufferSize) :
+	buffer{ nullptr }, bufferMemory{ nullptr }, bufferSize{ newBufferSize }, dataSize{ 0 }
+{}

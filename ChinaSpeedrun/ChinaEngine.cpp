@@ -1,7 +1,5 @@
 #include "ChinaEngine.h"
 
-#include <tiny_obj_loader.h>
-
 #include "ResourceManager.h"
 
 #include "Vertex.h"
@@ -14,28 +12,19 @@
 
 #include "Input.h"
 #include "World.h"
-#include "MovementComponent.h"
-#include "CameraComponent.h"
-#include "AudioSystem.h"
+//#include "MovementComponent.h"
+//#include "CameraComponent.h"
+#include "Transform.h"
+//#include "AudioSystem.h"
+#include "GameObject.h"
 
 #include "Time.h"
 
-using namespace cs;
+cs::World cs::ChinaEngine::world;
+cs::VulkanEngineRenderer cs::ChinaEngine::renderer;
+std::vector<cs::GameObject*> cs::ChinaEngine::objects;
 
-//World* ChinaEngine::world;
-VulkanEngineRenderer ChinaEngine::renderer;
-std::vector<Shader*> ChinaEngine::shaders;
-std::vector<Material*> ChinaEngine::materials;
-std::vector<Texture*> ChinaEngine::textures;
-std::vector<Mesh*> ChinaEngine::meshes;
-std::vector<MeshRenderer*> ChinaEngine::objects;
-
-VulkanEngineRenderer const& ChinaEngine::GetVulkanRenderer()
-{
-	return renderer;
-}
-
-void ChinaEngine::Run()
+void cs::ChinaEngine::Run()
 {
 	Time::CycleInit();
 
@@ -43,45 +32,36 @@ void ChinaEngine::Run()
 
 	renderer.Create(800, 600, "China Speedrun");
 
-	for (auto mesh : meshes)
-		renderer.AllocateMesh(mesh);
+	// Temporarly pre init all resources (so vulkan can actually use it)
+	ResourceManager::InitializeTest();
 
 	// Temporary solution to a visual glitch
 	renderer.Redraw();
 
-	InitInput();
+	//InitInput();
+	ImGuiStyleInit();
 
 	MainLoop();
 	EngineExit();
 }
 
-std::vector<MeshRenderer*> const& ChinaEngine::GetObjects()
+std::vector<cs::GameObject*> const& cs::ChinaEngine::GetObjects()
 {
 	return objects;
 }
 
-std::vector<Mesh*> const& ChinaEngine::GetMeshes()
+cs::GameObject* cs::ChinaEngine::InstanceObject(const char* name, const Vector3 position, const Vector3 rotation, const Vector3 scale)
 {
-	return meshes;
-}
+	GameObject* _newObject{ new GameObject };
+	_newObject->entity = world.registry.create();
+	_newObject->name = name;
 
-MeshRenderer* ChinaEngine::InstanceObject(Mesh* mesh, Material* material, const Vector3 position)
-{
-	if (mesh == nullptr)
-		return nullptr;
+	TransformComponent& _transform{ _newObject->AddComponent<TransformComponent>() };
+	_transform.position = position;
+	_transform.rotation = rotation;
+	_transform.scale = scale;
 
-	MeshRenderer* _newObject{ new MeshRenderer };
-
-	// for now we just push one material, but we'll add support for more later
-	_newObject->mesh = mesh;
-	_newObject->materials.push_back(material);
-	_newObject->uboOffset = sizeof(UniformBufferObject) * objects.size(); // haha.. we won't do this in the future... what if we wanted to delete objects... it would be devastating
-	_newObject->ubo->model = glm::translate(Matrix4x4(1.0f), position);
-	_newObject->ubo->view = glm::lookAt(Vector3(2.0f, 2.0f, 2.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, 1.0f));
-
-	meshes.push_back(mesh);
 	objects.push_back(_newObject);
-
 	return _newObject;
 }
 
@@ -90,111 +70,41 @@ float cs::ChinaEngine::AspectRatio()
 	return renderer.AspectRatio();
 }
 
-Mesh* cs::ChinaEngine::IsDuplicateMesh(std::string filename)
+void cs::ChinaEngine::EngineInit()
 {
-	for (auto mesh : meshes)
-		if (filename == mesh->GetResourcePath())
-			return mesh;
+	Shader* _shader{ ResourceManager::Load<Shader>("../Resources/shaders/default_shader") };
+	Material* _material{ ResourceManager::Load<Material>("../Resources/materials/test.mat") };
 
-	return nullptr;
-}
-
-Mesh* cs::ChinaEngine::LoadOBJ(std::string filename)
-{
-	Mesh* _outMesh{ IsDuplicateMesh(filename) };
-
-	if (_outMesh == nullptr)
-	{
-		_outMesh = new Mesh;
-
-		tinyobj::attrib_t _attributes;
-		std::vector<tinyobj::shape_t> _shapes;
-		std::vector<tinyobj::material_t> _materials;
-		std::string _warning, _error;
-
-		if (!tinyobj::LoadObj(&_attributes, &_shapes, &_materials, &_warning, &_error, filename.c_str()))
-		{
-			std::cout << "[ERROR]\t: " << _warning + _error << '\n';
-			delete _outMesh;
-			return nullptr;
-		}
-
-		std::vector<Vertex> _vertices;
-		std::vector<uint32_t> _indices;
-		// by using an unordered_map we can remove duplicates
-		std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-
-		for (const auto& shape : _shapes)
-		{
-			for (const auto& index : shape.mesh.indices)
-			{
-				Vertex _vertex{};
-
-				_vertex.position =
-				{
-					_attributes.vertices[3 * index.vertex_index + 0],
-					_attributes.vertices[3 * index.vertex_index + 1],
-					_attributes.vertices[3 * index.vertex_index + 2]
-				};
-
-				_vertex.texCoord =
-				{
-					_attributes.texcoords[2 * index.texcoord_index + 0],
-					1.0f - _attributes.texcoords[2 * index.texcoord_index + 1]
-				};
-
-				_vertex.color = { 1.0f, 1.0f, 1.0f };
-
-				//_vertices.push_back(_vertex);
-				//_indices.push_back(_indices.size());
-
-				// 93,312 verts
-				// 18,176 verts
-				// we avoid 75,136 vertices on suzanne's model
-
-				if (uniqueVertices.count(_vertex) == 0)
-				{
-					uniqueVertices[_vertex] = static_cast<uint32_t>(_vertices.size());
-					_vertices.push_back(_vertex);
-				}
-
-				_indices.push_back(uniqueVertices[_vertex]);
-			}
-		}
-
-		_outMesh->SetMesh(_vertices, _indices);
-	}
-
-	return _outMesh;
-}
-
-void ChinaEngine::EngineInit()
-{
-	//world = new World;
-
-	Shader* _shader{ new Shader({ "../Resources/shaders/vert.spv", "../Resources/shaders/frag.spv" }) };
-	Material* _material{ new Material(_shader) };
+	//_material->shader = _shader;
 
 	// these make no difference when spawning an object... yet
 	// meaning you can't assign these textures to any models...
-	Texture* _vargFlush{ new Texture("../Resources/textures/varg_flush.png") };
-	Texture* _junkoGyate{ new Texture("../Resources/textures/junko_gyate.png") };
-
-	Mesh* _mesh1{ Mesh::CreateDefaultCube({0.1f, 0.1f, 1.0f}) };
-	Mesh* _mesh2{ Mesh::CreateDefaultPlane({0.5f, 0.5f}) };
-	Mesh* _mesh3{ LoadOBJ("../Resources/models/suzanne.obj") };
+	Texture* _vargFlush{ ResourceManager::Load<Texture>("../Resources/textures/varg_flush.png") };
+	Texture* _junkoGyate{ ResourceManager::Load<Texture>("../Resources/textures/junko_gyate.png") };
+	Texture* _chaikaSmile{ ResourceManager::Load<Texture>("../Resources/textures/chaika_smile.png") };
 
 	// for now we're just creating objects like this... will change this in the future
-	MeshRenderer* _obj1{ InstanceObject(_mesh1, _material, Vector3(-1.3f, 0.0f, 1.2f)) };
-	MeshRenderer* _obj2{ InstanceObject(_mesh2, _material, Vector3(-0.45f, 0.7f, 0.0f)) };
-	MeshRenderer* _obj3{ InstanceObject(_mesh3, _material, Vector3(0.0f, 1.0f, 0.0f)) };
+	GameObject* _cube{ InstanceObject("Cube", Vector3(-1.3f, 0.0f, 1.2f)) };
+	GameObject* _plane{ InstanceObject("Plane", Vector3(-0.45f, 0.7f, 0.0f)) };
+	GameObject* _suzanne{ InstanceObject("Suzanne") };
 
-	_obj1->active = true;
-	_obj2->active = false;
-	_obj3->active = true;
+	MeshRendererComponent& _meshRendererCube{ _cube->AddComponent<MeshRendererComponent>() };
+	_meshRendererCube.mesh = Mesh::CreateDefaultCube({ 0.1f, 0.1f, 1.0f });
+	_meshRendererCube.materials.push_back(_material);
 
-	Texture* _texture{ ResourceManager::Load<Texture>("../Resources/textures/varg_flush.png") };
-	Mesh* _mesh{ ResourceManager::Load<Mesh>("../Resources/textures/varg_flush.png") };
+	MeshRendererComponent& _meshRendererPlane{ _plane->AddComponent<MeshRendererComponent>() };
+	_meshRendererPlane.mesh = Mesh::CreateDefaultPlane({ 0.5f, 0.5f });
+	_meshRendererPlane.materials.push_back(_material);
+
+	MeshRendererComponent& _meshRendererMonke{ _suzanne->AddComponent<MeshRendererComponent>() };
+	_meshRendererMonke.mesh = ResourceManager::Load<Mesh>("../Resources/models/suzanne.obj");
+	_meshRendererMonke.materials.push_back(_material);
+}
+
+void cs::ChinaEngine::ImGuiStyleInit()
+{
+	/// Here we can change the style of ImGui however we like.
+	ImGuiStyle* _style{ &ImGui::GetStyle() };
 }
 
 void cs::ChinaEngine::InitInput()
@@ -209,6 +119,49 @@ void cs::ChinaEngine::InitInput()
 	Input::AddMapping("right", GLFW_KEY_RIGHT);
 }
 
+void cs::ChinaEngine::ImGuiDraw()
+{
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
+	static GameObject* _activeObject{ nullptr };
+
+	if (ImGui::Begin("Hierarchy"))
+	{
+		if (ImGui::TreeNode("Main Scene"))
+		{
+			for (GameObject* object : objects)
+			{
+				ImGui::Text(object->name.c_str());
+				if (ImGui::IsItemClicked())
+					_activeObject = object;
+			}
+			ImGui::TreePop();
+		}
+	}
+	
+	ImGui::End();
+
+	if (ImGui::Begin("Inspector"))
+	{
+		if (_activeObject != nullptr)
+		{
+			ImGui::Text(_activeObject->name.c_str());
+
+			TransformComponent& _transform{ world.registry.get<TransformComponent>(_activeObject->entity) };
+
+			ImGui::Text("\nTransform");
+			ImGui::InputFloat3("Position", &_transform.position.x);
+			ImGui::InputFloat3("Rotation", &_transform.rotation.x);
+			ImGui::InputFloat3("Scale", &_transform.scale.x);
+		}
+	}
+	ImGui::End();
+
+	ImGui::Render();
+}
+
 void cs::ChinaEngine::MainLoop()
 {
 	while (!glfwWindowShouldClose(renderer.GetWindow()))
@@ -217,17 +170,13 @@ void cs::ChinaEngine::MainLoop()
 
 		glfwPollEvents();
 
-		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-		ImGui::ShowDemoWindow();
+		ImGuiDraw();
 
-		//world->Step();
+		world.Step();
 
-		for (size_t i{ 0 }; i < objects.size(); i++)
-			objects[i]->Update(i);
+		//for (size_t i{ 0 }; i < objects.size(); i++)
+		//	objects[i]->Update();
 
-		ImGui::Render();
 		renderer.DrawFrame();
 		Input::FinishFrame();
 

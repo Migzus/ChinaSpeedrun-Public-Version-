@@ -1,42 +1,32 @@
 #pragma once
 
-/// <summary>
-/// 
-/// in the mesh renderer, we have to store information about the different descriptor offsets
-/// because, multiple objects can have the same shader, the same material, the same mesh
-/// Essentially, they can be duplicates, BUT they can have different orientations
-/// 
-/// </summary>
+#include "RenderComponent.h"
 
-#include "Component.h"
-
-#include <vulkan/vulkan.h>
-#include <vector>
-
-// this will inherit from Component (because an object can have a mesh that renders on screen)
 namespace cs
 {
-	class MeshRenderer : public Component
+	class MeshRendererComponent
 	{
 	public:
-		bool active;								 // TEMP 
+		friend class MeshRenderer;
+		friend class VulkanEngineRenderer;
+
 		std::vector<class Material*> materials;
 		class Mesh* mesh;
-		struct UniformBufferObject* ubo;             // TEMP
-		VkDeviceSize uboOffset;                      // TEMP
-		VkDescriptorPool descriptorPool;             // TEMP
-		std::vector<VkDescriptorSet> descriptorSets; // TEMP
 
-		MeshRenderer();
-		MeshRenderer(Mesh* newMesh);
-
-		void Update(size_t index);
-		uint16_t GetUBOSize() const;
-
-		const std::vector<VkDescriptorSet>& GetDescriptorSet() const;
-
-		~MeshRenderer();
+		MeshRendererComponent();
 
 	private:
+		UniformBufferObject ubo;
+		VkDeviceSize uboOffset;
+		VkDescriptorSetLayout descriptorSetLayout;
+		VkDescriptorPool descriptorPool;
+		std::vector<VkDescriptorSet> descriptorSets;
+	};
+
+	class MeshRenderer
+	{
+	public:
+		static void UpdateUBO(MeshRendererComponent& meshRenderer, class TransformComponent& transform);
+		static void VulkanDraw(MeshRendererComponent& meshRenderer, VkCommandBuffer& commandBuffer, VkPipelineLayout& layout, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer);
 	};
 }

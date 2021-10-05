@@ -29,3 +29,8 @@ cs::Shader::Shader(std::vector<std::string> paths)
 		
 	}
 }
+
+void cs::Shader::Initialize()
+{
+
+}

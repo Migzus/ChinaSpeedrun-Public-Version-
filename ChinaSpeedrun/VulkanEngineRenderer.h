@@ -23,6 +23,15 @@ namespace cs
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
+	struct VulkanBufferInfo
+	{
+		VkBuffer buffer;
+		VkDeviceMemory bufferMemory;
+		VkDeviceSize bufferSize, dataSize;
+
+		VulkanBufferInfo(VkDeviceSize newBufferSize);
+	};
+
 	class VulkanEngineRenderer
 	{
 	public:
@@ -32,12 +41,12 @@ namespace cs
 
 		static void FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight);
 
-		void AllocateMesh(class Mesh* mesh);
-		void AllocateTexture(class Texture* texture);
+		void AllocateMesh(const std::vector<class Vertex>& vertices, const std::vector<uint32_t>& indices, VkDeviceSize& vertexBufferOffset, VkDeviceSize& indexBufferOffset, VkDeviceSize& vertexSize, VkDeviceSize& indexSize, VkBuffer& vertexBufferRef, VkBuffer& indexBufferRef);
+		void AllocateTexture(const uint8_t* pixels, const uint32_t& mipLevels, const uint32_t& texWidth, const uint32_t& texHeight, VkImage& texture, VkDeviceMemory& textureMemory, VkImageView& textureView);
 		void AllocateShader(class Shader* shader);
 
-		void FreeMesh(Mesh* mesh);
-		void FreeTexture(Texture* mesh);
+		void FreeMesh(class Mesh* mesh);
+		void FreeTexture(class Texture* mesh);
 		void FreeShader(Shader* mesh);
 
 		void Create(int newWidth, int newHeight, const char* appTitle);
@@ -72,7 +81,6 @@ namespace cs
 		int width, height;
 		std::string appName;
 
-		std::vector<VkDescriptorSet> descriptorSets;
 		std::vector<VkSemaphore> imageAvailableSemaphores, renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences, imagesInFlight;
 		std::vector<VkCommandBuffer> commandBuffers;
@@ -81,11 +89,7 @@ namespace cs
 		std::vector<VkImage> swapChainImages;
 		std::vector<VkBuffer> uniformBuffers;
 		std::vector<VkDeviceMemory> uniformBuffersMemory;
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
-
-		// might make a struct, and store this in a vector... who knows
-		VkDeviceSize textureBufferSize, vertexBufferSize, indexBufferSize;
-		VkDeviceSize currentTextureOffset, currentVertexOffset, currentIndexOffset;
+		VulkanBufferInfo vertexBuffer, indexBuffer;
 
 		// Spesific to ImGui Stuff
 		VkRenderPass imGuiRenderPass;
@@ -103,7 +107,6 @@ namespace cs
 		uint32_t mipLevels;
 		VkImage textureImage, depthImage;
 		VkDeviceMemory vertexBufferMemory, indexBufferMemory, textureImageMemory, depthImageMemory;
-		VkBuffer vertexBuffer, indexBuffer;
 		VkCommandPool commandPool;
 		VkPipeline graphicsPipeline;
 		VkRenderPass renderPass;

@@ -3,6 +3,9 @@
 #include <iterator>
 
 #include "Material.h"
+#include "ChinaEngine.h"
+#include "VulkanEngineRenderer.h"
+#include "ResourceManager.h"
 
 cs::Mesh::Mesh() :
 	vertices{}, indices{}
@@ -11,6 +14,11 @@ cs::Mesh::Mesh() :
 cs::Mesh::Mesh(std::vector<Vertex> vertexArray, std::vector<uint32_t> indexArray) :
 	vertices{vertexArray}, indices{indexArray}
 {}
+
+void cs::Mesh::Initialize()
+{
+	ChinaEngine::renderer.AllocateMesh(vertices, indices, vertexBufferOffset, indexBufferOffset, vertexSize, indexSize, vertexBufferRef, indexBufferRef);
+}
 
 cs::Mesh* cs::Mesh::CreateDefaultPlane(const Vector2 extent)
 {
@@ -27,7 +35,10 @@ cs::Mesh* cs::Mesh::CreateDefaultPlane(const Vector2 extent)
 		0, 1, 2, 2, 3, 0
 	};
 
-	return new Mesh(_vertices, _indices);
+	Mesh* _outMesh{ new Mesh(_vertices, _indices) };
+	_outMesh->resourcePath = "default_plane";
+	ResourceManager::ForcePush<Mesh>(_outMesh);
+	return _outMesh;
 }
 
 cs::Mesh* cs::Mesh::CreateDefaultCube(const Vector3 extent)
@@ -54,7 +65,10 @@ cs::Mesh* cs::Mesh::CreateDefaultCube(const Vector3 extent)
 		5, 4, 6, 6, 4, 7
 	};
 
-	return new Mesh(_vertices, _indices);
+	Mesh* _outMesh{ new Mesh(_vertices, _indices) };
+	_outMesh->resourcePath = "default_cube";
+	ResourceManager::ForcePush<Mesh>(_outMesh);
+	return _outMesh;
 }
 
 cs::Mesh* cs::Mesh::CreateDefaultIcoSphere(const uint8_t subdivisions, const float radius)
