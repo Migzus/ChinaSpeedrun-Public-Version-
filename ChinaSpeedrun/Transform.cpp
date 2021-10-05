@@ -1,8 +1,17 @@
 #include "Transform.h"
 
+#include <glm/gtx/quaternion.hpp>
+#include "imgui.h"
+
+void cs::Transform::DrawComponent()
+{
+
+}
+
 void cs::Transform::CalculateMatrix(TransformComponent& transform)
 {
-	transform.matrix = glm::scale(glm::rotate(glm::rotate(glm::rotate(glm::translate(Matrix4x4(1.0f), transform.position), transform.rotation.z, Vector3(0.0f, 0.0f, 1.0f)), transform.rotation.y, Vector3(0.0f, 1.0f, 0.0f)), transform.rotation.x, Vector3(1.0f, 0.0f, 0.0f)), transform.scale);
+	transform.rotation = glm::radians(transform.rotationDegrees);
+	transform.matrix = glm::translate(Matrix4x4(1.0f), transform.position) * glm::toMat4(Quaternion(transform.rotation)) * glm::scale(Matrix4x4(1.0f), transform.scale);
 }
 
 const Matrix4x4& cs::TransformComponent::GetMatrixTransform()

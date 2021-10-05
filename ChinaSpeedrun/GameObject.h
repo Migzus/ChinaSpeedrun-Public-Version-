@@ -22,6 +22,9 @@ namespace cs
 
 		GameObject();
 
+		// Draw all the game object's components
+		void EditorDrawComponents();
+
 		// Called at the start of the program
 		virtual void Init();
 		// Called when the object is instanced
@@ -36,6 +39,9 @@ namespace cs
 		// Queues this object for deletion
 		void QueueFree();
 		
+		// Checks to see if we have at least one of the component type
+		template<class T>
+		bool HasComponent();
 		// Add the spesified component
 		template<class T>
 		T& AddComponent();
@@ -64,6 +70,12 @@ namespace cs
 	};
 
 	template<class T>
+	inline bool GameObject::HasComponent()
+	{
+		return ChinaEngine::world.registry.any_of<T>(entity);
+	}
+
+	template<class T>
 	inline T& GameObject::AddComponent()
 	{
 		return ChinaEngine::world.registry.emplace<T>(entity);
@@ -72,7 +84,7 @@ namespace cs
 	template<class T>
 	inline T& GameObject::GetComponent(const uint8_t componentSkipCount)
 	{
-
+		return ChinaEngine::world.registry.get<T>(entity);
 	}
 
 	template<class T>

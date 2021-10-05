@@ -10,6 +10,8 @@
 #include "MeshRenderer.h"
 #include "VulkanEngineRenderer.h"
 
+#include "ImGuizmo.h"
+
 #include "Input.h"
 #include "World.h"
 //#include "MovementComponent.h"
@@ -86,7 +88,8 @@ void cs::ChinaEngine::EngineInit()
 	// for now we're just creating objects like this... will change this in the future
 	GameObject* _cube{ InstanceObject("Cube", Vector3(-1.3f, 0.0f, 1.2f)) };
 	GameObject* _plane{ InstanceObject("Plane", Vector3(-0.45f, 0.7f, 0.0f)) };
-	GameObject* _suzanne{ InstanceObject("Suzanne") };
+	GameObject* _suzanne{ InstanceObject("Suzanne", Vector3(0.0f, -2.0f, -1.0f)) };
+	GameObject* _randomObject{ InstanceObject("This object has no renderer") };
 
 	MeshRendererComponent& _meshRendererCube{ _cube->AddComponent<MeshRendererComponent>() };
 	_meshRendererCube.mesh = Mesh::CreateDefaultCube({ 0.1f, 0.1f, 1.0f });
@@ -124,6 +127,7 @@ void cs::ChinaEngine::ImGuiDraw()
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+	ImGuizmo::BeginFrame();
 
 	static GameObject* _activeObject{ nullptr };
 
@@ -149,12 +153,29 @@ void cs::ChinaEngine::ImGuiDraw()
 		{
 			ImGui::Text(_activeObject->name.c_str());
 
-			TransformComponent& _transform{ world.registry.get<TransformComponent>(_activeObject->entity) };
+			if (_activeObject->HasComponent<TransformComponent>())
+			{
+				if (ImGui::TreeNodeEx("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					TransformComponent& _transform{ world.registry.get<TransformComponent>(_activeObject->entity) };
 
-			ImGui::Text("\nTransform");
-			ImGui::InputFloat3("Position", &_transform.position.x);
-			ImGui::InputFloat3("Rotation", &_transform.rotation.x);
-			ImGui::InputFloat3("Scale", &_transform.scale.x);
+					ImGui::DragFloat3("Position", &_transform.position.x);
+					ImGui::DragFloat3("Rotation", &_transform.rotationDegrees.x);
+					ImGui::DragFloat3("Scale", &_transform.scale.x);
+
+					ImGui::TreePop();
+				}
+			}
+
+			if (_activeObject->HasComponent<MeshRendererComponent>())
+			{
+				if (ImGui::TreeNodeEx("Mesh Renderer", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					
+
+					ImGui::TreePop();
+				}
+			}
 		}
 	}
 	ImGui::End();

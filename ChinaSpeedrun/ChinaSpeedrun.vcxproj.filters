@@ -56,6 +56,12 @@
     <ClCompile Include="RenderComponent.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
+    <ClCompile Include="Gizmos.cpp" />
+    <ClCompile Include="EngineEditor.cpp" />
+    <ClCompile Include="..\Libraries\ImGuizmo\ImGuizmo.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGuiLayer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -92,6 +98,12 @@
     <ClInclude Include="MeshRenderer.h">
       <Filter>ecs</Filter>
     </ClInclude>
+    <ClInclude Include="Gizmos.h" />
+    <ClInclude Include="EngineEditor.h" />
+    <ClInclude Include="..\Libraries\ImGuizmo\ImGuizmo.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGuiLayer.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

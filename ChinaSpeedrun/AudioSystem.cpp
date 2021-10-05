@@ -91,11 +91,11 @@ void AudioSystem::Load(std::string path) {
 
 	file.convertPCMToBuffer(bufferData);
 
-	alec(alBufferData(buffer[buffer.index], AL_FORMAT_STEREO16, bufferData.data(), bufferData.size(), file.getSampleRate()));
+	alec(alBufferData(buffer[buffer.index], AL_FORMAT_STEREO16, bufferData.data(), (ALsizei)bufferData.size(), file.getSampleRate()));
 
 	auto pathToName = [](const std::string &path) {
-		const unsigned lastSlash = path.rfind('/');
-		const unsigned lastDot = path.rfind('.');
+		const size_t lastSlash = path.rfind('/');
+		const size_t lastDot = path.rfind('.');
 		return path.substr(lastSlash + 1, lastDot - lastSlash - 1);
 	};
 

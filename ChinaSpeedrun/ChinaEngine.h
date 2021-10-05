@@ -14,7 +14,7 @@ namespace cs
 
 		static void Run();
 		static std::vector<class GameObject*> const& GetObjects();
-		static GameObject* InstanceObject(const char* name, const Vector3 position = Vector3(1.0f, 1.0f, 1.0f), const Vector3 rotation = Vector3(0.0f, 0.0f, 0.0f), const Vector3 scale = Vector3(1.0f, 1.0f, 1.0f));
+		static GameObject* InstanceObject(const char* name, const Vector3 position = Vector3(0.0f, 0.0f, 0.0f), const Vector3 rotation = Vector3(0.0f, 0.0f, 0.0f), const Vector3 scale = Vector3(1.0f, 1.0f, 1.0f));
 		static float AspectRatio();
 
 	private:

@@ -1,9 +1,14 @@
 #include "GameObject.h"
 
 cs::GameObject::GameObject() :
-	name{ "" }, active{ true }
+	name{ "Object" }, active{ true }
 {
 	ComponentInit();
+}
+
+void cs::GameObject::EditorDrawComponents()
+{
+
 }
 
 void cs::GameObject::Init()
