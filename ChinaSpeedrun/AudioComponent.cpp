@@ -1,5 +1,5 @@
 #include "AudioComponent.h"
 
-AudioComponent::AudioComponent() : soundName{ "" }, play{ false }, isPlaying{ false }, onListener{ false }
+cs::AudioComponent::AudioComponent() : soundId{ 0 }, play{ false }, stop{ false }, isPlaying{ false }, onListener{ false }, time{ 0 }, duration{ 0 }
 {
 }

@@ -1,5 +1,6 @@
 #include "ChinaEngine.h"
 
+#include "AudioComponent.h"
 #include "ResourceManager.h"
 
 #include "Vertex.h"
@@ -103,6 +104,12 @@ void cs::ChinaEngine::EngineInit()
 	_meshRendererMonke.materials.push_back(_material);
 
 	CameraComponent& _cameraComponent{ _camera->AddComponent<CameraComponent>() };
+
+	auto* _audioComponent{ &_cube->AddComponent<AudioComponent>() };
+	_audioComponent->soundName = "koto";
+
+	_audioComponent = &_suzanne->AddComponent<AudioComponent>();
+	_audioComponent->soundName = "kazeoto";
 }
 
 void cs::ChinaEngine::ImGuiStyleInit()
@@ -129,6 +136,8 @@ void cs::ChinaEngine::ImGuiDraw()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 	ImGuizmo::BeginFrame();
+
+	ImGui::ShowDemoWindow();
 
 	static GameObject* _activeObject{ nullptr };
 
@@ -189,6 +198,32 @@ void cs::ChinaEngine::ImGuiDraw()
 					ImGui::DragFloat("Field of View", &_camera.fov);
 					ImGui::DragFloat("Near Plane", &_camera.nearPlane);
 					ImGui::DragFloat("Far Plane", &_camera.farPlane);
+
+					ImGui::TreePop();
+				}
+			}
+
+			if (_activeObject->HasComponent<AudioComponent>())
+			{
+				if (ImGui::TreeNodeEx("Audio", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					auto& _audioComponent{ world.registry.get<AudioComponent>(_activeObject->entity) };
+
+					char buf[128];
+					strncpy_s(buf, _audioComponent.soundName.c_str(), sizeof(buf) - 1);
+					ImGui::InputText("Sound Name", &buf[0], sizeof(buf));
+					_audioComponent.soundName = buf;
+
+					if (ImGui::Button("Play"))
+						_audioComponent.play = true;
+
+					ImGui::SameLine();
+
+					if (ImGui::Button("Stop"))
+						_audioComponent.stop = true;
+
+					ImGui::SameLine();
+					ImGui::ProgressBar(_audioComponent.time / _audioComponent.duration);
 
 					ImGui::TreePop();
 				}

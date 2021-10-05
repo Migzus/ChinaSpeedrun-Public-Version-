@@ -1,17 +1,20 @@
 #include "AudioSystem.h"
+#include "AudioComponent.h"
 
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AudioFile.h>
 
-AudioBufferBlob::AudioBufferBlob() : index{ 0 }
+#include "Time.h"
+
+cs::AudioBufferBlob::AudioBufferBlob() : index{ 0 }
 {
 	for (unsigned i = 0; i < max; i++) {
 		buffer[i] = 0;
 	}
 }
 
-AudioSourceBlob::AudioSourceBlob() : index{ 0 }
+cs::AudioSourceBlob::AudioSourceBlob() : index{ 0 }
 {
 	for (unsigned i = 0; i < max; i++) {
 		source[i] = 0;
@@ -29,18 +32,46 @@ AudioSourceBlob::AudioSourceBlob() : index{ 0 }
 FUNCTION_CALL;\
 OpenAL_ErrorCheck(FUNCTION_CALL)
 
-AudioSystem::AudioSystem() {
+cs::AudioSystem::AudioSystem() {
 	Init();
 }
 
-AudioSystem::~AudioSystem()
+cs::AudioSystem::~AudioSystem()
 {
 	alcMakeContextCurrent(nullptr);
 	alcDestroyContext(context);
 	alcCloseDevice(device);
 }
 
-void AudioSystem::Init()
+void cs::AudioSystem::Update(AudioComponent& ac)
+{
+	if (ac.play)
+	{
+		if (ac.isPlaying)
+		{
+			Stop(ac.soundId);
+		}
+
+		ac.soundId = Play(ac.soundName);
+		ac.duration = buffer.meta[soundMap[ac.soundName]].duration;
+		ac.time = 0.f;
+		ac.isPlaying = true;
+		ac.play = false;
+	}
+
+	if (ac.stop)
+	{
+		Stop(ac.soundId);
+		ac.soundId = 0;
+		ac.time = 0.f;
+		ac.isPlaying = false;
+		ac.stop = false;
+	}
+
+	ac.time += Time::deltaTime * ac.isPlaying;
+}
+
+void cs::AudioSystem::Init()
 {
 	device = alcOpenDevice(nullptr);
 
@@ -56,9 +87,11 @@ void AudioSystem::Init()
 	alec(alGenSources(source.max, source.source));
 	
 	Load("../resources/sounds/koto.wav");
+	Load("../resources/sounds/kazeoto.wav");
+	Load("../resources/sounds/pon1.wav");
 }
 
-void AudioSystem::Load(std::string path) {
+void cs::AudioSystem::Load(std::string path) {
 
 	if (buffer.index + 1 >= buffer.max) {
 		std::cerr << "AudioSystem error: " << "Not enough buffers" << std::endl;
@@ -89,9 +122,13 @@ void AudioSystem::Load(std::string path) {
 
 	std::vector<uint8_t> bufferData;
 
+	buffer.meta[buffer.index].rate = file.getSampleRate();
+	buffer.meta[buffer.index].duration = static_cast<float>(file.getLengthInSeconds());
+	buffer.meta[buffer.index].depth = file.getBitDepth();
+
 	file.convertPCMToBuffer(bufferData);
 
-	alec(alBufferData(buffer[buffer.index], AL_FORMAT_STEREO16, bufferData.data(), (ALsizei)bufferData.size(), file.getSampleRate()));
+	alec(alBufferData(buffer[buffer.index], AL_FORMAT_STEREO16, bufferData.data(), static_cast<ALsizei>(bufferData.size()), file.getSampleRate()));
 
 	auto pathToName = [](const std::string &path) {
 		const size_t lastSlash = path.rfind('/');
@@ -104,7 +141,7 @@ void AudioSystem::Load(std::string path) {
 	buffer.index++;
 }
 
-void AudioSystem::Play(std::string name)
+unsigned cs::AudioSystem::Play(std::string name)
 {
 	unsigned const _bi = soundMap[name];
 	
@@ -112,7 +149,21 @@ void AudioSystem::Play(std::string name)
 
 	alSourcePlay(source[source.index]);
 
+	const unsigned _sid{ source.index };
+
 	source.index = (source.index + 1) % source.max;
+
+	return _sid;
+}
+
+void cs::AudioSystem::Pause(unsigned sid)
+{
+	alSourcePause(source[sid]);
+}
+
+void cs::AudioSystem::Stop(unsigned sid)
+{
+	alSourceStop(source[sid]);
 }
 
 #undef alec
