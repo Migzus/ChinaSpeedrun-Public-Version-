@@ -4,10 +4,19 @@
 #include "Mesh.h"
 #include "ChinaEngine.h"
 #include "World.h"
+#include "CameraComponent.h"
+#include "Camera.h"
 
 void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformComponent& transform)
 {
 	meshRenderer.ubo.model = transform.GetMatrixTransform();
+}
+
+void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformComponent& transform, CameraComponent& camera)
+{
+	meshRenderer.ubo.model = transform.GetMatrixTransform();
+	meshRenderer.ubo.proj = Camera::GetProjectionMatrix(camera);
+	meshRenderer.ubo.view = Camera::GetViewMatrix(camera);
 }
 
 void cs::MeshRenderer::VulkanDraw(MeshRendererComponent& meshRenderer, VkCommandBuffer& commandBuffer, VkPipelineLayout& layout, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer)

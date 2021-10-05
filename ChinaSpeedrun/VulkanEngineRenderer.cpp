@@ -15,6 +15,7 @@
 #include "Texture.h"
 #include "Mesh.h"
 #include "MeshRenderer.h"
+#include "CameraComponent.h"
 #include "ChinaEngine.h"
 #include "ResourceManager.h"
 #include "World.h"
@@ -308,7 +309,7 @@ VkDevice const& cs::VulkanEngineRenderer::GetDevice()
 
 float cs::VulkanEngineRenderer::AspectRatio() const
 {
-	return width / (float)height;
+	return static_cast<float>(width) / static_cast<float>(height);
 }
 
 GLFWwindow* cs::VulkanEngineRenderer::GetWindow()
@@ -509,8 +510,16 @@ void cs::VulkanEngineRenderer::InitImGui()
 
 	ImGui::StyleColorsDark();
 
-	ImGui_ImplGlfw_InitForVulkan(window, true);
+	ImGui_ImplGlfw_InitForVulkan(window, false);
 	ImGui_ImplVulkan_InitInfo _initInfo{};
+
+	glfwSetWindowFocusCallback(window, ImGui_ImplGlfw_WindowFocusCallback);
+	glfwSetCursorEnterCallback(window, ImGui_ImplGlfw_CursorEnterCallback);
+	glfwSetMouseButtonCallback(window, ImGui_ImplGlfw_MouseButtonCallback);
+	glfwSetScrollCallback(window, ImGui_ImplGlfw_ScrollCallback);
+	glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
+	glfwSetMonitorCallback(ImGui_ImplGlfw_MonitorCallback);
+
 	_initInfo.Instance = instance;
 	_initInfo.PhysicalDevice = physicalDevice;
 	_initInfo.Device = device;
@@ -832,7 +841,7 @@ void cs::VulkanEngineRenderer::CreateGraphicsPipeline()
 	_rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	_rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	_rasterizer.lineWidth = 1.0f;
-	_rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	_rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
 	_rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	_rasterizer.depthBiasEnable = VK_FALSE;
 	_rasterizer.depthBiasConstantFactor = 0.0f;
@@ -1256,15 +1265,10 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
 		auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
+
 		for (auto e : _renderers)
 		{
 			MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
-
-			// TEMP Solution
-			_meshRenderer.ubo.proj = glm::perspective(Mathf::PI * 0.25f, ChinaEngine::AspectRatio(), 0.1f, 10.0f);
-			_meshRenderer.ubo.view = glm::lookAt(Vector3(2.0f, 2.0f, 2.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, 1.0f));
-			_meshRenderer.ubo.proj[1][1] *= -1.0f;
-
 			MeshRenderer::VulkanDraw(_meshRenderer, commandBuffers[i], pipelineLayout, i, vertexBuffer.buffer, indexBuffer.buffer);
 		}
 		

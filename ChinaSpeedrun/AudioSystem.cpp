@@ -107,7 +107,7 @@ void AudioSystem::Load(std::string path) {
 void AudioSystem::Play(std::string name)
 {
 	unsigned const _bi = soundMap[name];
-
+	
 	alSourcei(source[source.index], AL_BUFFER, buffer[_bi]);
 
 	alSourcePlay(source[source.index]);

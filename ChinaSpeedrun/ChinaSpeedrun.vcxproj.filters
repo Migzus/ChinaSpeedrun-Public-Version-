@@ -62,6 +62,12 @@
       <Filter>imgui</Filter>
     </ClCompile>
     <ClCompile Include="ImGuiLayer.cpp" />
+    <ClCompile Include="Camera.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraComponent.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -104,6 +110,12 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="ImGuiLayer.h" />
+    <ClInclude Include="CameraComponent.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

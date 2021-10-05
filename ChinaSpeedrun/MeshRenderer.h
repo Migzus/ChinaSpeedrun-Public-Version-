@@ -27,6 +27,7 @@ namespace cs
 	{
 	public:
 		static void UpdateUBO(MeshRendererComponent& meshRenderer, class TransformComponent& transform);
+		static void UpdateUBO(MeshRendererComponent& meshRenderer, TransformComponent& transform, class CameraComponent& camera);
 		static void VulkanDraw(MeshRendererComponent& meshRenderer, VkCommandBuffer& commandBuffer, VkPipelineLayout& layout, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer);
 	};
 }

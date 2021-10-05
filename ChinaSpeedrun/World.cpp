@@ -4,6 +4,8 @@
 
 #include "Transform.h"
 #include "MeshRenderer.h"
+#include "Camera.h"
+#include "CameraComponent.h"
 
 cs::World::World()
 {
@@ -15,42 +17,25 @@ cs::World::World()
 
 void cs::World::Step()
 {
-	auto _objects{ registry.view<MeshRendererComponent, TransformComponent>() };
-	for (auto e : _objects)
+	auto _cameras{ registry.view<CameraComponent, TransformComponent>() };
+	for (auto e : _cameras)
+	{
+		auto& _transform{ registry.get<TransformComponent>(e) };
+		auto& _camera{ registry.get<CameraComponent>(e) };
+
+		Transform::CalculateMatrix(_transform);
+		Camera::CalculatePerspective(_camera);
+		Camera::UpdateCameraTransform(_camera, _transform);
+	}
+
+	auto _renderableObjects{ registry.view<MeshRendererComponent, TransformComponent>() };
+	for (auto e : _renderableObjects)
 	{
 		auto& _transform{ registry.get<TransformComponent>(e) };
 		auto& _meshRenderer{ registry.get<MeshRendererComponent>(e) };
+		auto& _camera{ registry.get<CameraComponent>(_cameras.front()) };
 
 		Transform::CalculateMatrix(_transform);
-		MeshRenderer::UpdateUBO(_meshRenderer, _transform);
+		MeshRenderer::UpdateUBO(_meshRenderer, _transform, _camera);
 	}
-
-	/*
-	auto _group = registry.group<MeshRendererComponent>(entt::get<TransformComponent>);
-	for (auto _entity : _group) {
-		auto& [_movement, _transform] = _group.get<MeshRendererComponent, TransformComponent>(_entity);
-		//MovementSystem::HandleMovement(_movement, _transform);
-	}
-	
-	for (int i = 0; i < 10; i++) {
-		registry.emplace<Matrix4x4>(registry.create());
-	}
-
-	auto _entity = registry.create();
-	registry.emplace<CameraComponent>(_entity);
-
-	for (int i = 0; i < 10; i++) {
-		registry.emplace<Matrix4x4>(registry.create());
-	}
-
-	registry.sort<CameraComponent, Matrix4x4>();
-
-	entt::basic_view view = registry.view<CameraComponent>();
-
-	CameraSystem system;
-
-	for (auto& e : view) {
-		const auto& camera = view.get<CameraComponent>(e);
-
-	}*/
 }

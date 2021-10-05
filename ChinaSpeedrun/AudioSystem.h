@@ -11,14 +11,14 @@
 #include <string>
 #include <map>
 
-// Potential structs to group important data
+// Structs to group data
 struct AudioBufferBlob {
 public:
 	static constexpr unsigned max{ 10 };
 	unsigned index;
 	unsigned buffer[max];
-	unsigned operator [](unsigned i) const { return buffer[i]; }
-	unsigned& operator [](unsigned i) { return buffer[i]; }
+	unsigned operator [](const unsigned i) const { return buffer[i]; }
+	unsigned& operator [](const unsigned i) { return buffer[i]; }
 	AudioBufferBlob();
 private:
 };

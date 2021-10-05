@@ -14,11 +14,9 @@
 
 #include "Input.h"
 #include "World.h"
-//#include "MovementComponent.h"
-//#include "CameraComponent.h"
 #include "Transform.h"
-//#include "AudioSystem.h"
 #include "GameObject.h"
+#include "CameraComponent.h"
 
 #include "Time.h"
 
@@ -40,8 +38,8 @@ void cs::ChinaEngine::Run()
 	// Temporary solution to a visual glitch
 	renderer.Redraw();
 
-	//InitInput();
 	ImGuiStyleInit();
+	InitInput();
 
 	MainLoop();
 	EngineExit();
@@ -60,7 +58,7 @@ cs::GameObject* cs::ChinaEngine::InstanceObject(const char* name, const Vector3 
 
 	TransformComponent& _transform{ _newObject->AddComponent<TransformComponent>() };
 	_transform.position = position;
-	_transform.rotation = rotation;
+	_transform.rotationDegrees = rotation;
 	_transform.scale = scale;
 
 	objects.push_back(_newObject);
@@ -88,8 +86,9 @@ void cs::ChinaEngine::EngineInit()
 	// for now we're just creating objects like this... will change this in the future
 	GameObject* _cube{ InstanceObject("Cube", Vector3(-1.3f, 0.0f, 1.2f)) };
 	GameObject* _plane{ InstanceObject("Plane", Vector3(-0.45f, 0.7f, 0.0f)) };
-	GameObject* _suzanne{ InstanceObject("Suzanne", Vector3(0.0f, -2.0f, -1.0f)) };
+	GameObject* _suzanne{ InstanceObject("Suzanne", Vector3(0.0f, -2.0f, -1.0f), Vector3(90.0f, 0.0f, 0.0f)) };
 	GameObject* _randomObject{ InstanceObject("This object has no renderer") };
+	GameObject* _camera{ InstanceObject("Camera", Vector3(0.0f, 1.0f, -6.0f), Vector3(62.0f, -23.0f, 16.0f)) };
 
 	MeshRendererComponent& _meshRendererCube{ _cube->AddComponent<MeshRendererComponent>() };
 	_meshRendererCube.mesh = Mesh::CreateDefaultCube({ 0.1f, 0.1f, 1.0f });
@@ -102,6 +101,8 @@ void cs::ChinaEngine::EngineInit()
 	MeshRendererComponent& _meshRendererMonke{ _suzanne->AddComponent<MeshRendererComponent>() };
 	_meshRendererMonke.mesh = ResourceManager::Load<Mesh>("../Resources/models/suzanne.obj");
 	_meshRendererMonke.materials.push_back(_material);
+
+	CameraComponent& _cameraComponent{ _camera->AddComponent<CameraComponent>() };
 }
 
 void cs::ChinaEngine::ImGuiStyleInit()
@@ -153,6 +154,8 @@ void cs::ChinaEngine::ImGuiDraw()
 		{
 			ImGui::Text(_activeObject->name.c_str());
 
+			// in the future we will move this entire draw function for ImGui to another class
+			// and drawing components in the inspector will not be done by multiple if statements...
 			if (_activeObject->HasComponent<TransformComponent>())
 			{
 				if (ImGui::TreeNodeEx("Transform", ImGuiTreeNodeFlags_DefaultOpen))
@@ -172,6 +175,20 @@ void cs::ChinaEngine::ImGuiDraw()
 				if (ImGui::TreeNodeEx("Mesh Renderer", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					
+
+					ImGui::TreePop();
+				}
+			}
+
+			if (_activeObject->HasComponent<CameraComponent>())
+			{
+				if (ImGui::TreeNodeEx("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					CameraComponent& _camera{ world.registry.get<CameraComponent>(_activeObject->entity) };
+
+					ImGui::DragFloat("Field of View", &_camera.fov);
+					ImGui::DragFloat("Near Plane", &_camera.nearPlane);
+					ImGui::DragFloat("Far Plane", &_camera.farPlane);
 
 					ImGui::TreePop();
 				}
