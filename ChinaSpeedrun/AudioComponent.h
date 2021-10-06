@@ -2,11 +2,16 @@
 
 #include <string>
 
-class AudioComponent
+namespace cs
 {
-public:
-	std::string soundName;
-	bool play, isPlaying, onListener;
-	AudioComponent();
-};
+	class AudioComponent
+	{
+	public:
+		std::string soundName;
+		unsigned soundId;
+		bool play, stop, isPlaying, onListener;
+		float time, duration;
 
+		AudioComponent();
+	};
+}

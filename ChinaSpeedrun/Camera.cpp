@@ -15,7 +15,7 @@ const Matrix4x4& cs::Camera::GetViewMatrix(CameraComponent& camera)
 
 void cs::Camera::UpdateCameraTransform(CameraComponent& camera, TransformComponent& transform)
 {
-	camera.view = transform.GetMatrixTransform();
+	camera.view = transform;
 }
 
 void cs::Camera::CalculatePerspective(CameraComponent& camera)

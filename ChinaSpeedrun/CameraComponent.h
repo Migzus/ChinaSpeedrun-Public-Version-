@@ -9,6 +9,8 @@ namespace cs
 	public:
 		friend class Camera;
 
+		static CameraComponent* currentActiveCamera;
+
 		enum class Projection
 		{
 			ORTHOGRAPHIC,

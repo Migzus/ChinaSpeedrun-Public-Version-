@@ -9,12 +9,12 @@
 
 void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformComponent& transform)
 {
-	meshRenderer.ubo.model = transform.GetMatrixTransform();
+	meshRenderer.ubo.model = transform;
 }
 
 void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformComponent& transform, CameraComponent& camera)
 {
-	meshRenderer.ubo.model = transform.GetMatrixTransform();
+	meshRenderer.ubo.model = transform;
 	meshRenderer.ubo.proj = Camera::GetProjectionMatrix(camera);
 	meshRenderer.ubo.view = Camera::GetViewMatrix(camera);
 }

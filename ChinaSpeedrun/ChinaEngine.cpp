@@ -1,5 +1,6 @@
 #include "ChinaEngine.h"
 
+#include "AudioComponent.h"
 #include "ResourceManager.h"
 
 #include "Vertex.h"
@@ -17,6 +18,7 @@
 #include "Transform.h"
 #include "GameObject.h"
 #include "CameraComponent.h"
+#include "Camera.h"
 
 #include "Time.h"
 
@@ -86,6 +88,7 @@ void cs::ChinaEngine::EngineInit()
 	// for now we're just creating objects like this... will change this in the future
 	GameObject* _cube{ InstanceObject("Cube", Vector3(-1.3f, 0.0f, 1.2f)) };
 	GameObject* _plane{ InstanceObject("Plane", Vector3(-0.45f, 0.7f, 0.0f)) };
+	GameObject* _plane2{ InstanceObject("Plane2", Vector3(0.75f, -0.3f, 2.0f)) };
 	GameObject* _suzanne{ InstanceObject("Suzanne", Vector3(0.0f, -2.0f, -1.0f), Vector3(90.0f, 0.0f, 0.0f)) };
 	GameObject* _randomObject{ InstanceObject("This object has no renderer") };
 	GameObject* _camera{ InstanceObject("Camera", Vector3(0.0f, 1.0f, -6.0f), Vector3(62.0f, -23.0f, 16.0f)) };
@@ -98,11 +101,22 @@ void cs::ChinaEngine::EngineInit()
 	_meshRendererPlane.mesh = Mesh::CreateDefaultPlane({ 0.5f, 0.5f });
 	_meshRendererPlane.materials.push_back(_material);
 
+	MeshRendererComponent& _meshRendererPlane2{ _plane2->AddComponent<MeshRendererComponent>() };
+	_meshRendererPlane2.mesh = _meshRendererPlane.mesh;
+	_meshRendererPlane2.materials.push_back(_material);
+
 	MeshRendererComponent& _meshRendererMonke{ _suzanne->AddComponent<MeshRendererComponent>() };
 	_meshRendererMonke.mesh = ResourceManager::Load<Mesh>("../Resources/models/suzanne.obj");
 	_meshRendererMonke.materials.push_back(_material);
 
 	CameraComponent& _cameraComponent{ _camera->AddComponent<CameraComponent>() };
+	CameraComponent::currentActiveCamera = &_cameraComponent;
+
+	auto* _audioComponent{ &_cube->AddComponent<AudioComponent>() };
+	_audioComponent->soundName = "koto";
+
+	_audioComponent = &_suzanne->AddComponent<AudioComponent>();
+	_audioComponent->soundName = "kazeoto";
 }
 
 void cs::ChinaEngine::ImGuiStyleInit()
@@ -131,6 +145,17 @@ void cs::ChinaEngine::ImGuiDraw()
 	ImGuizmo::BeginFrame();
 
 	static GameObject* _activeObject{ nullptr };
+	Matrix4x4 _viewMatrix{ glm::inverse(Camera::GetViewMatrix(*CameraComponent::currentActiveCamera)) }, _projectionMatrix{ Camera::GetProjectionMatrix(*CameraComponent::currentActiveCamera) }, _identityMatrix{ Matrix4x4(1.0f) };
+
+	ImGuizmo::SetOrthographic(false);
+	ImGuizmo::SetDrawlist();
+
+	int _width, _height;
+	renderer.GetViewportSize(_width, _height);
+
+	ImGuizmo::SetRect(0.0f, 0.0f, static_cast<float>(_width), static_cast<float>(_height));
+
+	ImGuizmo::DrawGrid(glm::value_ptr(_viewMatrix), glm::value_ptr(_projectionMatrix), glm::value_ptr(_identityMatrix), 100.0f);
 
 	if (ImGui::Begin("Hierarchy"))
 	{
@@ -158,10 +183,16 @@ void cs::ChinaEngine::ImGuiDraw()
 			// and drawing components in the inspector will not be done by multiple if statements...
 			if (_activeObject->HasComponent<TransformComponent>())
 			{
+				//ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, static_cast<float>(ImGui::GetWindowWidth()), static_cast<float>(ImGui::GetWindowHeight()));
+
+				TransformComponent& _transform{ world.registry.get<TransformComponent>(_activeObject->entity) };
+				Matrix4x4 _mainMatrix{ _transform };
+
+				ImGuizmo::Manipulate(glm::value_ptr(_viewMatrix), glm::value_ptr(_projectionMatrix),
+					ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(_mainMatrix));
+				
 				if (ImGui::TreeNodeEx("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					TransformComponent& _transform{ world.registry.get<TransformComponent>(_activeObject->entity) };
-
 					ImGui::DragFloat3("Position", &_transform.position.x, 0.1f);
 					ImGui::DragFloat3("Rotation", &_transform.rotationDegrees.x);
 					ImGui::DragFloat3("Scale", &_transform.scale.x);
@@ -186,12 +217,38 @@ void cs::ChinaEngine::ImGuiDraw()
 				{
 					CameraComponent& _camera{ world.registry.get<CameraComponent>(_activeObject->entity) };
 
-					const char* _options[]{ "Projection", "Orthographic" };
+					const char* _options[]{ "Perspective", "Orthographic" };
 					ImGui::ListBox("Projection", (int*)&_camera.projection, _options, 2);
 
 					ImGui::DragFloat("Field of View", &_camera.fov, 1.0f, 0.1f, 179.0f);
 					ImGui::DragFloat("Near Plane", &_camera.nearPlane, 1.0f, 0.001f);
 					ImGui::DragFloat("Far Plane", &_camera.farPlane, 1.0f);
+
+					ImGui::TreePop();
+				}
+			}
+
+			if (_activeObject->HasComponent<AudioComponent>())
+			{
+				if (ImGui::TreeNodeEx("Audio", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					auto& _audioComponent{ world.registry.get<AudioComponent>(_activeObject->entity) };
+
+					char buf[128];
+					strncpy_s(buf, _audioComponent.soundName.c_str(), sizeof(buf) - 1);
+					ImGui::InputText("Sound Name", &buf[0], sizeof(buf));
+					_audioComponent.soundName = buf;
+
+					if (ImGui::Button("Play"))
+						_audioComponent.play = true;
+
+					ImGui::SameLine();
+
+					if (ImGui::Button("Stop"))
+						_audioComponent.stop = true;
+
+					ImGui::SameLine();
+					ImGui::ProgressBar(_audioComponent.time / _audioComponent.duration);
 
 					ImGui::TreePop();
 				}

@@ -3,8 +3,11 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-# Ingnore precompiled shaders
+# Ignore precompiled shaders
 Resources/shaders/*.spv
+
+# Ignore the imgui.ini file, only because it will constantly gives us a merge conflict
+ChinaSpeedrun/imgui.ini
 
 # User-specific files
 *.rsuser

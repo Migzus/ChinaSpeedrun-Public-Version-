@@ -1,2 +1,3 @@
 #include "CameraComponent.h"
-#include "ChinaEngine.h"
+
+cs::CameraComponent* cs::CameraComponent::currentActiveCamera;

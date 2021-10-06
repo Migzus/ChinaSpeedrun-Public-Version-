@@ -309,7 +309,13 @@ VkDevice const& cs::VulkanEngineRenderer::GetDevice()
 
 float cs::VulkanEngineRenderer::AspectRatio() const
 {
-	return static_cast<float>(width) / static_cast<float>(height);
+	// This will change, I want to remove the if statement, and I want to not use this every frame, for every object
+	static int _height{ 1 };
+
+	if (height > 0)
+		_height = height;
+
+	return static_cast<float>(width) / static_cast<float>(_height);
 }
 
 GLFWwindow* cs::VulkanEngineRenderer::GetWindow()

@@ -14,7 +14,12 @@ void cs::Transform::CalculateMatrix(TransformComponent& transform)
 	transform.matrix = glm::translate(Matrix4x4(1.0f), transform.position) * glm::toMat4(Quaternion(transform.rotation)) * glm::scale(Matrix4x4(1.0f), transform.scale);
 }
 
-const Matrix4x4& cs::TransformComponent::GetMatrixTransform()
+Matrix4x4& cs::Transform::GetMatrixTransform(TransformComponent& transform)
+{
+	return transform.matrix;
+}
+
+cs::TransformComponent::operator Matrix4x4& ()
 {
 	return matrix;
 }

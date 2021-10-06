@@ -8,6 +8,7 @@ namespace cs
 	{
 	public:
 		entt::registry registry;
+		class AudioSystem* audioSystem;
 		
 		World();
 		
