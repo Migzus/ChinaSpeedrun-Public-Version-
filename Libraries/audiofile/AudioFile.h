@@ -83,6 +83,8 @@ public:
      */
     bool load (std::string filePath);
 
+    bool loadBuffer(std::string filePath, std::vector<uint8_t>& bufferData);
+
     bool read(std::string filePath, std::vector<uint8_t>& out);
 
     /** Saves an audio file to a given file path.
@@ -96,6 +98,9 @@ public:
     
     /** @Returns the number of audio channels in the buffer */
     int getNumChannels() const;
+
+    /** @Returns the number of audio channels as read from file */
+    int getNumChannelsMeta() const;
 
     /** @Returns true if the audio file is mono */
     bool isMono() const;
@@ -222,6 +227,8 @@ private:
     uint16_t audioFormat;
     bool logErrorsToConsole{ true };
 
+    //=============================================================
+    // These are only set in decodeWaveFileHeader. AIFF too in the future?
     uint16_t numChannels;
     uint16_t numBytesPerBlock;
     uint16_t numBytesPerSample;
@@ -309,6 +316,13 @@ template <class T>
 int AudioFile<T>::getNumChannels() const
 {
     return (int)samples.size();
+}
+
+//=============================================================
+template <class T>
+int AudioFile<T>::getNumChannelsMeta() const
+{
+    return numChannels;
 }
 
 //=============================================================
@@ -546,6 +560,43 @@ bool AudioFile<T>::load (std::string filePath)
 
 //=============================================================
 template <class T>
+bool AudioFile<T>::loadBuffer(std::string filePath, std::vector<uint8_t>& bufferData)
+{
+    if (!read(filePath, bufferData))
+    {
+        reportError("ERROR: Couldn't read Audio File " + filePath);
+        return false;
+    }
+
+    // get audio file format
+    audioFileFormat = determineAudioFileFormat(bufferData);
+
+    if (audioFileFormat == AudioFileFormat::Wave)
+    {
+        if (decodeWaveFileHeader(bufferData))
+        {
+            //bufferData.erase(bufferData.begin(), bufferData.begin() + indexOfDataChunk + 8);
+            return true;
+        }
+    	else
+        {
+            return false;
+        }
+    }
+    else if (audioFileFormat == AudioFileFormat::Aiff)
+    {
+        reportError("ERROR: Loading AIFF buffer only is not supported");
+        return false;
+    }
+    else
+    {
+        reportError("Audio File Type: Error");
+        return false;
+    }
+}
+
+//=============================================================
+template <class T>
 bool AudioFile<T>::read(std::string filePath, std::vector<uint8_t>& out)
 {
     std::ifstream file(filePath, std::ios::binary);
@@ -662,7 +713,7 @@ bool AudioFile<T>::decodeWaveFile (std::vector<uint8_t>& fileData)
     int d = indexOfDataChunk;
     std::string dataChunkID (fileData.begin() + d, fileData.begin() + d + 4);
     int32_t dataChunkSize = fourBytesToInt (fileData, d + 4);
-    
+
     int numSamples = dataChunkSize / (numChannels * bitDepth / 8);
     int samplesStartIndex = indexOfDataChunk + 8;
     

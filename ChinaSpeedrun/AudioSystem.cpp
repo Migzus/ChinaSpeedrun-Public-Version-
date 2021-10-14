@@ -99,8 +99,10 @@ bool cs::AudioSystem::Load(std::string path) {
 		return false;
 	}
 
+	std::vector<uint8_t> bufferData;
+
 	AudioFile<float> file;
-	if (!file.load(path))
+	if (!file.loadBuffer(path, bufferData))
 	{
 		std::cerr << "AudioFile error: " << "Couldn't read file" << std::endl;
 		return false;
@@ -108,30 +110,38 @@ bool cs::AudioSystem::Load(std::string path) {
 
 	ALenum format;
 
-	if (file.isMono()) {
-		if (file.getBitDepth() == 8) {
+	if (file.getNumChannelsMeta() == 1)
+	{
+		if (file.getBitDepth() == 8)
+		{
 			format = AL_FORMAT_MONO8;
 		}
-		else {
+		else
+		{
 			format = AL_FORMAT_MONO16;
 		}
 	}
-	else {
-		if (file.getBitDepth() == 8) {
+	else if (file.getNumChannelsMeta() == 2)
+	{
+		if (file.getBitDepth() == 8)
+		{
 			format = AL_FORMAT_STEREO8;
 		}
-		else {
+		else
+		{
 			format = AL_FORMAT_STEREO16;
 		}
 	}
 
-	std::vector<uint8_t> bufferData;
-
 	buffer.meta[buffer.index].rate = file.getSampleRate();
-	buffer.meta[buffer.index].duration = static_cast<float>(file.getLengthInSeconds());
 	buffer.meta[buffer.index].depth = file.getBitDepth();
+	buffer.meta[buffer.index].duration = // audio calculation is wrong right now
+		static_cast<float>(bufferData.size()) /
+		static_cast<float>(file.getBitDepth()) /
+		static_cast<float>(file.getNumChannelsMeta()) /
+		static_cast<float>(file.getSampleRate());
 
-	file.convertPCMToBuffer(bufferData);
+	std::cout << bufferData.size() << ", " << file.getBitDepth() << ", " << file.getNumChannelsMeta() << ", " << file.getSampleRate() << std::endl;
 
 	alec(alBufferData(buffer[buffer.index], AL_FORMAT_STEREO16, bufferData.data(), static_cast<ALsizei>(bufferData.size()), file.getSampleRate()));
 
