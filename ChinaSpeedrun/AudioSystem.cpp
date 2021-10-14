@@ -91,15 +91,20 @@ void cs::AudioSystem::Init()
 	Load("../resources/sounds/pon1.wav");
 }
 
-void cs::AudioSystem::Load(std::string path) {
+bool cs::AudioSystem::Load(std::string path) {
 
-	if (buffer.index + 1 >= buffer.max) {
+	if (buffer.index + 1 >= buffer.max)
+	{
 		std::cerr << "AudioSystem error: " << "Not enough buffers" << std::endl;
-		return;
+		return false;
 	}
 
 	AudioFile<float> file;
-	file.load(path);
+	if (!file.load(path))
+	{
+		std::cerr << "AudioFile error: " << "Couldn't read file" << std::endl;
+		return false;
+	}
 
 	ALenum format;
 
@@ -139,6 +144,8 @@ void cs::AudioSystem::Load(std::string path) {
 	soundMap.insert({ pathToName(path), buffer.index });
 
 	buffer.index++;
+
+	return true;
 }
 
 unsigned cs::AudioSystem::Play(std::string name)

@@ -51,7 +51,7 @@ namespace cs {
 
 	private:
 		void Init();
-		void Load(std::string path);
+		bool Load(std::string path);
 		unsigned Play(std::string name);
 		void Pause(unsigned sid);
 		void Stop(unsigned sid);
