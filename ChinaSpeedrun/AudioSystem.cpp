@@ -110,7 +110,7 @@ bool cs::AudioSystem::Load(std::string path) {
 
 	ALenum format;
 
-	if (file.getNumChannelsMeta() == 1)
+	if (file.getNumChannelsAsRead() == 1)
 	{
 		if (file.getBitDepth() == 8)
 		{
@@ -121,7 +121,7 @@ bool cs::AudioSystem::Load(std::string path) {
 			format = AL_FORMAT_MONO16;
 		}
 	}
-	else if (file.getNumChannelsMeta() == 2)
+	else if (file.getNumChannelsAsRead() == 2)
 	{
 		if (file.getBitDepth() == 8)
 		{
@@ -138,11 +138,11 @@ bool cs::AudioSystem::Load(std::string path) {
 	buffer.meta[buffer.index].duration =
 		static_cast<float>(bufferData.size()) /
 		static_cast<float>(file.getBitDepth()) /
-		static_cast<float>(file.getNumChannelsMeta()) /
+		static_cast<float>(file.getNumChannelsAsRead()) /
 		static_cast<float>(file.getSampleRate()) *
 		8.f;
 
-	std::cout << bufferData.size() << ", " << file.getBitDepth() << ", " << file.getNumChannelsMeta() << ", " << file.getSampleRate() << std::endl;
+	std::cout << bufferData.size() << ", " << file.getBitDepth() << ", " << file.getNumChannelsAsRead() << ", " << file.getSampleRate() << std::endl;
 
 	alec(alBufferData(buffer[buffer.index], AL_FORMAT_STEREO16, bufferData.data(), static_cast<ALsizei>(bufferData.size()), file.getSampleRate()));
 

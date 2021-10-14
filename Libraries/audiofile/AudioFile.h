@@ -100,7 +100,7 @@ public:
     int getNumChannels() const;
 
     /** @Returns the number of audio channels as read from file */
-    int getNumChannelsMeta() const;
+    int getNumChannelsAsRead() const;
 
     /** @Returns true if the audio file is mono */
     bool isMono() const;
@@ -320,7 +320,7 @@ int AudioFile<T>::getNumChannels() const
 
 //=============================================================
 template <class T>
-int AudioFile<T>::getNumChannelsMeta() const
+int AudioFile<T>::getNumChannelsAsRead() const
 {
     return numChannels;
 }
