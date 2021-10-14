@@ -135,11 +135,12 @@ bool cs::AudioSystem::Load(std::string path) {
 
 	buffer.meta[buffer.index].rate = file.getSampleRate();
 	buffer.meta[buffer.index].depth = file.getBitDepth();
-	buffer.meta[buffer.index].duration = // audio calculation is wrong right now
+	buffer.meta[buffer.index].duration =
 		static_cast<float>(bufferData.size()) /
 		static_cast<float>(file.getBitDepth()) /
 		static_cast<float>(file.getNumChannelsMeta()) /
-		static_cast<float>(file.getSampleRate());
+		static_cast<float>(file.getSampleRate()) *
+		8.f;
 
 	std::cout << bufferData.size() << ", " << file.getBitDepth() << ", " << file.getNumChannelsMeta() << ", " << file.getSampleRate() << std::endl;
 
