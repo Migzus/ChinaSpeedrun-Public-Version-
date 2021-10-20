@@ -19,15 +19,13 @@ Once downloaded you MUST go into the Resource/shaders directory; run a file name
 If you don't run this file; when running the compiled progarm, it will crash.
 
 Libraries used:<br>
-GLFW<br>
-GLM<br>
-The stb collection<br>
-imgui<br>
-OpenAL<br>
-TinyOBJLoader<br>
-Box2D<br>
-entt<br>
-gifdec<br>
-ImGuizmo<br>
-<br>
-(Links to their github pages will be added soon)
+[GLFW](https://github.com/glfw/glfw)<br>
+[GLM](https://github.com/g-truc/glm)<br>
+[The stb collection](https://github.com/nothings/stb)<br>
+[imgui](https://github.com/ocornut/imgui)<br>
+[OpenAL](https://www.openal.org/)<br>
+[TinyOBJLoader](https://github.com/tinyobjloader/tinyobjloader)<br>
+[Box2D](https://github.com/erincatto/box2d)<br>
+[entt](https://github.com/skypjack/entt)<br>
+[gifdec](https://github.com/lecram/gifdec)<br>
+[ImGuizmo](https://github.com/CedricGuillemet/ImGuizmo)<br>
