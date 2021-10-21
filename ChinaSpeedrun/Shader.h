@@ -2,15 +2,14 @@
 
 #include "Resource.h"
 
-#include <vector>
+#include <vulkan/vulkan.h>
+#include <map>
 
 namespace cs
 {
 	class Shader : public Resource
 	{
 	public:
-		Shader(std::vector<std::string> paths);
-
 		enum class Type
 		{
 			VERTEX,
@@ -19,7 +18,7 @@ namespace cs
 			COMPUTE
 		};
 
-		enum class DataType
+		enum class Data
 		{
 			FLOAT,
 			BOOL,
@@ -30,15 +29,22 @@ namespace cs
 			MAT2,
 			MAT3,
 			MAT4,
-			SAMPLER2D
+			SAMPLER2D,
+			UNIFORM
 		};
+
+		std::map<std::string, VkDescriptorSetLayoutBinding> descriptorBindings;
+		std::map<std::string, VkVertexInputAttributeDescription> vertexAttributes;
 
 		void Initialize() override;
 
-		// we need shader type, 
-		void AssignShaderParam(Type shaderType, DataType dataType);
+		void AssignShaderDescriptor(std::string descriptorName, uint32_t binding, Type shaderType, Data dataType);
+		void AssignShaderVertexInputAttrib(std::string attrbuteName, uint32_t location, Data dataType, uint32_t offset);
 
 	private:
+		VkRenderPass renderPass;
+		VkPipelineLayout layout;
+		VkPipeline pipeline;
 		//std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
 	};
 }

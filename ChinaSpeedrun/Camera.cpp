@@ -21,4 +21,5 @@ void cs::Camera::UpdateCameraTransform(CameraComponent& camera, TransformCompone
 void cs::Camera::CalculatePerspective(CameraComponent& camera)
 {
 	camera.proj = glm::perspective(glm::radians(camera.fov), ChinaEngine::AspectRatio(), camera.nearPlane, camera.farPlane);
+	camera.proj[1][1] *= -1.0f;
 }

@@ -131,7 +131,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\lib-vc2019;$(SolutionDir)\Libraries\openal\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;OpenAL32.lib;glslang.lib;shaderc.lib;shaderc_combined.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;OpenAL32.lib;shaderc.lib;shaderc_combined.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -151,7 +151,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\lib-vc2019;$(SolutionDir)\Libraries\openal\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;OpenAL32.lib;glslang.lib;shaderc.lib;shaderc_combined.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;OpenAL32.lib;shaderc.lib;shaderc_combined.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -170,6 +170,7 @@
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="ChinaEngine.cpp" />
     <ClCompile Include="Color.cpp" />
+    <ClCompile Include="Debug.cpp" />
     <ClCompile Include="EngineEditor.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Gizmos.cpp" />
@@ -183,7 +184,10 @@
     <ClCompile Include="RenderComponent.cpp" />
     <ClCompile Include="Resource.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Signal.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="Transform.cpp" />
@@ -201,6 +205,7 @@
     <ClInclude Include="ChinaCoreHeader.h" />
     <ClInclude Include="ChinaEngine.h" />
     <ClInclude Include="Color.h" />
+    <ClInclude Include="Debug.h" />
     <ClInclude Include="EngineEditor.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Gizmos.h" />
@@ -213,7 +218,10 @@
     <ClInclude Include="RenderComponent.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Signal.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="Transform.h" />

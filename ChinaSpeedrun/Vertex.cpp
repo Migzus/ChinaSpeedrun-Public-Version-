@@ -1,7 +1,5 @@
 #include "Vertex.h"
 
-using namespace cs;
-
 VkVertexInputBindingDescription cs::Vertex::GetBindingDescription()
 {
 	VkVertexInputBindingDescription _bindingDescription{};

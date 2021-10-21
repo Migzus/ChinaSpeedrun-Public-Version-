@@ -24,9 +24,12 @@ namespace cs
 		void SetPixels(std::vector<Color> pixels, uint32_t width, uint32_t height);
 		uint32_t GetTextureByteSize() const;
 
+		// will make these private
+		VkImageView textureView;
+		VkSampler textureSampler;
+
 	private:
 		VkImage texture;
 		VkDeviceMemory textureMemory;
-		VkImageView textureView;
 	};
 }

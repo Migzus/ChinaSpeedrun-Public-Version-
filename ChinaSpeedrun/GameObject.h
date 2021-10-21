@@ -22,6 +22,8 @@ namespace cs
 
 		GameObject();
 
+		void Test(int number, std::string someString);
+
 		// Draw all the game object's components
 		void EditorDrawComponents();
 

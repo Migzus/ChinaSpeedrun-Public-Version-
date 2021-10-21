@@ -32,9 +32,7 @@ namespace cs
 
 		static void ForcePushMesh(Mesh* mesh);
 
-		/////////////
-		static void InitializeTest();
-		/////////////
+		static void InstanceAllResources();
 
 		template<>
 		static Mesh* IsDuplicateResource(std::string filename)

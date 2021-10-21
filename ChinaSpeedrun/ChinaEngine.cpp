@@ -22,6 +22,10 @@
 
 #include "Time.h"
 
+#ifdef NDEBUG
+#include <shaderc/shaderc.hpp>
+#endif
+
 cs::World cs::ChinaEngine::world;
 cs::VulkanEngineRenderer cs::ChinaEngine::renderer;
 std::vector<cs::GameObject*> cs::ChinaEngine::objects;
@@ -30,12 +34,26 @@ void cs::ChinaEngine::Run()
 {
 	Time::CycleInit();
 
-	EngineInit();
+#ifdef NDEBUG
+	shaderc::Compiler _compiler;
+	std::string _outText;
 
+	shaderc::SpvCompilationResult _result{ _compiler.CompileGlslToSpv(_outText, shaderc_glsl_default_vertex_shader, "../Resource/shaders/default_shader.vert") };
+	
+	if (_result.GetCompilationStatus() != shaderc_compilation_status_success)
+		std::cout << "[WARNING]\t: " << _result.GetErrorMessage() << '\n';
+#endif // NDEBUG
+
+	// ok so we need to fizzle out what needs to be done.
+	// The order of things needs to be ordered
+	// The VulkenRenderer needs to init the essentials, wilst also init the other things that
+	// currently can be static.
+	// We then can gain the ability to dynamically assign stuff
+
+	EngineInit();
 	renderer.Create(800, 600, "China Speedrun");
 
-	// Temporarly pre init all resources (so vulkan can actually use it)
-	ResourceManager::InitializeTest();
+	ResourceManager::InstanceAllResources();
 
 	// Temporary solution to a visual glitch
 	renderer.Redraw();
@@ -75,9 +93,22 @@ float cs::ChinaEngine::AspectRatio()
 void cs::ChinaEngine::EngineInit()
 {
 	Shader* _shader{ ResourceManager::Load<Shader>("../Resources/shaders/default_shader") };
-	Material* _material{ ResourceManager::Load<Material>("../Resources/materials/test.mat") };
+	_shader->AssignShaderVertexInputAttrib("position", 0, Shader::Data::VEC3, offsetof(Vertex, position));
+	_shader->AssignShaderVertexInputAttrib("color", 1, Shader::Data::VEC3, offsetof(Vertex, color));
+	_shader->AssignShaderVertexInputAttrib("texCoord", 2, Shader::Data::VEC2, offsetof(Vertex, texCoord));
 
-	//_material->shader = _shader;
+	_shader->AssignShaderDescriptor("ubo", 0, Shader::Type::VERTEX, Shader::Data::UNIFORM);
+	_shader->AssignShaderDescriptor("texSampler", 1, Shader::Type::FRAGMENT, Shader::Data::SAMPLER2D);
+
+	Material* _material{ ResourceManager::Load<Material>("../Resources/materials/test.mat") };
+	Material* _material1{ ResourceManager::Load<Material>("../Resources/materials/test1.mat") };
+	Material* _material2{ ResourceManager::Load<Material>("../Resources/materials/test2.mat") };
+	_material->shader = _shader;
+	_material1->shader = _shader;
+	_material2->shader = _shader;
+	_material->renderMode = Material::RenderMode::OPEQUE_; // This is not nesseccary, it is set to Opeque by default
+	_material->fillMode = Material::FillMode::FILL;
+	_material->cullMode = Material::CullMode::BACK;
 
 	// these make no difference when spawning an object... yet
 	// meaning you can't assign these textures to any models...
@@ -85,6 +116,11 @@ void cs::ChinaEngine::EngineInit()
 	Texture* _junkoGyate{ ResourceManager::Load<Texture>("../Resources/textures/junko_gyate.png") };
 	Texture* _chaikaSmile{ ResourceManager::Load<Texture>("../Resources/textures/chaika_smile.png") };
 
+	_material->shaderParams["texSampler"] = _vargFlush;
+	_material1->shaderParams["texSampler"] = _junkoGyate;
+	_material2->shaderParams["texSampler"] = _chaikaSmile;
+	//_material->shaderParams["time"] = 0.0f;
+	
 	// for now we're just creating objects like this... will change this in the future
 	GameObject* _cube{ InstanceObject("Cube", Vector3(-1.3f, 0.0f, 1.2f)) };
 	GameObject* _plane{ InstanceObject("Plane", Vector3(-0.45f, 0.7f, 0.0f)) };
@@ -99,15 +135,15 @@ void cs::ChinaEngine::EngineInit()
 
 	MeshRendererComponent& _meshRendererPlane{ _plane->AddComponent<MeshRendererComponent>() };
 	_meshRendererPlane.mesh = Mesh::CreateDefaultPlane({ 0.5f, 0.5f });
-	_meshRendererPlane.materials.push_back(_material);
+	_meshRendererPlane.materials.push_back(_material2);
 
 	MeshRendererComponent& _meshRendererPlane2{ _plane2->AddComponent<MeshRendererComponent>() };
 	_meshRendererPlane2.mesh = _meshRendererPlane.mesh;
-	_meshRendererPlane2.materials.push_back(_material);
+	_meshRendererPlane2.materials.push_back(_material1);
 
 	MeshRendererComponent& _meshRendererMonke{ _suzanne->AddComponent<MeshRendererComponent>() };
 	_meshRendererMonke.mesh = ResourceManager::Load<Mesh>("../Resources/models/suzanne.obj");
-	_meshRendererMonke.materials.push_back(_material);
+	_meshRendererMonke.materials.push_back(_material1);
 
 	CameraComponent& _cameraComponent{ _camera->AddComponent<CameraComponent>() };
 	CameraComponent::currentActiveCamera = &_cameraComponent;
@@ -154,7 +190,6 @@ void cs::ChinaEngine::ImGuiDraw()
 	renderer.GetViewportSize(_width, _height);
 
 	ImGuizmo::SetRect(0.0f, 0.0f, static_cast<float>(_width), static_cast<float>(_height));
-
 	ImGuizmo::DrawGrid(glm::value_ptr(_viewMatrix), glm::value_ptr(_projectionMatrix), glm::value_ptr(_identityMatrix), 100.0f);
 
 	if (ImGui::Begin("Hierarchy"))
@@ -191,6 +226,11 @@ void cs::ChinaEngine::ImGuiDraw()
 				ImGuizmo::Manipulate(glm::value_ptr(_viewMatrix), glm::value_ptr(_projectionMatrix),
 					ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(_mainMatrix));
 				
+				if (ImGuizmo::IsUsing())
+				{
+					_transform.position = _mainMatrix[3];
+				}
+
 				if (ImGui::TreeNodeEx("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					ImGui::DragFloat3("Position", &_transform.position.x, 0.1f);
@@ -255,6 +295,10 @@ void cs::ChinaEngine::ImGuiDraw()
 			}
 		}
 	}
+	ImGui::End();
+
+	if (ImGui::Begin("Profiler"))
+		ImGui::Text("Delta Time: %f", Time::deltaTime);
 	ImGui::End();
 
 	ImGui::Render();

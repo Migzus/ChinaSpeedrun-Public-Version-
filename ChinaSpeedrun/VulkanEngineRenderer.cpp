@@ -96,7 +96,7 @@ void cs::VulkanEngineRenderer::AllocateMesh(const std::vector<Vertex>& vertices,
 	indexBufferRef = indexBuffer.buffer;
 }
 
-void cs::VulkanEngineRenderer::AllocateTexture(const uint8_t* pixels, const uint32_t& mipLevels, const uint32_t& texWidth, const uint32_t& texHeight, VkImage& texture, VkDeviceMemory& textureMemory, VkImageView& textureView)
+void cs::VulkanEngineRenderer::AllocateTexture(const uint8_t* pixels, const uint32_t& mipLevels, const uint32_t& texWidth, const uint32_t& texHeight, VkImage& texture, VkDeviceMemory& textureMemory, VkImageView& textureView, VkSampler& textureSampler)
 {
 	VkDeviceSize _imageSize{ static_cast<uint64_t>(texWidth * texHeight * 4) };
 	VkBuffer _stagingBuffer;
@@ -117,10 +117,46 @@ void cs::VulkanEngineRenderer::AllocateTexture(const uint8_t* pixels, const uint
 	vkDestroyBuffer(device, _stagingBuffer, nullptr);
 	vkFreeMemory(device, _stagingBufferMemory, nullptr);
 
+	// --- VIEW -------------------------------------------------------------------------
+
 	textureView = CreateImageView(texture, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels);
+
+	// --- SAMPLER ----------------------------------------------------------------------
+
+	VkSamplerCreateInfo _samplerInfo{};
+	_samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	_samplerInfo.magFilter = VK_FILTER_LINEAR;
+	_samplerInfo.minFilter = VK_FILTER_LINEAR;
+	_samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	_samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	_samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	_samplerInfo.anisotropyEnable = VK_FALSE;
+	_samplerInfo.maxAnisotropy = 1.0f;
+	_samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+	_samplerInfo.compareEnable = VK_FALSE;
+	_samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+	_samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	_samplerInfo.mipLodBias = 0.0f;
+	_samplerInfo.minLod = 0.0f;
+	_samplerInfo.maxLod = static_cast<float>(mipLevels);
+
+	if (vkCreateSampler(device, &_samplerInfo, nullptr, &textureSampler) != VK_SUCCESS)
+		throw std::runtime_error("[FAIL]\t: Failed to create texture sampler.");
+
+	//std::cout << "helloz\n";
 }
 
-void VulkanEngineRenderer::AllocateShader(Shader* shader)
+void VulkanEngineRenderer::AllocateShader(VkRenderPass& renderPass, VkPipelineLayout& layout, VkPipeline& pipeline)
+{
+
+}
+
+void cs::VulkanEngineRenderer::AllocateMaterial(Material* material)
+{
+
+}
+
+void cs::VulkanEngineRenderer::AllocateObject(GameObject* object)
 {
 
 }
@@ -175,30 +211,31 @@ void cs::VulkanEngineRenderer::InitWindow()
 
 void cs::VulkanEngineRenderer::InitVulkan()
 {
-	CreateInstance();
-	SetupDebugMessenger();
-	CreateSurface();
-	PickPhysicalDevice();
-	CreateLogicalDevice();
-	CreateSwapChain();
-	CreateImageViews();
-	CreateRenderPass();
-	CreateDescriptorSetLayout();
-	CreateGraphicsPipeline();
-	CreateColorResources();
-	CreateDepthResources();
-	CreateFramebuffers();
-	CreateCommandPool();
-	CreateTextureImage();
-	CreateTextureImageView();
-	CreateTextureSampler();
-	CreateVertexBuffer();
-	CreateIndexBuffer();
-	CreateUniformBuffers();
-	CreateDescriptorPool();
-	CreateDescriptorSets();
-	CreateCommandBuffers();
-	CreateSyncObjects();
+	CreateInstance();			// Necessarily Init Call
+	SetupDebugMessenger();		// Init Call
+	CreateSurface();			// Necessarily Init Call
+	PickPhysicalDevice();		// Necessarily Init Call
+	CreateLogicalDevice();		// Necessarily Init Call
+	CreateSwapChain();			// Necessarily Init Call
+	CreateImageViews();			// Necessarily Init Call
+	//AllocateShader(new Shader);			// Setup Default Shader
+	CreateRenderPass();			// Shader Spesific
+	CreateDescriptorSetLayout();// Shader Spesific
+	CreateGraphicsPipeline();	// Shader Spesific (Depends on a render pass)
+	CreateColorResources();		// Necessarily Init Call
+	CreateDepthResources();		// Necessarily Init Call
+	CreateFramebuffers();		// Necessarily Init Call (But requires a render pass) (one way to counter this is to create a default shader)
+	CreateCommandPool();		// Necessarily Init Call
+	CreateTextureImage();		// Texture Spesific
+	CreateTextureImageView();	// Texture Spesific
+	CreateTextureSampler();		// Texture Spesific
+	CreateVertexBuffer();		// Necessarily Init Call (For Models)
+	CreateIndexBuffer();		// Necessarily Init Call (For Models)
+	CreateUniformBuffers();		// Necessarily Init Call (For Objects)
+	CreateDescriptorPool();		// Shader Spesific (Technically we only need one descriptor pool, seeing as it describes all object traits in relation to the shader)
+	CreateDescriptorSets();		// Material Spesific (Here we mash up everything and create a material out of everything told to the shader)
+	CreateCommandBuffers();		// Object Spesific (Whenever we create new objects we need to add them as draw commands) (also, depends on pipeline layout)
+	CreateSyncObjects();		// Necessarily Init Call
 }
 
 void cs::VulkanEngineRenderer::DrawFrame()
@@ -757,7 +794,7 @@ void cs::VulkanEngineRenderer::CreateDescriptorSetLayout()
 	{
 		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
 
-		// bind the matricies
+		// layout for matricies (UniformBufferObject)
 		VkDescriptorSetLayoutBinding _uboLayoutBinding{};
 		_uboLayoutBinding.binding = 0; // what binding slot are we using -> layout(binding = ???) uniform ...
 		_uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -765,11 +802,11 @@ void cs::VulkanEngineRenderer::CreateDescriptorSetLayout()
 		_uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // what shader type will we look for
 		_uboLayoutBinding.pImmutableSamplers = nullptr;
 
-		// bind the texture
+		// layout for textures
 		VkDescriptorSetLayoutBinding _samplerLayoutBinding{};
 		_samplerLayoutBinding.binding = 1;
-		_samplerLayoutBinding.descriptorCount = 1;
 		_samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		_samplerLayoutBinding.descriptorCount = 1;
 		_samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		_samplerLayoutBinding.pImmutableSamplers = nullptr;
 
@@ -845,10 +882,10 @@ void cs::VulkanEngineRenderer::CreateGraphicsPipeline()
 	_rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 	_rasterizer.depthClampEnable = VK_FALSE;
 	_rasterizer.rasterizerDiscardEnable = VK_FALSE;
-	_rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-	_rasterizer.lineWidth = 1.0f;
-	_rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
-	_rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+	_rasterizer.polygonMode = VK_POLYGON_MODE_FILL;				// make this material spesific would be preferable
+	_rasterizer.lineWidth = 1.0f;								// make this material spesific would be preferable
+	_rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;				// make this material spesific would be preferable
+	_rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;	// make this material spesific would be preferable
 	_rasterizer.depthBiasEnable = VK_FALSE;
 	_rasterizer.depthBiasConstantFactor = 0.0f;
 	_rasterizer.depthBiasClamp = 0.0f;
@@ -875,6 +912,7 @@ void cs::VulkanEngineRenderer::CreateGraphicsPipeline()
 	_depthStencil.front = {};
 	_depthStencil.back = {};
 
+	// Make this attachment "visible" for materials would be preferable
 	VkPipelineColorBlendAttachmentState _colorBlendAttachment{};
 	_colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 	_colorBlendAttachment.blendEnable = VK_FALSE;
@@ -896,6 +934,7 @@ void cs::VulkanEngineRenderer::CreateGraphicsPipeline()
 	_colorBlending.blendConstants[2] = 0.0f;
 	_colorBlending.blendConstants[3] = 0.0f;
 
+	// DescriptorSetLayouts can be shader spesific and not object dependent
 	std::vector<VkDescriptorSetLayout> _allDescriptorSetLayouts;
 	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
 	for (auto e : _renderers)
@@ -1120,7 +1159,7 @@ void cs::VulkanEngineRenderer::CreateTextureSampler()
 	_samplerInfo.maxLod = static_cast<float>(mipLevels);
 
 	if (vkCreateSampler(device, &_samplerInfo, nullptr, &textureSampler) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to create texture sampler.");
+		throw std::runtime_error("[FAIL]\t: Failed to create texture sampler.");
 }
 
 void cs::VulkanEngineRenderer::CreateVertexBuffer()
@@ -1301,7 +1340,7 @@ void cs::VulkanEngineRenderer::CreateSyncObjects()
 
 	for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; i++)
 		if (vkCreateSemaphore(device, &_semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS || vkCreateSemaphore(device, &_semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS || vkCreateFence(device, &_fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL] :\tFailed to create semaphores.");
+			throw std::runtime_error("[FAIL]\t: Failed to create semaphores.");
 }
 
 void cs::VulkanEngineRenderer::CreateImage(uint32_t width, uint32_t height, uint32_t mipmapLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
@@ -1481,7 +1520,7 @@ VkFormat cs::VulkanEngineRenderer::FindSupportedFormat(const std::vector<VkForma
 	}
 
 	// extremely unlikely, unless the graphics card is really old...
-	throw std::runtime_error("[FAIL] :\tFailed to find supported format.");
+	throw std::runtime_error("[FAIL\t: Failed to find supported format.");
 }
 
 void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
@@ -1528,7 +1567,7 @@ void cs::VulkanEngineRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlag
 	_bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	if (vkCreateBuffer(device, &_bufferInfo, nullptr, &buffer) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to create buffer.");
+		throw std::runtime_error("[FAIL]\t: Failed to create buffer.");
 
 	VkMemoryRequirements _memRequirements;
 	vkGetBufferMemoryRequirements(device, buffer, &_memRequirements);
@@ -1539,7 +1578,7 @@ void cs::VulkanEngineRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlag
 	_allocInfo.memoryTypeIndex = FindMemoryType(_memRequirements.memoryTypeBits, properties);
 
 	if (vkAllocateMemory(device, &_allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to allocate buffer memory.");
+		throw std::runtime_error("[FAIL]\t: Failed to allocate buffer memory.");
 
 	vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
@@ -1733,7 +1772,7 @@ VkShaderModule cs::VulkanEngineRenderer::CreateShaderModule(const std::vector<ch
 
 	VkShaderModule _shaderModule;
 	if (vkCreateShaderModule(device, &_createInfo, nullptr, &_shaderModule) != VK_SUCCESS)
-		throw std::runtime_error("failed to create shader module!");
+		throw std::runtime_error("[FAIL]\t: Failed to create shader module.");
 
 	return _shaderModule;
 }

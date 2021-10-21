@@ -12,7 +12,7 @@ cs::Texture::Texture() :
 
 void cs::Texture::Initialize()
 {
-	ChinaEngine::renderer.AllocateTexture(pixels, mipLevels, width, height, texture, textureMemory, textureView);
+	ChinaEngine::renderer.AllocateTexture(pixels, mipLevels, width, height, texture, textureMemory, textureView, textureSampler);
 }
 
 uint8_t* cs::Texture::GetRawPixels()

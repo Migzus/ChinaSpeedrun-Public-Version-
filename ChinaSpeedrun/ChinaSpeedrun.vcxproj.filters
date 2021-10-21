@@ -68,6 +68,10 @@
     <ClCompile Include="CameraComponent.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
+    <ClCompile Include="Debug.cpp" />
+    <ClCompile Include="Signal.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="SceneManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -116,6 +120,10 @@
     <ClInclude Include="Camera.h">
       <Filter>ecs</Filter>
     </ClInclude>
+    <ClInclude Include="Debug.h" />
+    <ClInclude Include="Signal.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

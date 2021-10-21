@@ -41,9 +41,14 @@ namespace cs
 
 		static void FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight);
 
+		// Allocates a mesh into the buffers, DON'T EVEN ATTEMPT TO CALL THIS ON YOUR OWN
 		void AllocateMesh(const std::vector<class Vertex>& vertices, const std::vector<uint32_t>& indices, VkDeviceSize& vertexBufferOffset, VkDeviceSize& indexBufferOffset, VkDeviceSize& vertexSize, VkDeviceSize& indexSize, VkBuffer& vertexBufferRef, VkBuffer& indexBufferRef);
-		void AllocateTexture(const uint8_t* pixels, const uint32_t& mipLevels, const uint32_t& texWidth, const uint32_t& texHeight, VkImage& texture, VkDeviceMemory& textureMemory, VkImageView& textureView);
-		void AllocateShader(class Shader* shader);
+		// "Allocates" a texture, don't call this either...
+		void AllocateTexture(const uint8_t* pixels, const uint32_t& mipLevels, const uint32_t& texWidth, const uint32_t& texHeight, VkImage& texture, VkDeviceMemory& textureMemory, VkImageView& textureView, VkSampler& textureSampler);
+		// Allocates a shader
+		void AllocateShader(VkRenderPass& renderPass, VkPipelineLayout& layout, VkPipeline& pipeline);
+		void AllocateMaterial(class Material* material);
+		void AllocateObject(class GameObject* object);
 
 		void FreeMesh(class Mesh* mesh);
 		void FreeTexture(class Texture* mesh);
@@ -73,6 +78,7 @@ namespace cs
 		const bool enableValidationLayers{ true };
 #endif
 
+		// This member can be moved into the shader class
 		VkSampleCountFlagBits msaaSamples{ VK_SAMPLE_COUNT_1_BIT };
 		size_t currentFrame{ 0 };
 		bool framebufferResized{ false };

@@ -1,4 +1,5 @@
 #include "GameObject.h"
+#include "Signal.h"
 
 cs::GameObject::GameObject() :
 	name{ "Object" }, active{ true }
@@ -6,9 +7,26 @@ cs::GameObject::GameObject() :
 	ComponentInit();
 }
 
-void cs::GameObject::EditorDrawComponents()
+void cs::GameObject::Test(int number, std::string someString)
 {
 
+}
+
+class Foo
+{
+public:
+	void kill(int number, std::string kill)
+	{
+
+	}
+};
+
+void cs::GameObject::EditorDrawComponents()
+{
+	//Foo a;
+	//Signal::Connect("timeout", &a, &Foo::kill);
+	//Signal::Connect("timeout", this, &GameObject::Test);
+	//Signal::EmitSignal("timeout", &a, 2, "lol");
 }
 
 void cs::GameObject::Init()

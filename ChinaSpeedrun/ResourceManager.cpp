@@ -22,14 +22,6 @@ std::map<std::string, cs::AudioSource*> cs::ResourceManager::audioTracks;
 // One thing that the resource manager will do automatically is allocation to the vulkan buffers
 // In other words, we have direct contact with the VulkanRenderer, and we can tell it to allocate and free resources at will
 
-void cs::ResourceManager::InitializeTest()
-{
-	for (std::pair<std::string, Mesh*> mesh : meshes)
-		mesh.second->Initialize();
-	for (std::pair<std::string, Texture*> texture : textures)
-		texture.second->Initialize();
-}
-
 cs::Mesh* cs::ResourceManager::LoadModel(const std::string filename)
 {
 	Mesh* _outMesh{ IsDuplicateResource<Mesh>(filename) };
@@ -90,6 +82,8 @@ cs::Mesh* cs::ResourceManager::LoadModel(const std::string filename)
 		_outMesh->SetMesh(_vertices, _indices);
 		_outMesh->resourcePath = filename;
 		meshes[filename] = _outMesh;
+
+		//_outMesh->Initialize();
 	}
 
 	return _outMesh;
@@ -114,10 +108,12 @@ cs::Texture* cs::ResourceManager::LoadTexture(const std::string filename)
 			std::cout << "[WARNING]\t: Cannot open file: [" << filename << "]\n";
 			return nullptr;
 		}
-
+		
 		_outTexture->mipLevels = static_cast<uint32_t>(std::floor(std::log2(_outTexture->width > _outTexture->height ? _outTexture->width : _outTexture->height))) + 1;
 		_outTexture->resourcePath = filename;
 		textures[filename] = _outTexture;
+
+		//_outTexture->Initialize();
 	}
 
 	return _outTexture;
@@ -159,6 +155,15 @@ std::vector<char> cs::ResourceManager::LoadRaw(const std::string filename)
 void cs::ResourceManager::ForcePushMesh(Mesh* mesh)
 {
 	meshes[mesh->resourcePath] = mesh;
+}
+
+void cs::ResourceManager::InstanceAllResources()
+{
+	for (const std::pair<std::string, Texture*> texture : textures)
+		texture.second->Initialize();
+
+	for (const std::pair<std::string, Mesh*> mesh : meshes)
+		mesh.second->Initialize();
 }
 
 void cs::ResourceManager::ClearAllResourcePools()
