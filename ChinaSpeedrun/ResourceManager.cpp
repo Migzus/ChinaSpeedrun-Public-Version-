@@ -4,7 +4,7 @@
 #include "Material.h"
 #include "Texture.h"
 #include "Shader.h"
-//#include "AudioSource.h"
+#include "AudioData.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -13,11 +13,13 @@
 #include <stb_image.h>
 #include <fstream>
 
+#include <AudioFile.h>
+
 std::map<std::string, cs::Material*> cs::ResourceManager::materials;
 std::map<std::string, cs::Texture*> cs::ResourceManager::textures;
 std::map<std::string, cs::Mesh*> cs::ResourceManager::meshes;
 std::map<std::string, cs::Shader*> cs::ResourceManager::shaders;
-std::map<std::string, cs::AudioSource*> cs::ResourceManager::audioTracks;
+std::map<std::string, cs::AudioData*> cs::ResourceManager::audio;
 
 // One thing that the resource manager will do automatically is allocation to the vulkan buffers
 // In other words, we have direct contact with the VulkanRenderer, and we can tell it to allocate and free resources at will
@@ -95,8 +97,33 @@ cs::Mesh* cs::ResourceManager::LoadModel(const std::string filename)
 	return _outMesh;
 }
 
-cs::AudioSource* cs::ResourceManager::LoadAudio(const std::string filename)
+cs::AudioData* cs::ResourceManager::LoadAudio(const std::string filename)
 {
+	AudioFile<float> _file;
+
+	std::vector<uint8_t> _buffer;
+
+	if (_file.loadBuffer(filename, _buffer))
+	{
+		const auto _audioData{ new AudioData(
+			_buffer,
+			AudioMeta(static_cast<float>(_buffer.size()) /
+				static_cast<float>(_file.getBitDepth()) /
+				static_cast<float>(_file.getNumChannelsAsRead()) /
+				static_cast<float>(_file.getSampleRate()) * 8.f,
+			_file.getSampleRate(),
+			_file.getBitDepth(),
+			_file.getNumChannelsAsRead()))};
+		audio.insert({ filename, _audioData });
+		return _audioData;
+	}
+	else
+	{
+		return nullptr;
+	}
+
+	
+
 	return nullptr;
 }
 
@@ -179,7 +206,7 @@ void cs::ResourceManager::ClearAllResourcePools()
 		delete material.second;
 	materials.clear();
 
-	/*for (const std::pair<std::string, AudioSource*> audio : audioTracks)
+	/*for (const std::pair<std::string, AudioData*> audio : audioTracks)
 		delete audio.second;
 	audioTracks.clear();*/
 }

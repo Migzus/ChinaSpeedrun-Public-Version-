@@ -23,7 +23,7 @@ namespace cs
 		static void ForcePush(T* resource);
 
 		static class Mesh* LoadModel(const std::string filename);
-		static class AudioSource* LoadAudio(const std::string filename);
+		static class AudioData* LoadAudio(const std::string filename);
 		static class Texture* LoadTexture(const std::string filename);
 		static class Shader* LoadShader(std::vector<std::string> filenames);
 		static class Material* LoadMaterial(const std::string filename);
@@ -103,7 +103,7 @@ namespace cs
 
 	private:
 		static std::map<std::string, cs::Mesh*> meshes;
-		static std::map<std::string, cs::AudioSource*> audioTracks;
+		static std::map<std::string, cs::AudioData*> audio;
 		static std::map<std::string, cs::Texture*> textures;
 		static std::map<std::string, cs::Shader*> shaders;
 		static std::map<std::string, cs::Material*> materials;

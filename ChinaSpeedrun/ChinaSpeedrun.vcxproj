@@ -164,6 +164,7 @@
     <ClCompile Include="..\Libraries\imgui\src\imgui_tables.cpp" />
     <ClCompile Include="..\Libraries\imgui\src\imgui_widgets.cpp" />
     <ClCompile Include="AudioComponent.cpp" />
+    <ClCompile Include="AudioData.cpp" />
     <ClCompile Include="AudioSystem.cpp" />
     <ClCompile Include="BulletManagerComponent.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -194,6 +195,7 @@
   <ItemGroup>
     <ClInclude Include="..\Libraries\ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="AudioComponent.h" />
+    <ClInclude Include="AudioData.h" />
     <ClInclude Include="AudioSystem.h" />
     <ClInclude Include="BulletManagerComponent.h" />
     <ClInclude Include="Camera.h" />
