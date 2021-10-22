@@ -3,6 +3,9 @@
 #include "ChinaEngine.h"
 #include "VulkanEngineRenderer.h"
 
+cs::Shader::Shader(std::map<std::string, std::vector<char>> spv) : spvCode{ spv }
+{}
+
 void cs::Shader::Initialize()
 {
 	ChinaEngine::renderer.AllocateShader(renderPass, layout, pipeline);
@@ -52,7 +55,7 @@ void cs::Shader::AssignShaderDescriptor(std::string descriptorName, uint32_t bin
 
 void cs::Shader::AssignShaderVertexInputAttrib(std::string attrbuteName, uint32_t location, Data dataType, uint32_t offset)
 {
-	VkFormat _format{};
+	VkFormat _format{ VK_FORMAT_UNDEFINED };
 
 	switch (dataType)
 	{
@@ -90,4 +93,9 @@ void cs::Shader::AssignShaderVertexInputAttrib(std::string attrbuteName, uint32_
 	_attributeDescription.offset = offset;
 
 	vertexAttributes[attrbuteName] = _attributeDescription;
+}
+
+const std::map<std::string, std::vector<char>>& cs::Shader::GetSPVCode() const
+{
+	return spvCode;
 }

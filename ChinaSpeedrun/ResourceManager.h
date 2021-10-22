@@ -81,7 +81,7 @@ namespace cs
 		template<>
 		static Shader* Load(const std::string filename)
 		{
-			const std::string _shaderTypes[]{ "vert", "frag", "comp" };
+			const std::string _shaderTypes[]{ "vert", "frag", "comp", "geom" };
 			std::vector<std::string> _shaderfiles;
 
 			for (size_t i{ 0 }; i < 3; i++)

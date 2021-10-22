@@ -1,10 +1,12 @@
 #pragma once
 
+#include "Component.h"
+
 #include <string>
 
 namespace cs
 {
-	class AudioComponent
+	class AudioComponent : Component
 	{
 	public:
 		std::string soundName;
@@ -13,5 +15,7 @@ namespace cs
 		float time, duration;
 
 		AudioComponent();
+
+		virtual void ImGuiDrawComponent() override;
 	};
 }

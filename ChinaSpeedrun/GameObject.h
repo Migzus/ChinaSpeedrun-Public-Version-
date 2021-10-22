@@ -58,7 +58,7 @@ namespace cs
 		std::vector<T&> GetComponents();
 		// Removes the selected
 		template<class T>
-		void RemoveComponent(const T& component);
+		void RemoveComponent();
 		// Removes all of the components stored
 		void RemoveAllComponents();
 		// Removes all the components of spsified type
@@ -92,19 +92,19 @@ namespace cs
 	template<class T>
 	inline T& GameObject::GetComponentAt(const uint8_t componentIndex)
 	{
-
+		
 	}
 
 	template<class T>
 	inline std::vector<T&> GameObject::GetComponents()
 	{
-
+		
 	}
 
 	template<class T>
-	inline void GameObject::RemoveComponent(const T& component)
+	inline void GameObject::RemoveComponent()
 	{
-
+		return ChinaEngine::world.registry.remove_if_exists<T>(entity);
 	}
 
 	template<class T>

@@ -52,7 +52,7 @@ namespace cs
 
 		void FreeMesh(class Mesh* mesh);
 		void FreeTexture(class Texture* mesh);
-		void FreeShader(Shader* mesh);
+		void FreeShader(class Shader* mesh);
 
 		void Create(int newWidth, int newHeight, const char* appTitle);
 		void GetViewportSize(int& widthRef, int& heightRef) const;

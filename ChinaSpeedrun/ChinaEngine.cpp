@@ -19,12 +19,11 @@
 #include "GameObject.h"
 #include "CameraComponent.h"
 #include "Camera.h"
+#include "PhysicsServer.h"
 
 #include "Time.h"
 
-#ifdef NDEBUG
-#include <shaderc/shaderc.hpp>
-#endif
+#include "Debug.h"
 
 cs::World cs::ChinaEngine::world;
 cs::VulkanEngineRenderer cs::ChinaEngine::renderer;
@@ -33,16 +32,6 @@ std::vector<cs::GameObject*> cs::ChinaEngine::objects;
 void cs::ChinaEngine::Run()
 {
 	Time::CycleInit();
-
-#ifdef NDEBUG
-	shaderc::Compiler _compiler;
-	std::string _outText;
-
-	shaderc::SpvCompilationResult _result{ _compiler.CompileGlslToSpv(_outText, shaderc_glsl_default_vertex_shader, "../Resource/shaders/default_shader.vert") };
-	
-	if (_result.GetCompilationStatus() != shaderc_compilation_status_success)
-		std::cout << "[WARNING]\t: " << _result.GetErrorMessage() << '\n';
-#endif // NDEBUG
 
 	// ok so we need to fizzle out what needs to be done.
 	// The order of things needs to be ordered
@@ -116,9 +105,9 @@ void cs::ChinaEngine::EngineInit()
 	Texture* _junkoGyate{ ResourceManager::Load<Texture>("../Resources/textures/junko_gyate.png") };
 	Texture* _chaikaSmile{ ResourceManager::Load<Texture>("../Resources/textures/chaika_smile.png") };
 
-	_material->shaderParams["texSampler"] = _vargFlush;
-	_material1->shaderParams["texSampler"] = _junkoGyate;
-	_material2->shaderParams["texSampler"] = _chaikaSmile;
+	//_material->shaderParams["texSampler"] = _vargFlush;
+	//_material1->shaderParams["texSampler"] = _junkoGyate;
+	//_material2->shaderParams["texSampler"] = _chaikaSmile;
 	//_material->shaderParams["time"] = 0.0f;
 	
 	// for now we're just creating objects like this... will change this in the future
@@ -148,11 +137,11 @@ void cs::ChinaEngine::EngineInit()
 	CameraComponent& _cameraComponent{ _camera->AddComponent<CameraComponent>() };
 	CameraComponent::currentActiveCamera = &_cameraComponent;
 
-	auto* _audioComponent{ &_cube->AddComponent<AudioComponent>() };
+	/*auto* _audioComponent{ &_cube->AddComponent<AudioComponent>() };
 	_audioComponent->soundName = "koto";
 
 	_audioComponent = &_suzanne->AddComponent<AudioComponent>();
-	_audioComponent->soundName = "kazeoto";
+	_audioComponent->soundName = "kazeoto";*/
 }
 
 void cs::ChinaEngine::ImGuiStyleInit()
@@ -220,7 +209,7 @@ void cs::ChinaEngine::ImGuiDraw()
 			{
 				//ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, static_cast<float>(ImGui::GetWindowWidth()), static_cast<float>(ImGui::GetWindowHeight()));
 
-				TransformComponent& _transform{ world.registry.get<TransformComponent>(_activeObject->entity) };
+				TransformComponent& _transform{ _activeObject->GetComponent<TransformComponent>() };
 				Matrix4x4 _mainMatrix{ _transform };
 
 				ImGuizmo::Manipulate(glm::value_ptr(_viewMatrix), glm::value_ptr(_projectionMatrix),
@@ -251,11 +240,33 @@ void cs::ChinaEngine::ImGuiDraw()
 				}
 			}
 
+			if (_activeObject->HasComponent<SphereColliderComponent>())
+			{
+				if (ImGui::TreeNodeEx("Sphere Collider", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					SphereColliderComponent& _sphereCollider{ _activeObject->GetComponent<SphereColliderComponent>() };
+
+					ImGui::DragFloat("Radius", &_sphereCollider.radius, 0.01f);
+
+					ImGui::TreePop();
+				}
+			}
+
+			if (_activeObject->HasComponent<PolygonCollider>())
+			{
+				if (ImGui::TreeNodeEx("Polygon Collider", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+
+
+					ImGui::TreePop();
+				}
+			}
+
 			if (_activeObject->HasComponent<CameraComponent>())
 			{
 				if (ImGui::TreeNodeEx("Camera", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					CameraComponent& _camera{ world.registry.get<CameraComponent>(_activeObject->entity) };
+					CameraComponent& _camera{ _activeObject->GetComponent<CameraComponent>() };
 
 					const char* _options[]{ "Perspective", "Orthographic" };
 					ImGui::ListBox("Projection", (int*)&_camera.projection, _options, 2);
@@ -263,32 +274,6 @@ void cs::ChinaEngine::ImGuiDraw()
 					ImGui::DragFloat("Field of View", &_camera.fov, 1.0f, 0.1f, 179.0f);
 					ImGui::DragFloat("Near Plane", &_camera.nearPlane, 1.0f, 0.001f);
 					ImGui::DragFloat("Far Plane", &_camera.farPlane, 1.0f);
-
-					ImGui::TreePop();
-				}
-			}
-
-			if (_activeObject->HasComponent<AudioComponent>())
-			{
-				if (ImGui::TreeNodeEx("Audio", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					auto& _audioComponent{ world.registry.get<AudioComponent>(_activeObject->entity) };
-
-					char buf[128];
-					strncpy_s(buf, _audioComponent.soundName.c_str(), sizeof(buf) - 1);
-					ImGui::InputText("Sound Name", &buf[0], sizeof(buf));
-					_audioComponent.soundName = buf;
-
-					if (ImGui::Button("Play"))
-						_audioComponent.play = true;
-
-					ImGui::SameLine();
-
-					if (ImGui::Button("Stop"))
-						_audioComponent.stop = true;
-
-					ImGui::SameLine();
-					ImGui::ProgressBar(_audioComponent.time / _audioComponent.duration);
 
 					ImGui::TreePop();
 				}

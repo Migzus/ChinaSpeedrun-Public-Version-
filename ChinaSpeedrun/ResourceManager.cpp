@@ -1,5 +1,7 @@
 #include "ResourceManager.h"
 
+#include "Debug.h"
+
 #include "Mesh.h"
 #include "Material.h"
 #include "Texture.h"
@@ -12,6 +14,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <fstream>
+
+#ifdef NDEBUG
+#include <shaderc/shaderc.hpp>
+#endif
 
 std::map<std::string, cs::Material*> cs::ResourceManager::materials;
 std::map<std::string, cs::Texture*> cs::ResourceManager::textures;
@@ -37,7 +43,7 @@ cs::Mesh* cs::ResourceManager::LoadModel(const std::string filename)
 
 		if (!tinyobj::LoadObj(&_attributes, &_shapes, &_materials, &_warning, &_error, filename.c_str()))
 		{
-			std::cout << "[ERROR]\t: " << _warning + _error << '\n';
+			Debug::LogWarning(_warning + _error);
 			delete _outMesh;
 			return nullptr;
 		}
@@ -105,7 +111,7 @@ cs::Texture* cs::ResourceManager::LoadTexture(const std::string filename)
 
 		if (_outTexture->pixels == nullptr)
 		{
-			std::cout << "[WARNING]\t: Cannot open file: [" << filename << "]\n";
+			Debug::LogWarning("Cannot open file : [" + filename + ']');
 			return nullptr;
 		}
 		
@@ -121,12 +127,70 @@ cs::Texture* cs::ResourceManager::LoadTexture(const std::string filename)
 
 cs::Shader* cs::ResourceManager::LoadShader(std::vector<std::string> filenames)
 {
-	return nullptr;
+	std::map<std::string, RawData> _outShaderSPVs;
+
+	for (std::string file : filenames)
+	{
+		std::string _shaderType{ file.substr(file.find_last_of('.') + 1) };
+
+#ifdef NDEBUG
+		shaderc_shader_kind _shaderKind{ shaderc_glsl_default_anyhit_shader };
+
+		if (_shaderType == "vert")
+			_shaderKind = shaderc_glsl_default_vertex_shader;
+		else if (_shaderType == "frag")
+			_shaderKind = shaderc_glsl_default_fragment_shader;
+		else if (_shaderType == "comp")
+			_shaderKind = shaderc_glsl_default_compute_shader;
+		else if (_shaderType == "geom")
+			_shaderKind = shaderc_glsl_default_geometry_shader;
+		else
+		{
+			Debug::LogWarning("The shader type \"" + _shaderType + "\" is either not supported or does not exist.");
+			break;
+		}
+
+		shaderc::Compiler _compiler;
+		std::string _outText;
+
+		shaderc::SpvCompilationResult _result{ _compiler.CompileGlslToSpv(_outText, shaderc_glsl_default_vertex_shader, file.c_str()) };
+
+		if (_result.GetCompilationStatus() != shaderc_compilation_status_success)
+			Debug::LogWarning(_result.GetErrorMessage());
+		else
+			_outShaderSPVs[_shaderType] = { _outText.begin(), _outText.end() };
+#else
+		std::string _newFilepath{ file };
+		Shader::Type _shaderKind{};
+
+		if (_shaderType == "vert")
+			_shaderKind = Shader::Type::VERTEX;
+		else if (_shaderType == "frag")
+			_shaderKind = Shader::Type::FRAGMENT;
+		else if (_shaderType == "comp")
+			_shaderKind = Shader::Type::COMPUTE;
+		else if (_shaderType == "geom")
+			_shaderKind = Shader::Type::GEOMETRY;
+		else
+		{
+			Debug::LogWarning("The shader type \"" + _shaderType + "\" is either not supported or does not exist.");
+			break;
+		}
+
+		_newFilepath.insert(_newFilepath.find_last_of('.'), '_' + _shaderType);
+		_newFilepath.replace(_newFilepath.find_last_of('.') + 1, _newFilepath.length(), "spv");
+
+		_outShaderSPVs[_shaderType] = LoadRaw(_newFilepath);		
+#endif // NDEBUG
+	}
+
+	return new Shader(_outShaderSPVs);
 }
 
 cs::Material* cs::ResourceManager::LoadMaterial(const std::string filename)
 {
-	return nullptr;
+	// We don't have our own material formatter or reader... sooooo, empty...
+	return new Material;
 }
 
 cs::Scene* cs::ResourceManager::LoadScene(const std::string filename)
@@ -134,12 +198,15 @@ cs::Scene* cs::ResourceManager::LoadScene(const std::string filename)
 	return nullptr;
 }
 
-std::vector<char> cs::ResourceManager::LoadRaw(const std::string filename)
+RawData cs::ResourceManager::LoadRaw(const std::string filename)
 {
 	std::ifstream _file{ filename, std::ios::ate | std::ios::binary };
 
 	if (!_file.is_open())
-		std::cout << "[WARNING]\t: Could not open: " + filename << '\n';
+	{
+		Debug::LogWarning("Could not open: " + filename);
+		return std::vector<char>();
+	}
 
 	size_t _fileSize{ (size_t)_file.tellg() };
 	std::vector<char> _buffer(_fileSize);

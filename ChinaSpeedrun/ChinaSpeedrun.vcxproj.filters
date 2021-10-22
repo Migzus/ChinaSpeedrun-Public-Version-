@@ -72,6 +72,13 @@
     <ClCompile Include="Signal.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneManager.cpp" />
+    <ClCompile Include="Variant.cpp" />
+    <ClCompile Include="PhysicsServer.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="Component.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -124,6 +131,13 @@
     <ClInclude Include="Signal.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
+    <ClInclude Include="Variant.h" />
+    <ClInclude Include="PhysicsServer.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="Component.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

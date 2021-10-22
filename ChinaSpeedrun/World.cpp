@@ -8,6 +8,7 @@
 #include "CameraComponent.h"
 #include "AudioSystem.h"
 #include "AudioComponent.h"
+#include "PhysicsServer.h"
 
 cs::World::World() : audioSystem{ new AudioSystem }
 {

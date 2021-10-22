@@ -10,8 +10,8 @@
 #include <algorithm>
 
 #include "Vertex.h"
-//#include "Shader.h"
-//#include "Material.h"
+#include "Shader.h"
+#include "Material.h"
 #include "Texture.h"
 #include "Mesh.h"
 #include "MeshRenderer.h"
@@ -19,6 +19,7 @@
 #include "ChinaEngine.h"
 #include "ResourceManager.h"
 #include "World.h"
+#include "Debug.h"
 
 using namespace cs;
 
@@ -43,9 +44,10 @@ void cs::VulkanEngineRenderer::AllocateMesh(const std::vector<Vertex>& vertices,
 
 	if (_newVertexOffset > vertexBuffer.bufferSize || _newIndexOffset > indexBuffer.bufferSize)
 	{
-		std::cout << "[WARNING]\t: Cannot allocate more memory for this model. It is too large. Excess data:\n" <<
-			"\t> " << (_newVertexOffset - vertexBuffer.bufferSize) << "\t(bytes, vertices)\n" <<
-			"\t> " << (_newIndexOffset - indexBuffer.bufferSize) << "\t(bytes, indices)\n";
+		Debug::LogWarning("Cannot allocate more memory for this model. It is too large. Excess data:\n\t>" +
+			std::to_string(_newVertexOffset - vertexBuffer.bufferSize) + "\t(bytes, vertices)\n\t>" +
+			std::to_string(_newIndexOffset - indexBuffer.bufferSize) + "\t(bytes, indices)\n"
+		);
 		return;
 	}
 
@@ -141,7 +143,7 @@ void cs::VulkanEngineRenderer::AllocateTexture(const uint8_t* pixels, const uint
 	_samplerInfo.maxLod = static_cast<float>(mipLevels);
 
 	if (vkCreateSampler(device, &_samplerInfo, nullptr, &textureSampler) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create texture sampler.");
+		Debug::LogFail("Could not crate a texture sampler.");
 
 	//std::cout << "helloz\n";
 }
@@ -218,7 +220,6 @@ void cs::VulkanEngineRenderer::InitVulkan()
 	CreateLogicalDevice();		// Necessarily Init Call
 	CreateSwapChain();			// Necessarily Init Call
 	CreateImageViews();			// Necessarily Init Call
-	//AllocateShader(new Shader);			// Setup Default Shader
 	CreateRenderPass();			// Shader Spesific
 	CreateDescriptorSetLayout();// Shader Spesific
 	CreateGraphicsPipeline();	// Shader Spesific (Depends on a render pass)
@@ -251,7 +252,7 @@ void cs::VulkanEngineRenderer::DrawFrame()
 		return;
 	}
 	else if (_result != VK_SUCCESS && _result != VK_SUBOPTIMAL_KHR)
-		throw std::runtime_error("[FAIL]\t: Failed to acquire swap chain image.");
+		Debug::LogFail("Failed to acquire swap chain image.");
 
 	if (imagesInFlight[_imageIndex] != VK_NULL_HANDLE)
 		vkWaitForFences(device, 1, &imagesInFlight[_imageIndex], VK_TRUE, UINT64_MAX);
@@ -285,7 +286,7 @@ void cs::VulkanEngineRenderer::DrawFrame()
 
 	vkCmdEndRenderPass(imGuiCommandBuffers[_imageIndex]);
 	if (vkEndCommandBuffer(imGuiCommandBuffers[_imageIndex]) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to record ImGui command buffer.");
+		Debug::LogFail("Failed to record ImGui command buffer.");
 
 	// -------------------------------------------------------------------------------------------------------
 
@@ -308,7 +309,7 @@ void cs::VulkanEngineRenderer::DrawFrame()
 	vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
 	if (vkQueueSubmit(graphicsQueue, 1, &_submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to submit draw command buffer.");
+		Debug::LogFail("Failed to submit draw command buffer.");
 
 	VkPresentInfoKHR _presentInfo{};
 	_presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -329,7 +330,7 @@ void cs::VulkanEngineRenderer::DrawFrame()
 		RecreateSwapChain();
 	}
 	else if (_result != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to present swap chain image.");
+		Debug::LogFail("Failed to present swap chain image.");
 
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
@@ -459,7 +460,7 @@ void cs::VulkanEngineRenderer::ImGuiRenderPass()
 	_info.pDependencies = &_dependency;
 
 	if (vkCreateRenderPass(device, &_info, nullptr, &imGuiRenderPass) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Could not create ImGui render pass.");
+		Debug::LogFail("Could not create ImGui render pass.");
 }
 
 void cs::VulkanEngineRenderer::ImGuiFramebuffers()
@@ -478,7 +479,7 @@ void cs::VulkanEngineRenderer::ImGuiFramebuffers()
 		_framebufferInfo.layers = 1;
 
 		if (vkCreateFramebuffer(device, &_framebufferInfo, nullptr, &imGuiFramebuffers[i]) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL]\t: Failed to create ImGui framebuffer.");
+			Debug::LogFail("Failed to create ImGui framebuffer.");
 	}
 }
 
@@ -509,7 +510,7 @@ void cs::VulkanEngineRenderer::ImGuiDescriptorPool()
 	_poolInfo.maxSets = _swapChainSize;
 
 	if (vkCreateDescriptorPool(device, &_poolInfo, nullptr, &imGuiDescriptorPool) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create ImGui descriptor pool.");
+		Debug::LogFail("Failed to create ImGui descriptor pool.");
 }
 
 void cs::VulkanEngineRenderer::ImGuiCommandPool()
@@ -522,7 +523,7 @@ void cs::VulkanEngineRenderer::ImGuiCommandPool()
 	_poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 	if (vkCreateCommandPool(device, &_poolInfo, nullptr, &imGuiCommandPool) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create ImGui command pool.");
+		Debug::LogFail("Failed to create ImGui command pool.");
 }
 
 void cs::VulkanEngineRenderer::ImGuiCommandBuffers()
@@ -536,7 +537,7 @@ void cs::VulkanEngineRenderer::ImGuiCommandBuffers()
 	_commandBufferAllocateInfo.commandBufferCount = static_cast<uint32_t>(imGuiCommandBuffers.size());
 
 	if (vkAllocateCommandBuffers(device, &_commandBufferAllocateInfo, imGuiCommandBuffers.data()) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to allocate ImGui command buffers.");
+		Debug::LogFail("Failed to allocate ImGui command buffers.");
 }
 
 void cs::VulkanEngineRenderer::InitImGui()
@@ -584,7 +585,7 @@ void cs::VulkanEngineRenderer::InitImGui()
 void cs::VulkanEngineRenderer::CreateInstance()
 {
 	if (enableValidationLayers && !CheckValidationSupport())
-		throw std::runtime_error("[ERROR] :\tRequested validation layer support, but non are available.");
+		Debug::LogFail("Requested validation layer support, but non are available.");
 
 	VkApplicationInfo _appInfo{};
 	_appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -619,7 +620,7 @@ void cs::VulkanEngineRenderer::CreateInstance()
 	}
 
 	if (vkCreateInstance(&_createInfo, nullptr, &instance) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tCould not create a Vulkan Instance.");
+		Debug::LogFail("Could not create a Vulkan Instance.");
 }
 
 void cs::VulkanEngineRenderer::SetupDebugMessenger()
@@ -631,13 +632,13 @@ void cs::VulkanEngineRenderer::SetupDebugMessenger()
 	PopulateDebugMessengerCreateInfo(_createInfo);
 
 	if (CreateDebugUtilsMessengerEXT(instance, &_createInfo, nullptr, &debugMessenger) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to set up debug messenger.");
+		Debug::LogFail("Failed to set up debug messenger.");
 }
 
 void cs::VulkanEngineRenderer::CreateSurface()
 {
 	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create window surface.");
+		Debug::LogFail("Failed to create window surface.");
 }
 
 void cs::VulkanEngineRenderer::PickPhysicalDevice()
@@ -646,7 +647,7 @@ void cs::VulkanEngineRenderer::PickPhysicalDevice()
 	vkEnumeratePhysicalDevices(instance, &_deviceCount, nullptr);
 
 	if (_deviceCount == 0)
-		throw std::runtime_error("[FAIL] :\tNo Vulkan supported GPUs on this device.");
+		Debug::LogFail("No Vulkan supported GPUs on this device.");
 
 	std::vector<VkPhysicalDevice> _devices{ _deviceCount };
 	vkEnumeratePhysicalDevices(instance, &_deviceCount, _devices.data());
@@ -662,7 +663,7 @@ void cs::VulkanEngineRenderer::PickPhysicalDevice()
 	}
 
 	if (physicalDevice == VK_NULL_HANDLE)
-		throw std::runtime_error("[FAIL] :\tFailed to find a suitable GPU.");
+		Debug::LogFail("Failed to find a suitable GPU.");
 
 	/*
 	std::multimap<int, VkPhysicalDevice> _candidates;
@@ -713,7 +714,7 @@ void cs::VulkanEngineRenderer::CreateLogicalDevice()
 		_createInfo.enabledLayerCount = 0;
 
 	if (vkCreateDevice(physicalDevice, &_createInfo, nullptr, &device) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL] :\tFailed to create logical device.");
+		Debug::LogFail("Failed to create logical device.");
 
 	vkGetDeviceQueue(device, _indices.graphicsFamily.value(), 0, &graphicsQueue);
 	vkGetDeviceQueue(device, _indices.graphicsFamily.value(), 0, &presentQueue);
@@ -765,7 +766,7 @@ void cs::VulkanEngineRenderer::CreateSwapChain()
 	_createInfo.oldSwapchain = VK_NULL_HANDLE;
 
 	if (vkCreateSwapchainKHR(device, &_createInfo, nullptr, &swapChain) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create swap chain.");
+		Debug::LogFail("Failed to create swap chain.");
 
 	vkGetSwapchainImagesKHR(device, swapChain, &_imageCount, nullptr);
 	swapChainImages.resize(_imageCount);
@@ -817,14 +818,14 @@ void cs::VulkanEngineRenderer::CreateDescriptorSetLayout()
 		_layoutInfo.pBindings = _bindings.data();
 
 		if (vkCreateDescriptorSetLayout(device, &_layoutInfo, nullptr, &_meshRenderer.descriptorSetLayout) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL]\t: Failed to create descriptor set layout.");
+			Debug::LogFail("Failed to create descriptor set layout.");
 	}
 }
 
 void cs::VulkanEngineRenderer::CreateGraphicsPipeline()
 {
-	auto _vertShaderCode{ ResourceManager::LoadRaw("../Resources/shaders/vert.spv") };
-	auto _fragShaderCode{ ResourceManager::LoadRaw("../Resources/shaders/frag.spv") };
+	auto _vertShaderCode{ ResourceManager::LoadRaw("../Resources/shaders/default_shader_vert.spv") };
+	auto _fragShaderCode{ ResourceManager::LoadRaw("../Resources/shaders/default_shader_frag.spv") };
 
 	VkShaderModule _vertShaderModule{ CreateShaderModule(_vertShaderCode) };
 	VkShaderModule _fragShaderModule{ CreateShaderModule(_fragShaderCode) };
@@ -951,7 +952,7 @@ void cs::VulkanEngineRenderer::CreateGraphicsPipeline()
 	_pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
 	if (vkCreatePipelineLayout(device, &_pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create pipeline layout.");
+		Debug::LogFail("Failed to create pipeline layout.");
 
 	VkGraphicsPipelineCreateInfo _pipelineInfo{};
 	_pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -972,7 +973,7 @@ void cs::VulkanEngineRenderer::CreateGraphicsPipeline()
 	_pipelineInfo.basePipelineIndex = -1;
 
 	if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &_pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create graphics pipeline.");
+		Debug::LogFail("Failed to create graphics pipeline.");
 
 	vkDestroyShaderModule(device, _fragShaderModule, nullptr);
 	vkDestroyShaderModule(device, _vertShaderModule, nullptr);
@@ -1048,7 +1049,7 @@ void cs::VulkanEngineRenderer::CreateRenderPass()
 	_renderPassInfo.pDependencies = &_dependency;
 
 	if (vkCreateRenderPass(device, &_renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create render pass.");
+		Debug::LogFail("Failed to create render pass.");
 }
 
 void cs::VulkanEngineRenderer::CreateFramebuffers()
@@ -1069,7 +1070,7 @@ void cs::VulkanEngineRenderer::CreateFramebuffers()
 		_framebufferInfo.layers = 1;
 
 		if (vkCreateFramebuffer(device, &_framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL]\t: Failed to create framebuffer.");
+			Debug::LogFail("Failed to create framebuffer.");
 	}
 }
 
@@ -1083,7 +1084,7 @@ void cs::VulkanEngineRenderer::CreateCommandPool()
 	_poolInfo.flags = 0;
 
 	if (vkCreateCommandPool(device, &_poolInfo, nullptr, &commandPool) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create command pool.");
+		Debug::LogFail("Failed to create command pool.");
 }
 
 void cs::VulkanEngineRenderer::CreateColorResources()
@@ -1109,7 +1110,7 @@ void cs::VulkanEngineRenderer::CreateTextureImage()
 	VkDeviceSize _imageSize{ static_cast<uint64_t>(_texWidth * _texHeight * 4) }; // 4 color channels (r, g, b, a)
 
 	if (!_pixels)
-		throw std::runtime_error("[FAIL]\t: Failed to load texture image.");
+		Debug::LogFail("Failed to load texture image.");
 
 	mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(_texWidth, _texHeight)))) + 1;
 
@@ -1159,7 +1160,7 @@ void cs::VulkanEngineRenderer::CreateTextureSampler()
 	_samplerInfo.maxLod = static_cast<float>(mipLevels);
 
 	if (vkCreateSampler(device, &_samplerInfo, nullptr, &textureSampler) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create texture sampler.");
+		Debug::LogFail("Failed to create texture sampler.");
 }
 
 void cs::VulkanEngineRenderer::CreateVertexBuffer()
@@ -1206,7 +1207,7 @@ void cs::VulkanEngineRenderer::CreateDescriptorPool()
 		_poolInfo.maxSets = _swapChainSize;
 
 		if (vkCreateDescriptorPool(device, &_poolInfo, nullptr, &_meshRenderer.descriptorPool) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL]\t: Failed to create descriptor pool.");
+			Debug::LogFail("Failed to create descriptor pool.");
 	}
 }
 
@@ -1226,7 +1227,7 @@ void cs::VulkanEngineRenderer::CreateDescriptorSets()
 
 		_meshRenderer.descriptorSets.resize(swapChainImages.size());
 		if (vkAllocateDescriptorSets(device, &_allocInfo, _meshRenderer.descriptorSets.data()) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL]\t: Failed to allocate descriptor sets.");
+			Debug::LogFail("Failed to allocate descriptor sets.");
 
 		for (size_t i{ 0 }; i < swapChainImages.size(); i++)
 		{
@@ -1280,7 +1281,7 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 	_allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
 
 	if (vkAllocateCommandBuffers(device, &_allocInfo, commandBuffers.data()) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to allocate command buffers.");
+		Debug::LogFail("Failed to allocate command buffers.");
 
 	for (size_t i{ 0 }; i < commandBuffers.size(); i++)
 	{
@@ -1290,7 +1291,7 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 		_beginInfo.pInheritanceInfo = nullptr;
 
 		if (vkBeginCommandBuffer(commandBuffers[i], &_beginInfo) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL]\t: Failed to begin recording command buffer.");
+			Debug::LogFail("Failed to begin recording command buffer.");
 
 		VkRenderPassBeginInfo _renderPassInfo{};
 		_renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1320,7 +1321,7 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 		vkCmdEndRenderPass(commandBuffers[i]);
 
 		if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL]\t: Failed to record command buffer.");
+			Debug::LogFail("Failed to record command buffer.");
 	}
 }
 
@@ -1340,7 +1341,7 @@ void cs::VulkanEngineRenderer::CreateSyncObjects()
 
 	for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; i++)
 		if (vkCreateSemaphore(device, &_semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS || vkCreateSemaphore(device, &_semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS || vkCreateFence(device, &_fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
-			throw std::runtime_error("[FAIL]\t: Failed to create semaphores.");
+			Debug::LogFail("Failed to create semaphores.");
 }
 
 void cs::VulkanEngineRenderer::CreateImage(uint32_t width, uint32_t height, uint32_t mipmapLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
@@ -1361,7 +1362,7 @@ void cs::VulkanEngineRenderer::CreateImage(uint32_t width, uint32_t height, uint
 	_imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	if (vkCreateImage(device, &_imageInfo, nullptr, &image) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create image.");
+		Debug::LogFail("Failed to create image.");
 
 	VkMemoryRequirements _memRequirements;
 	vkGetImageMemoryRequirements(device, image, &_memRequirements);
@@ -1372,7 +1373,7 @@ void cs::VulkanEngineRenderer::CreateImage(uint32_t width, uint32_t height, uint
 	_allocInfo.memoryTypeIndex = FindMemoryType(_memRequirements.memoryTypeBits, properties);
 
 	if (vkAllocateMemory(device, &_allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to allocate image memory.");
+		Debug::LogFail("Failed to allocate image memory.");
 
 	vkBindImageMemory(device, image, imageMemory, 0);
 }
@@ -1392,7 +1393,7 @@ VkImageView cs::VulkanEngineRenderer::CreateImageView(VkImage image, VkFormat fo
 
 	VkImageView _imageView;
 	if (vkCreateImageView(device, &_viewInfo, nullptr, &_imageView) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create texture image view.");
+		Debug::LogFail("Failed to create texture image view.");
 
 	return _imageView;
 }
@@ -1403,7 +1404,7 @@ void cs::VulkanEngineRenderer::GenerateMipmaps(VkImage image, VkFormat imageForm
 	vkGetPhysicalDeviceFormatProperties(physicalDevice, imageFormat, &formatProperties);
 
 	if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
-		throw std::runtime_error("[WARNING]\t: Texture image format does not support linear blitting.");
+		Debug::LogFail("Texture image format does not support linear blitting.");
 
 	VkCommandBuffer _commandBuffer{ BeginSingleTimeCommands() };
 
@@ -1520,7 +1521,7 @@ VkFormat cs::VulkanEngineRenderer::FindSupportedFormat(const std::vector<VkForma
 	}
 
 	// extremely unlikely, unless the graphics card is really old...
-	throw std::runtime_error("[FAIL\t: Failed to find supported format.");
+	Debug::LogFail("Failed to find supported format.");
 }
 
 void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
@@ -1567,7 +1568,7 @@ void cs::VulkanEngineRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlag
 	_bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	if (vkCreateBuffer(device, &_bufferInfo, nullptr, &buffer) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create buffer.");
+		Debug::LogFail("Failed to create buffer.");
 
 	VkMemoryRequirements _memRequirements;
 	vkGetBufferMemoryRequirements(device, buffer, &_memRequirements);
@@ -1578,7 +1579,7 @@ void cs::VulkanEngineRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlag
 	_allocInfo.memoryTypeIndex = FindMemoryType(_memRequirements.memoryTypeBits, properties);
 
 	if (vkAllocateMemory(device, &_allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to allocate buffer memory.");
+		Debug::LogFail("Failed to allocate buffer memory.");
 
 	vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
@@ -1668,7 +1669,7 @@ void cs::VulkanEngineRenderer::TransitionImageLayout(VkImage image, VkFormat for
 		_destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 	}
 	else
-		throw std::invalid_argument("[ERROR] :\tUnsupported layout transition.");
+		Debug::LogFail("Unsupported layout transition.");
 
 	vkCmdPipelineBarrier(_commandBuffer, _sourceStage, _destinationStage, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
 
@@ -1772,7 +1773,7 @@ VkShaderModule cs::VulkanEngineRenderer::CreateShaderModule(const std::vector<ch
 
 	VkShaderModule _shaderModule;
 	if (vkCreateShaderModule(device, &_createInfo, nullptr, &_shaderModule) != VK_SUCCESS)
-		throw std::runtime_error("[FAIL]\t: Failed to create shader module.");
+		Debug::LogFail("Failed to create shader module.");
 
 	return _shaderModule;
 }
@@ -1886,7 +1887,7 @@ uint32_t cs::VulkanEngineRenderer::FindMemoryType(uint32_t typeFilter, VkMemoryP
 		if (typeFilter & (1 << i) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
 			return i;
 
-	throw std::runtime_error("[FAIL] :\tFailed to find suitable memory type.");
+	Debug::LogFail("Failed to find suitable memory type.");
 }
 
 // currently an unused function, will use it in the future (probably)
@@ -2021,8 +2022,8 @@ void cs::VulkanEngineRenderer::DestroyDebugUtilsMessengerEXT(VkInstance instance
 
 VKAPI_ATTR VkBool32 VKAPI_CALL cs::VulkanEngineRenderer::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-	std::cerr << "[INFO] :\t Validation layers: " << pCallbackData->pMessage << '\n';
-
+	Debug::LogInfo("Validation layers :" + static_cast<std::string>(pCallbackData->pMessage));
+	
 	return VK_FALSE;
 }
 
