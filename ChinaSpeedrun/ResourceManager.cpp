@@ -2,6 +2,9 @@
 
 #include "Debug.h"
 
+#include "ChinaEngine.h"
+#include "VulkanEngineRenderer.h"
+
 #include "Mesh.h"
 #include "Material.h"
 #include "Texture.h"
@@ -19,11 +22,11 @@
 #include <shaderc/shaderc.hpp>
 #endif
 
-std::map<std::string, cs::Material*> cs::ResourceManager::materials;
-std::map<std::string, cs::Texture*> cs::ResourceManager::textures;
-std::map<std::string, cs::Mesh*> cs::ResourceManager::meshes;
-std::map<std::string, cs::Shader*> cs::ResourceManager::shaders;
-std::map<std::string, cs::AudioSource*> cs::ResourceManager::audioTracks;
+std::unordered_map<std::string, cs::Material*> cs::ResourceManager::materials;
+std::unordered_map<std::string, cs::Texture*> cs::ResourceManager::textures;
+std::unordered_map<std::string, cs::Mesh*> cs::ResourceManager::meshes;
+std::unordered_map<std::string, cs::Shader*> cs::ResourceManager::shaders;
+std::unordered_map<std::string, cs::AudioSource*> cs::ResourceManager::audioTracks;
 
 // One thing that the resource manager will do automatically is allocation to the vulkan buffers
 // In other words, we have direct contact with the VulkanRenderer, and we can tell it to allocate and free resources at will
@@ -127,7 +130,7 @@ cs::Texture* cs::ResourceManager::LoadTexture(const std::string filename)
 
 cs::Shader* cs::ResourceManager::LoadShader(std::vector<std::string> filenames)
 {
-	std::map<std::string, RawData> _outShaderSPVs;
+	std::unordered_map<std::string, RawData> _outShaderSPVs;
 
 	for (std::string file : filenames)
 	{
@@ -161,17 +164,8 @@ cs::Shader* cs::ResourceManager::LoadShader(std::vector<std::string> filenames)
 			_outShaderSPVs[_shaderType] = { _outText.begin(), _outText.end() };
 #else
 		std::string _newFilepath{ file };
-		Shader::Type _shaderKind{};
 
-		if (_shaderType == "vert")
-			_shaderKind = Shader::Type::VERTEX;
-		else if (_shaderType == "frag")
-			_shaderKind = Shader::Type::FRAGMENT;
-		else if (_shaderType == "comp")
-			_shaderKind = Shader::Type::COMPUTE;
-		else if (_shaderType == "geom")
-			_shaderKind = Shader::Type::GEOMETRY;
-		else
+		if (_shaderType != "vert" && _shaderType != "frag" && _shaderType != "geom" && _shaderType != "comp")
 		{
 			Debug::LogWarning("The shader type \"" + _shaderType + "\" is either not supported or does not exist.");
 			break;
@@ -184,13 +178,22 @@ cs::Shader* cs::ResourceManager::LoadShader(std::vector<std::string> filenames)
 #endif // NDEBUG
 	}
 
-	return new Shader(_outShaderSPVs);
+	std::string _shaderResource{ filenames[0].substr(0, filenames[0].find_last_of('.')) };
+
+	shaders[_shaderResource] = new Shader(_outShaderSPVs);
+	shaders[_shaderResource]->resourcePath = _shaderResource;
+
+	return shaders[_shaderResource];
 }
 
 cs::Material* cs::ResourceManager::LoadMaterial(const std::string filename)
 {
 	// We don't have our own material formatter or reader... sooooo, empty...
-	return new Material;
+	materials[filename] = new Material;
+
+	materials[filename]->resourcePath = filename;
+
+	return materials[filename];
 }
 
 cs::Scene* cs::ResourceManager::LoadScene(const std::string filename)
@@ -224,31 +227,22 @@ void cs::ResourceManager::ForcePushMesh(Mesh* mesh)
 	meshes[mesh->resourcePath] = mesh;
 }
 
-void cs::ResourceManager::InstanceAllResources()
-{
-	for (const std::pair<std::string, Texture*> texture : textures)
-		texture.second->Initialize();
-
-	for (const std::pair<std::string, Mesh*> mesh : meshes)
-		mesh.second->Initialize();
-}
-
 void cs::ResourceManager::ClearAllResourcePools()
 {
 	for (const std::pair<std::string, Texture*> texture : textures)
-		delete texture.second;
+		ChinaEngine::renderer.SolveTexture(texture.second, Solve::REMOVE);
 	textures.clear();
 
 	for (const std::pair<std::string, Mesh*> mesh : meshes)
-		delete mesh.second;
+		ChinaEngine::renderer.SolveMesh(mesh.second, Solve::REMOVE);
 	meshes.clear();
 
 	for (const std::pair<std::string, Shader*> shader : shaders)
-		delete shader.second;
+		ChinaEngine::renderer.SolveShader(shader.second, Solve::REMOVE);
 	shaders.clear();
 
 	for (const std::pair<std::string, Material*> material : materials)
-		delete material.second;
+		ChinaEngine::renderer.SolveMaterial(material.second, Solve::REMOVE);
 	materials.clear();
 
 	/*for (const std::pair<std::string, AudioSource*> audio : audioTracks)

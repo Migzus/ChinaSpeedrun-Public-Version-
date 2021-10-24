@@ -9,15 +9,20 @@
 
 cs::Mesh::Mesh() :
 	vertices{}, indices{}
-{}
+{
+	Initialize();
+}
 
 cs::Mesh::Mesh(std::vector<Vertex> vertexArray, std::vector<uint32_t> indexArray) :
 	vertices{vertexArray}, indices{indexArray}
-{}
+{
+	Initialize();
+}
 
 void cs::Mesh::Initialize()
 {
-	ChinaEngine::renderer.AllocateMesh(vertices, indices, vertexBufferOffset, indexBufferOffset, vertexSize, indexSize, vertexBufferRef, indexBufferRef);
+	ChinaEngine::renderer.SolveMesh(this, Solve::ADD);
+	//ChinaEngine::renderer.AllocateMesh(vertices, indices, vertexBufferOffset, indexBufferOffset, vertexSize, indexSize, vertexBufferRef, indexBufferRef);
 }
 
 cs::Mesh* cs::Mesh::CreateDefaultPlane(const Vector2 extent)

@@ -1,18 +1,18 @@
 #include "Texture.h"
 
-#include <iostream>
-
 #include "Color.h"
 #include "ChinaEngine.h"
 #include "VulkanEngineRenderer.h"
 
 cs::Texture::Texture() :
-	pixels{ nullptr }
-{}
+	tilingX{ Tiling::REPEAT }, tilingY{ Tiling::REPEAT }, pixels{ nullptr }
+{
+	Initialize();
+}
 
 void cs::Texture::Initialize()
 {
-	ChinaEngine::renderer.AllocateTexture(pixels, mipLevels, width, height, texture, textureMemory, textureView, textureSampler);
+	ChinaEngine::renderer.SolveTexture(this, Solve::ADD);
 }
 
 uint8_t* cs::Texture::GetRawPixels()
@@ -22,12 +22,11 @@ uint8_t* cs::Texture::GetRawPixels()
 
 std::vector<cs::Color> cs::Texture::GetPixels() const
 {
-	uint32_t _colorArrayLength{ width * height / (uint32_t)usedColorChannels };
 	std::vector<Color> _pixels;
 
 	// for now we assume 4 color channels are always used... (in the for-loop)
 	// will fix this later
-	for (size_t i{ 0 }; i < _colorArrayLength; i++)
+	for (size_t i{ 0 }; i < GetTextureByteSize(); i++)
 	{
 		size_t _index{ i * usedColorChannels };
 
@@ -51,5 +50,5 @@ void cs::Texture::SetPixels(std::vector<Color> pixels, uint32_t width, uint32_t 
 
 uint32_t cs::Texture::GetTextureByteSize() const
 {
-	return width * height;
+	return width * height * 4; // usedColorChannels
 }

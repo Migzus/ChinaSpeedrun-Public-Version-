@@ -1,4 +1,5 @@
 #include "Resource.h"
+#include "ChinaEngine.h"
 
 bool cs::Resource::operator==(const Resource& other)
 {

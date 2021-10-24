@@ -1,15 +1,24 @@
 #pragma once
 
-#include <map>
+#include <vulkan/vulkan.h>
+#include <unordered_map>
+#include <variant>
 
 #include "Resource.h"
-#include "Variant.h"
+
+#include "Mathf.h"
+#include "Texture.h"
 
 namespace cs
 {
+	typedef std::variant<bool, int, float, Texture*, Vector2, Vector3, Vector4, Matrix3x3, Matrix4x4> Variant;
+
 	class Material : public Resource
 	{
 	public:
+		friend class VulkanEngineRenderer;
+		friend class ResourceManager;
+
 		enum class RenderMode
 		{
 			OPEQUE_,
@@ -18,25 +27,31 @@ namespace cs
 		
 		enum class FillMode
 		{
-			FILL,
-			LINE,
-			POINT
+			FILL = 0,
+			LINE = 1,
+			POINT = 2
 		} fillMode;
 
 		enum class CullMode
 		{
-			NONE,
-			FRONT,
-			BACK,
-			BOTH
+			NONE = 0,
+			FRONT = 0x00000001,
+			BACK = 0x00000002,
+			FRONT_AND_BACK = 0x00000003
 		} cullMode;
 
-		std::map<std::string, void*> shaderParams;
-		float lineWidth;
 		class Shader* shader;
+		std::unordered_map<std::string, Variant> shaderParams;
+		float lineWidth;
 
 		Material();
 
 		void Initialize() override;
+
+	private:
+		VkPipeline pipeline;
+
+		// Based on what the shader has; we update shaderParams accordingly
+		void UpdateShaderParams();
 	};
 }

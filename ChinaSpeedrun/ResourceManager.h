@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -13,6 +13,8 @@ namespace cs
 	class ResourceManager
 	{
 	public:
+		friend class VulkanEngineRenderer;
+
 		template<class T>
 		static T* IsDuplicateResource(std::string filename);
 		template<class T>
@@ -31,8 +33,6 @@ namespace cs
 		static RawData LoadRaw(const std::string filename);
 
 		static void ForcePushMesh(Mesh* mesh);
-
-		static void InstanceAllResources();
 
 		template<>
 		static Mesh* IsDuplicateResource(std::string filename)
@@ -100,10 +100,10 @@ namespace cs
 		static void ClearAllResourcePools();
 
 	private:
-		static std::map<std::string, cs::Mesh*> meshes;
-		static std::map<std::string, cs::AudioSource*> audioTracks;
-		static std::map<std::string, cs::Texture*> textures;
-		static std::map<std::string, cs::Shader*> shaders;
-		static std::map<std::string, cs::Material*> materials;
+		static std::unordered_map<std::string, cs::Mesh*> meshes;
+		static std::unordered_map<std::string, cs::AudioSource*> audioTracks;
+		static std::unordered_map<std::string, cs::Texture*> textures;
+		static std::unordered_map<std::string, cs::Shader*> shaders;
+		static std::unordered_map<std::string, cs::Material*> materials;
 	};
 }

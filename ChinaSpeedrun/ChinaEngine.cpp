@@ -33,19 +33,10 @@ void cs::ChinaEngine::Run()
 {
 	Time::CycleInit();
 
-	// ok so we need to fizzle out what needs to be done.
-	// The order of things needs to be ordered
-	// The VulkenRenderer needs to init the essentials, wilst also init the other things that
-	// currently can be static.
-	// We then can gain the ability to dynamically assign stuff
-
-	EngineInit();
 	renderer.Create(800, 600, "China Speedrun");
 
-	ResourceManager::InstanceAllResources();
-
-	// Temporary solution to a visual glitch
-	renderer.Redraw();
+	EngineInit();
+	renderer.Resolve();
 
 	ImGuiStyleInit();
 	InitInput();
@@ -89,26 +80,26 @@ void cs::ChinaEngine::EngineInit()
 	_shader->AssignShaderDescriptor("ubo", 0, Shader::Type::VERTEX, Shader::Data::UNIFORM);
 	_shader->AssignShaderDescriptor("texSampler", 1, Shader::Type::FRAGMENT, Shader::Data::SAMPLER2D);
 
-	Material* _material{ ResourceManager::Load<Material>("../Resources/materials/test.mat") };
-	Material* _material1{ ResourceManager::Load<Material>("../Resources/materials/test1.mat") };
-	Material* _material2{ ResourceManager::Load<Material>("../Resources/materials/test2.mat") };
-	_material->shader = _shader;
-	_material1->shader = _shader;
-	_material2->shader = _shader;
-	_material->renderMode = Material::RenderMode::OPEQUE_; // This is not nesseccary, it is set to Opeque by default
-	_material->fillMode = Material::FillMode::FILL;
-	_material->cullMode = Material::CullMode::BACK;
-
 	// these make no difference when spawning an object... yet
 	// meaning you can't assign these textures to any models...
 	Texture* _vargFlush{ ResourceManager::Load<Texture>("../Resources/textures/varg_flush.png") };
 	Texture* _junkoGyate{ ResourceManager::Load<Texture>("../Resources/textures/junko_gyate.png") };
 	Texture* _chaikaSmile{ ResourceManager::Load<Texture>("../Resources/textures/chaika_smile.png") };
 
-	//_material->shaderParams["texSampler"] = _vargFlush;
-	//_material1->shaderParams["texSampler"] = _junkoGyate;
-	//_material2->shaderParams["texSampler"] = _chaikaSmile;
-	//_material->shaderParams["time"] = 0.0f;
+	Material* _material{ ResourceManager::Load<Material>("../Resources/materials/test.mat") };
+	Material* _material1{ ResourceManager::Load<Material>("../Resources/materials/test1.mat") };
+	Material* _material2{ ResourceManager::Load<Material>("../Resources/materials/test2.mat") };
+
+	_material->shader = _shader;
+	_material->renderMode = Material::RenderMode::TRANSPARENT_;
+	_material->shaderParams["texSampler"] = _vargFlush;
+
+	_material1->shader = _shader;
+	_material1->shaderParams["texSampler"] = _junkoGyate;
+
+	_material2->shader = _shader;
+	_material2->cullMode = Material::CullMode::NONE;
+	_material2->shaderParams["texSampler"] = _chaikaSmile;
 	
 	// for now we're just creating objects like this... will change this in the future
 	GameObject* _cube{ InstanceObject("Cube", Vector3(-1.3f, 0.0f, 1.2f)) };
@@ -120,7 +111,7 @@ void cs::ChinaEngine::EngineInit()
 
 	MeshRendererComponent& _meshRendererCube{ _cube->AddComponent<MeshRendererComponent>() };
 	_meshRendererCube.mesh = Mesh::CreateDefaultCube({ 0.1f, 0.1f, 1.0f });
-	_meshRendererCube.materials.push_back(_material);
+	_meshRendererCube.materials.push_back(_material1);
 
 	MeshRendererComponent& _meshRendererPlane{ _plane->AddComponent<MeshRendererComponent>() };
 	_meshRendererPlane.mesh = Mesh::CreateDefaultPlane({ 0.5f, 0.5f });
@@ -128,12 +119,12 @@ void cs::ChinaEngine::EngineInit()
 
 	MeshRendererComponent& _meshRendererPlane2{ _plane2->AddComponent<MeshRendererComponent>() };
 	_meshRendererPlane2.mesh = _meshRendererPlane.mesh;
-	_meshRendererPlane2.materials.push_back(_material1);
+	_meshRendererPlane2.materials.push_back(_material);
 
 	MeshRendererComponent& _meshRendererMonke{ _suzanne->AddComponent<MeshRendererComponent>() };
 	_meshRendererMonke.mesh = ResourceManager::Load<Mesh>("../Resources/models/suzanne.obj");
 	_meshRendererMonke.materials.push_back(_material1);
-
+	
 	CameraComponent& _cameraComponent{ _camera->AddComponent<CameraComponent>() };
 	CameraComponent::currentActiveCamera = &_cameraComponent;
 
@@ -146,7 +137,7 @@ void cs::ChinaEngine::EngineInit()
 
 void cs::ChinaEngine::ImGuiStyleInit()
 {
-	/// Here we can change the style of ImGui however we like.
+	// Here we can change the style of ImGui however we like.
 	ImGuiStyle* _style{ &ImGui::GetStyle() };
 }
 
@@ -301,9 +292,7 @@ void cs::ChinaEngine::MainLoop()
 
 		world.Step();
 
-		//for (size_t i{ 0 }; i < objects.size(); i++)
-		//	objects[i]->Update();
-
+		renderer.Resolve();
 		renderer.DrawFrame();
 		Input::FinishFrame();
 

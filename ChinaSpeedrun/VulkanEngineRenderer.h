@@ -32,6 +32,14 @@ namespace cs
 		VulkanBufferInfo(VkDeviceSize newBufferSize);
 	};
 
+	enum class Solve
+	{
+		NONE,
+		UPDATE,
+		ADD,
+		REMOVE
+	};
+
 	class VulkanEngineRenderer
 	{
 	public:
@@ -41,23 +49,19 @@ namespace cs
 
 		static void FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight);
 
-		// Allocates a mesh into the buffers, DON'T EVEN ATTEMPT TO CALL THIS ON YOUR OWN
-		void AllocateMesh(const std::vector<class Vertex>& vertices, const std::vector<uint32_t>& indices, VkDeviceSize& vertexBufferOffset, VkDeviceSize& indexBufferOffset, VkDeviceSize& vertexSize, VkDeviceSize& indexSize, VkBuffer& vertexBufferRef, VkBuffer& indexBufferRef);
-		// "Allocates" a texture, don't call this either...
-		void AllocateTexture(const uint8_t* pixels, const uint32_t& mipLevels, const uint32_t& texWidth, const uint32_t& texHeight, VkImage& texture, VkDeviceMemory& textureMemory, VkImageView& textureView, VkSampler& textureSampler);
-		// Allocates a shader
-		void AllocateShader(VkRenderPass& renderPass, VkPipelineLayout& layout, VkPipeline& pipeline);
-		void AllocateMaterial(class Material* material);
-		void AllocateObject(class GameObject* object);
+		// Called before rendering happens, this is to ensure we have resolved all
+		// materials, shaders and gameobjects to prepare them for rendering.
+		void Resolve();
 
-		void FreeMesh(class Mesh* mesh);
-		void FreeTexture(class Texture* mesh);
-		void FreeShader(class Shader* mesh);
+		void SolveMesh(class Mesh* mesh, Solve solveMode);
+		void SolveShader(class Shader* shader, Solve solveMode);
+		void SolveTexture(class Texture* texture, Solve solveMode);
+		void SolveMaterial(class Material* material, Solve solveMode);
+		void SolveRenderer(class MeshRendererComponent* renderer, Solve solveMode);
 
 		void Create(int newWidth, int newHeight, const char* appTitle);
 		void GetViewportSize(int& widthRef, int& heightRef) const;
 		void DrawFrame();
-		void Redraw(); // TEMP func
 		VkDevice const& GetDevice();
 
 		float AspectRatio() const;
@@ -87,6 +91,12 @@ namespace cs
 		int width, height;
 		std::string appName;
 
+		std::unordered_map<Mesh*, Solve> solveMeshes;
+		std::unordered_map<Shader*, Solve> solveShaders;
+		std::unordered_map<Texture*, Solve> solveTextures;
+		std::unordered_map<Material*, Solve> solveMaterials;
+		std::unordered_map<MeshRendererComponent*, Solve> solveRenderers;
+
 		std::vector<VkSemaphore> imageAvailableSemaphores, renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences, imagesInFlight;
 		std::vector<VkCommandBuffer> commandBuffers;
@@ -112,11 +122,12 @@ namespace cs
 		VkSampler textureSampler;
 		uint32_t mipLevels;
 		VkImage textureImage, depthImage;
-		VkDeviceMemory vertexBufferMemory, indexBufferMemory, textureImageMemory, depthImageMemory;
+		VkDeviceMemory textureImageMemory, depthImageMemory;
 		VkCommandPool commandPool;
-		VkPipeline graphicsPipeline;
+		//VkDescriptorPool descriptorPool;
+		//VkPipeline graphicsPipeline;
 		VkRenderPass renderPass;
-		VkPipelineLayout pipelineLayout;
+		//VkPipelineLayout pipelineLayout;
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
 		VkSwapchainKHR swapChain;
@@ -126,6 +137,20 @@ namespace cs
 		VkInstance instance;
 		VkDebugUtilsMessengerEXT debugMessenger;
 		VkPhysicalDevice physicalDevice{ VK_NULL_HANDLE };
+
+		void AllocateMesh(Mesh* mesh);
+		void AllocateTexture(Texture* texture);
+		void AllocateShader(Shader* shader);
+		void AllocateMaterial(Material* material);
+
+		void UpdateShader(Shader* shader);
+		void UpdateTexture(Texture* texture);
+		void UpdateMaterial(Material* material);
+
+		void FreeMesh(Mesh* mesh);
+		void FreeTexture(Texture* texture);
+		void FreeShader(Shader* shader);
+		void FreeMaterial(Material* shader);
 
 		void InitWindow();
 		void InitVulkan();
@@ -145,8 +170,8 @@ namespace cs
 		void CreateLogicalDevice();
 		void CreateSwapChain();
 		void CreateImageViews();
-		void CreateDescriptorSetLayout();
-		void CreateGraphicsPipeline();
+		void CreateDescriptorSetLayout(Shader* shader);
+		void CreateGraphicsPipeline(Material* material);
 		void CreateRenderPass();
 		void CreateFramebuffers();
 		void CreateCommandPool();
@@ -158,8 +183,8 @@ namespace cs
 		void CreateVertexBuffer();
 		void CreateIndexBuffer();
 		void CreateUniformBuffers();
-		void CreateDescriptorPool();
-		void CreateDescriptorSets();
+		void CreateDescriptorPool(MeshRendererComponent& renderer);
+		void CreateDescriptorSets(MeshRendererComponent& renderer);
 		void CreateCommandBuffers();
 		void CreateSyncObjects();
 

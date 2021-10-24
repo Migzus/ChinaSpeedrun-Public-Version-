@@ -3,7 +3,7 @@
 #include "Resource.h"
 
 #include <vulkan/vulkan.h>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 namespace cs
@@ -11,12 +11,16 @@ namespace cs
 	class Shader : public Resource
 	{
 	public:
+		friend class VulkanEngineRenderer;
+		friend class ResourceManager;
+
 		enum class Type
 		{
 			VERTEX,
 			FRAGMENT,
 			GEOMETRY,
-			COMPUTE
+			COMPUTE,
+			ANY
 		};
 
 		enum class Data
@@ -34,24 +38,25 @@ namespace cs
 			UNIFORM
 		};
 
-		std::map<std::string, VkDescriptorSetLayoutBinding> descriptorBindings;
-		std::map<std::string, VkVertexInputAttributeDescription> vertexAttributes;
+		std::unordered_map<std::string, VkDescriptorSetLayoutBinding> descriptorBindings;
+		std::unordered_map<std::string, VkVertexInputAttributeDescription> vertexAttributes;
 
-		Shader(std::map<std::string, std::vector<char>> spv);
+		Shader(std::unordered_map<std::string, std::vector<char>> spv);
 
 		void Initialize() override;
 
 		void AssignShaderDescriptor(std::string descriptorName, uint32_t binding, Type shaderType, Data dataType);
 		void AssignShaderVertexInputAttrib(std::string attrbuteName, uint32_t location, Data dataType, uint32_t offset);
 
-		const std::map<std::string, std::vector<char>>& GetSPVCode() const;
+		const std::unordered_map<std::string, std::vector<char>>& GetSPVCode() const;
+
+		static VkShaderStageFlagBits GetShaderStageFlag(Type typeName);
+		static VkShaderStageFlagBits GetShaderStageFlag(std::string typeName);
 
 	private:
-		VkRenderPass renderPass;
+		VkDescriptorSetLayout descriptorSetLayout;
 		VkPipelineLayout layout;
-		VkPipeline pipeline;
 
-		std::map<std::string, std::vector<char>> spvCode;
-		//std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+		std::unordered_map<std::string, std::vector<char>> spvCode;
 	};
 }

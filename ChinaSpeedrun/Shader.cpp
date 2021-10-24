@@ -3,34 +3,18 @@
 #include "ChinaEngine.h"
 #include "VulkanEngineRenderer.h"
 
-cs::Shader::Shader(std::map<std::string, std::vector<char>> spv) : spvCode{ spv }
-{}
+cs::Shader::Shader(std::unordered_map<std::string, std::vector<char>> spv) : spvCode{ spv }
+{
+	Initialize();
+}
 
 void cs::Shader::Initialize()
 {
-	ChinaEngine::renderer.AllocateShader(renderPass, layout, pipeline);
+	ChinaEngine::renderer.SolveShader(this, Solve::ADD);
 }
 
 void cs::Shader::AssignShaderDescriptor(std::string descriptorName, uint32_t binding, Type shaderType, Data dataType)
 {
-	VkShaderStageFlags _stageFlags{ VK_SHADER_STAGE_VERTEX_BIT };
-
-	switch (shaderType)
-	{
-	case Type::VERTEX:
-		_stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		break;
-	case Type::FRAGMENT:
-		_stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		break;
-	case Type::GEOMETRY:
-		_stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT;
-		break;
-	case Type::COMPUTE:
-		_stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-		break;
-	}
-
 	VkDescriptorType _descriptorType{};
 
 	switch (dataType)
@@ -47,7 +31,7 @@ void cs::Shader::AssignShaderDescriptor(std::string descriptorName, uint32_t bin
 	_layoutBinding.binding = binding;
 	_layoutBinding.descriptorCount = 1;
 	_layoutBinding.descriptorType = _descriptorType;
-	_layoutBinding.stageFlags = _stageFlags;
+	_layoutBinding.stageFlags = GetShaderStageFlag(shaderType);
 	_layoutBinding.pImmutableSamplers = nullptr;
 
 	descriptorBindings[descriptorName] = _layoutBinding;
@@ -95,7 +79,42 @@ void cs::Shader::AssignShaderVertexInputAttrib(std::string attrbuteName, uint32_
 	vertexAttributes[attrbuteName] = _attributeDescription;
 }
 
-const std::map<std::string, std::vector<char>>& cs::Shader::GetSPVCode() const
+const std::unordered_map<std::string, std::vector<char>>& cs::Shader::GetSPVCode() const
 {
 	return spvCode;
+}
+
+VkShaderStageFlagBits cs::Shader::GetShaderStageFlag(Type typeName)
+{
+	switch (typeName)
+	{
+	case Type::VERTEX:
+		return VK_SHADER_STAGE_VERTEX_BIT;
+	case Type::FRAGMENT:
+		return VK_SHADER_STAGE_FRAGMENT_BIT;
+	case Type::GEOMETRY:
+		return VK_SHADER_STAGE_GEOMETRY_BIT;
+	case Type::COMPUTE:
+		return VK_SHADER_STAGE_COMPUTE_BIT;
+	case Type::ANY:
+		return VK_SHADER_STAGE_ALL_GRAPHICS;
+	}
+
+	return VK_SHADER_STAGE_ALL;
+}
+
+VkShaderStageFlagBits cs::Shader::GetShaderStageFlag(std::string typeName)
+{
+	if (typeName == "vert")
+		return VK_SHADER_STAGE_VERTEX_BIT;
+	else if (typeName == "frag")
+		return VK_SHADER_STAGE_FRAGMENT_BIT;
+	else if (typeName == "geom")
+		return VK_SHADER_STAGE_GEOMETRY_BIT;
+	else if (typeName == "comp")
+		return VK_SHADER_STAGE_COMPUTE_BIT;
+	else if (typeName.empty())
+		return VK_SHADER_STAGE_ALL_GRAPHICS;
+
+	return VK_SHADER_STAGE_ALL;
 }

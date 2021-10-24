@@ -9,11 +9,16 @@
 
 namespace cs
 {
+	class VulkanEngineRenderer;
+	class ResourceManager;
+	class MeshRenderer;
+
 	class Mesh : public Resource
 	{
 	public:
-		friend class VulkanEngineRenderer;
-		friend class MeshRenderer;
+		friend VulkanEngineRenderer;
+		friend ResourceManager;
+		friend MeshRenderer;
 
 		Mesh();
 		Mesh(std::vector<class cs::Vertex> vertexArray, std::vector<uint32_t> indexArray);

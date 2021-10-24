@@ -23,7 +23,7 @@ namespace cs
 	public:
 		std::vector<class Material*> materials;
 		VkDescriptorSetLayout descriptorSetLayout;
-		VkDescriptorPool descriptorPool;
+		//VkDescriptorPool descriptorPool;
 		std::vector<VkDescriptorSet> descriptorSets;
 	};
 

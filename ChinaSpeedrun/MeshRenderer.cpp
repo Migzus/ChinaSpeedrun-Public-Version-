@@ -1,5 +1,6 @@
 #include "MeshRenderer.h"
 
+#include "VulkanEngineRenderer.h"
 #include "Transform.h"
 #include "Mesh.h"
 #include "ChinaEngine.h"
@@ -30,7 +31,9 @@ void cs::MeshRenderer::VulkanDraw(MeshRendererComponent& meshRenderer, VkCommand
 }
 
 cs::MeshRendererComponent::MeshRendererComponent() :
-	mesh{ nullptr }, descriptorSetLayout{ nullptr }, descriptorPool{ nullptr }
+	mesh{ nullptr }
 {
+	ChinaEngine::renderer.SolveRenderer(this, Solve::ADD);
+	// perhaps move this line to the vulkan renderer...
 	uboOffset = UniformBufferObject::GetByteSize() * ChinaEngine::world.registry.size<MeshRendererComponent>();
 }

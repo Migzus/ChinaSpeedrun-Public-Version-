@@ -18,7 +18,6 @@ namespace cs
 	private:
 		UniformBufferObject ubo;
 		VkDeviceSize uboOffset;
-		VkDescriptorSetLayout descriptorSetLayout;
 		VkDescriptorPool descriptorPool;
 		std::vector<VkDescriptorSet> descriptorSets;
 	};
