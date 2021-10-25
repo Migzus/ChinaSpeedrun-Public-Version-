@@ -6,14 +6,18 @@
 #include "World.h"
 #include "ChinaEngine.h"
 
+#include <tuple>
 #include <vector>
 #include <string>
+#include <set>
 
 namespace cs
 {
 	class GameObject
 	{
 	public:
+		friend class ImGuiLayer;
+
 		std::string name;
 		bool active;
 		entt::entity entity;
@@ -21,11 +25,6 @@ namespace cs
 		std::vector<std::string> tags;
 
 		GameObject();
-
-		void Test(int number, std::string someString);
-
-		// Draw all the game object's components
-		void EditorDrawComponents();
 
 		// Called at the start of the program
 		virtual void Init();
@@ -42,20 +41,20 @@ namespace cs
 		void QueueFree();
 		
 		// Checks to see if we have at least one of the component type
-		template<class T>
+		template<class ...T>
 		bool HasComponent();
 		// Add the spesified component
 		template<class T>
 		T& AddComponent();
 		// Gets a component of this type
 		template<class T>
-		T& GetComponent(const uint8_t componentSkipCount = 0);
+		T& GetComponent();
 		// Gets the component at the specified index (This is the fastes method to get a component)
 		template<class T>
 		T& GetComponentAt(const uint8_t componentIndex);
 		// Gets all of the components of this type
-		template<class T>
-		std::vector<T&> GetComponents();
+		template<class ...T>
+		auto GetComponents();
 		// Removes the selected
 		template<class T>
 		void RemoveComponent();
@@ -67,14 +66,15 @@ namespace cs
 
 		~GameObject();
 
-	protected:
-		virtual void ComponentInit();
+	private:
+		// Draw all the game object's components
+		void EditorDrawComponents();
 	};
 
-	template<class T>
+	template<class ...T>
 	inline bool GameObject::HasComponent()
 	{
-		return ChinaEngine::world.registry.any_of<T>(entity);
+		return ChinaEngine::world.registry.any_of<T...>(entity);
 	}
 
 	template<class T>
@@ -84,7 +84,7 @@ namespace cs
 	}
 
 	template<class T>
-	inline T& GameObject::GetComponent(const uint8_t componentSkipCount)
+	inline T& GameObject::GetComponent()
 	{
 		return ChinaEngine::world.registry.get<T>(entity);
 	}
@@ -92,13 +92,13 @@ namespace cs
 	template<class T>
 	inline T& GameObject::GetComponentAt(const uint8_t componentIndex)
 	{
-		
+		return ChinaEngine::world.registry.get<componentIndex>(entity);
 	}
 
-	template<class T>
-	inline std::vector<T&> GameObject::GetComponents()
+	template<class ...T>
+	auto GameObject::GetComponents()
 	{
-		
+		return std::make_tuple(ChinaEngine::world.registry.get<T>(entity)...);
 	}
 
 	template<class T>

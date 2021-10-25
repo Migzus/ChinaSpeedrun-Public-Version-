@@ -1166,7 +1166,7 @@ void cs::VulkanEngineRenderer::CreateRenderPass()
 	_colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	_colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	_colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	_colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	_colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 	VkAttachmentDescription _depthAttachment{};
 	_depthAttachment.format = FindDepthFormat();
@@ -1211,8 +1211,8 @@ void cs::VulkanEngineRenderer::CreateRenderPass()
 	_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	_dependency.dstSubpass = 0;
 	_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-	_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	_dependency.srcAccessMask = 0;
+	_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
 	std::array<VkAttachmentDescription, 3> _attachments{ _colorAttachment, _depthAttachment, _colorAttachmentResolve };
@@ -1227,8 +1227,6 @@ void cs::VulkanEngineRenderer::CreateRenderPass()
 
 	if (vkCreateRenderPass(device, &_renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
 		Debug::LogFail("Failed to create render pass.");
-
-	//Debug::Log("Renderpass located at address: ", renderPass);
 }
 
 void cs::VulkanEngineRenderer::CreateFramebuffers()

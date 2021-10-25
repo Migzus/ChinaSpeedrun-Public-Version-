@@ -1,16 +1,22 @@
 #include "ImGuiLayer.h"
+
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 #include "ImGuizmo.h"
+
+#include "Mathf.h"
+#include "GameObject.h"
+#include "Time.h"
+
+#include "ChinaEngine.h"
+#include "EngineEditor.h"
 
 void cs::ImGuiLayer::Init()
 {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& _io{ ImGui::GetIO() }; (void)_io;
-
-
 }
 
 void cs::ImGuiLayer::Begin()
@@ -21,14 +27,79 @@ void cs::ImGuiLayer::Begin()
 	ImGuizmo::BeginFrame();
 }
 
+void cs::ImGuiLayer::Step()
+{
+    static GameObject* _activeObject{ nullptr };
+    
+    if (ImGui::Begin("Hierarchy"))
+    {
+        if (ImGui::TreeNode("Main Scene"))
+        {
+            for (GameObject* object : ChinaEngine::world.GetObjects())
+            {
+                ImGui::Text(object->name.c_str());
+                if (ImGui::IsItemClicked())
+                    _activeObject = object;
+            }
+            ImGui::TreePop();
+        }
+    }
+    ImGui::End();
+
+	if (ImGui::Begin("Inspector"))
+	{
+		if (_activeObject != nullptr)
+		{
+            ImGui::Checkbox("", &_activeObject->active);
+            ImGui::SameLine();
+			ImGui::Text(_activeObject->name.c_str());
+
+            _activeObject->EditorDrawComponents();
+		}
+	}
+	ImGui::End();
+
+    if (ImGui::Begin("Top Bar"))
+    {
+        switch (EngineEditor::GetPlaymodeState())
+        {
+        case EngineEditor::Playmode::EDITOR:
+            ImGui::Button("Play");
+            if (ImGui::IsItemClicked())
+                EngineEditor::SetPlaymode(EngineEditor::Playmode::PLAY);
+            break;
+        case EngineEditor::Playmode::PLAY:
+            ImGui::Button("Pause");
+            if (ImGui::IsItemClicked())
+                EngineEditor::SetPlaymode(EngineEditor::Playmode::PAUSE);
+            break;
+        case EngineEditor::Playmode::PAUSE:
+            ImGui::Button("Continue");
+            if (ImGui::IsItemClicked())
+                EngineEditor::SetPlaymode(EngineEditor::Playmode::PLAY);
+            break;
+        }
+
+        ImGui::SameLine();
+        ImGui::Button("Stop");
+        if (ImGui::IsItemClicked())
+            EngineEditor::SetPlaymode(EngineEditor::Playmode::EDITOR);
+    }
+    ImGui::End();
+
+	if (ImGui::Begin("Profiler"))
+		ImGui::Text("Delta Time: %f", Time::deltaTime);
+	ImGui::End();
+}
+
 void cs::ImGuiLayer::End()
 {
-
+    ImGui::Render();
 }
 
 void cs::ImGuiLayer::SetStyle()
 {
-
+    ImGuiStyle* _style{ &ImGui::GetStyle() };
 }
 
 bool cs::ImGuiLayer::BeginButtonDropDown(const char* label, ImVec2 buttonSize)
@@ -41,7 +112,7 @@ bool cs::ImGuiLayer::BeginButtonDropDown(const char* label, ImVec2 buttonSize)
     float y = ImGui::GetCursorPosY();
 
     ImVec2 size(20, buttonSize.y);
-    bool pressed = ImGui::Button("##", size);
+    bool pressed{ ImGui::Button("##", size) };
 
     // Arrow
     ImVec2 center(_pos.x + x + 10, _pos.y + y + buttonSize.y / 2);
@@ -63,9 +134,7 @@ bool cs::ImGuiLayer::BeginButtonDropDown(const char* label, ImVec2 buttonSize)
     ImGui::SetNextWindowPos(popupPos);
 
     if (pressed)
-    {
         ImGui::OpenPopup(label);
-    }
 
     if (ImGui::BeginPopup(label))
     {

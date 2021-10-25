@@ -79,6 +79,12 @@
     <ClCompile Include="Component.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
+    <ClCompile Include="Rigidbody.cpp" />
+    <ClCompile Include="PhysicsBody.cpp" />
+    <ClCompile Include="StaticBody.cpp" />
+    <ClCompile Include="Collider.cpp" />
+    <ClCompile Include="SphereCollider.cpp" />
+    <ClCompile Include="PolygonCollider.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -138,6 +144,12 @@
     <ClInclude Include="Component.h">
       <Filter>ecs</Filter>
     </ClInclude>
+    <ClInclude Include="Rigidbody.h" />
+    <ClInclude Include="PhysicsBody.h" />
+    <ClInclude Include="StaticBody.h" />
+    <ClInclude Include="Collider.h" />
+    <ClInclude Include="SphereCollider.h" />
+    <ClInclude Include="PolygonCollider.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

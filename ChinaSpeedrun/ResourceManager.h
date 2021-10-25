@@ -70,7 +70,12 @@ namespace cs
 		template<>
 		static Material* Load(const std::string filename)
 		{
-			return LoadMaterial(filename);
+			Material* _matOut{ IsDuplicateResource<Material>(filename) };
+
+			if (_matOut == nullptr)
+				_matOut = LoadMaterial(filename);
+
+			return _matOut;
 		}
 
 		template<>
@@ -81,19 +86,26 @@ namespace cs
 		template<>
 		static Shader* Load(const std::string filename)
 		{
-			const std::string _shaderTypes[]{ "vert", "frag", "comp", "geom" };
-			std::vector<std::string> _shaderfiles;
+			Shader* _shaderOut{ IsDuplicateResource<Shader>(filename) };
 
-			for (size_t i{ 0 }; i < 3; i++)
+			if (_shaderOut == nullptr)
 			{
-				std::string _fullfilePath{ filename + '.' + _shaderTypes[i] };
-				std::ifstream _file{ _fullfilePath };
+				const std::string _shaderTypes[]{ "vert", "frag", "comp", "geom" };
+				std::vector<std::string> _shaderfiles;
 
-				if (_file.good())
-					_shaderfiles.push_back(_fullfilePath);
+				for (size_t i{ 0 }; i < 3; i++)
+				{
+					std::string _fullfilePath{ filename + '.' + _shaderTypes[i] };
+					std::ifstream _file{ _fullfilePath };
+
+					if (_file.good())
+						_shaderfiles.push_back(_fullfilePath);
+				}
+
+				_shaderOut = LoadShader(_shaderfiles);
 			}
 
-			return LoadShader(_shaderfiles);
+			return _shaderOut;
 		}
 
 		// It is EXTREMELY dangerous to call this function from a normal script in-game. NEVER do this.

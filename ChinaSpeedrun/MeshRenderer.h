@@ -4,22 +4,17 @@
 
 namespace cs
 {
-	class MeshRendererComponent
+	class MeshRendererComponent : public RenderComponent
 	{
 	public:
 		friend class MeshRenderer;
 		friend class VulkanEngineRenderer;
 
-		std::vector<class Material*> materials;
 		class Mesh* mesh;
 
 		MeshRendererComponent();
 
-	private:
-		UniformBufferObject ubo;
-		VkDeviceSize uboOffset;
-		VkDescriptorPool descriptorPool;
-		std::vector<VkDescriptorSet> descriptorSets;
+		virtual void ImGuiDrawComponent() override;
 	};
 
 	class MeshRenderer

@@ -35,5 +35,15 @@ cs::MeshRendererComponent::MeshRendererComponent() :
 {
 	ChinaEngine::renderer.SolveRenderer(this, Solve::ADD);
 	// perhaps move this line to the vulkan renderer...
-	uboOffset = UniformBufferObject::GetByteSize() * ChinaEngine::world.registry.size<MeshRendererComponent>();
+	uboOffset = ChinaEngine::world.GetUBONextOffset();
+}
+
+void cs::MeshRendererComponent::ImGuiDrawComponent()
+{
+	if (ImGui::TreeNodeEx("Mesh Renderer", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+
+
+		ImGui::TreePop();
+	}
 }

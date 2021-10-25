@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "EngineEditor.h"
+
 #include "Transform.h"
 #include "MeshRenderer.h"
 #include "Camera.h"
@@ -10,12 +12,29 @@
 #include "AudioComponent.h"
 #include "PhysicsServer.h"
 
-cs::World::World() : audioSystem{ new AudioSystem }
+#include "GameObject.h"
+
+cs::GameObject* cs::World::InstanceObject(const char* name, const Vector3 position, const Vector3 rotation, const Vector3 scale)
 {
-	//entt::entity _entity{ registry.create() };
-	//registry.emplace<CameraComponent>(_entity);
-	//registry.emplace<TransformComponent>(_entity);
-	//registry.emplace<MeshRendererComponent>(_entity);
+	GameObject* _newObject{ new GameObject };
+	_newObject->entity = registry.create();
+	_newObject->name = name;
+
+	TransformComponent& _transform{ _newObject->AddComponent<TransformComponent>() };
+	_transform.position = position;
+	_transform.rotationDegrees = rotation;
+	_transform.scale = scale;
+
+	objects.push_back(_newObject);
+	return _newObject;
+}
+
+cs::World::World() : audioSystem{ new AudioSystem }
+{}
+
+void cs::World::Start()
+{
+	
 }
 
 void cs::World::Step()
@@ -53,4 +72,20 @@ void cs::World::Step()
 
 		MeshRenderer::UpdateUBO(_meshRenderer, _transform, _camera);
 	}
+}
+
+void cs::World::DeleteAllObjects()
+{
+	for (auto object : objects)
+		delete object;
+}
+
+const uint64_t cs::World::GetUBONextOffset() const
+{
+	return UniformBufferObject::GetByteSize() * registry.size<MeshRendererComponent>();
+}
+
+const std::vector<cs::GameObject*>& cs::World::GetObjects()
+{
+	return objects;
 }

@@ -1,12 +1,11 @@
 #pragma once
 
 #include "Mathf.h"
+#include "Component.h"
 
 #include <vulkan/vulkan.h>
 #include <vector>
 
-// Will fill this in the future
-// MeshRenderer and SpriteRenderer will inherit from this
 namespace cs
 {
 	struct UniformBufferObject
@@ -18,12 +17,21 @@ namespace cs
 		static uint32_t GetByteSize();
 	};
 
-	class RenderComponent
+	class RenderComponent : public Component
 	{
 	public:
+		//friend class SpriteRenderer;
+		friend class MeshRenderer;
+		friend class VulkanEngineRenderer;
+
 		std::vector<class Material*> materials;
-		VkDescriptorSetLayout descriptorSetLayout;
-		//VkDescriptorPool descriptorPool;
+
+		virtual void ImGuiDrawComponent() override;
+
+	protected:
+		UniformBufferObject ubo;
+		VkDeviceSize uboOffset;
+		VkDescriptorPool descriptorPool;
 		std::vector<VkDescriptorSet> descriptorSets;
 	};
 

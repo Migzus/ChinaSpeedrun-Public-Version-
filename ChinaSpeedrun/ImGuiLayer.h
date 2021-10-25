@@ -10,8 +10,11 @@ namespace cs
 	class ImGuiLayer
 	{
 	public:
+		friend class VulkanEngineRenderer;
+
 		void Init();
 		void Begin();
+		void Step();
 		void End();
 		void SetStyle();
 
