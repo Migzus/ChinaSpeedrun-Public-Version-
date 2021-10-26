@@ -1,6 +1,28 @@
 #include "SphereCollider.h"
 
 #include "imgui.h"
+#include "Collider.h"
+#include "PolygonCollider.h"
+#include "PhysicsServer.h"
+#include "Transform.h"
+#include "Mathf.h"
+
+cs::CollisionInfo cs::SphereColliderComponent::Intersect(const TransformComponent* transform, const ColliderComponent* otherCollider, const TransformComponent* otherTransform) const
+{
+	return otherCollider->Intersect(otherTransform, this, transform);
+}
+
+cs::CollisionInfo cs::SphereColliderComponent::Intersect(const TransformComponent* transform, const SphereColliderComponent* otherCollider, const TransformComponent* otherTransform) const
+{
+	// Sphere v Sphere
+	return cs::collision_tests::SphereSphereIntersection(transform, this, otherTransform, otherCollider);
+}
+
+cs::CollisionInfo cs::SphereColliderComponent::Intersect(const TransformComponent* transform, const PolygonColliderComponent* otherCollider, const TransformComponent* otherTransform) const
+{
+	// Sphere v Polygon
+	return cs::collision_tests::SpherePolygonIntersection(transform, this, otherTransform, otherCollider);
+}
 
 void cs::SphereColliderComponent::ImGuiDrawComponent()
 {

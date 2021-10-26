@@ -5,8 +5,8 @@ namespace cs
 	class Component
 	{
 	public:
-		bool enabled{ true };
 		class GameObject* gameObject{ nullptr };
+		bool enabled{ true };
 		
 		virtual void ImGuiDrawComponent() = 0;
 	};

@@ -1,5 +1,8 @@
 #include "Rigidbody.h"
 
+#include "ChinaEngine.h"
+#include "World.h"
+
 #include "Transform.h"
 #include "PhysicsServer.h"
 #include "Time.h"
@@ -7,9 +10,17 @@
 
 void cs::Rigidbody::CalculatePhysics(RigidbodyComponent& rigidBody, TransformComponent& transform)
 {
-	rigidBody.velocity += (PhysicsServer::gravityDirection * rigidBody.gravity / rigidBody.mass) * Time::deltaTime;
-
+	rigidBody.force += PhysicsServer::gravityDirection * rigidBody.mass * rigidBody.gravity;
+	rigidBody.velocity += rigidBody.force / rigidBody.mass * Time::deltaTime;
 	transform.position += rigidBody.velocity * Time::deltaTime;
+	rigidBody.force = Vector3(0.0f, 0.0f, 0.0f);
+}
+
+cs::RigidbodyComponent::RigidbodyComponent() :
+	mass{ 0.1f }, gravity{ 9.81f }, velocity{ 0.0f, 0.0f, 0.0f }, force{ 0.0f, 0.0f, 0.0f }
+{
+	bodyType = BodyType::RIGID;
+	ChinaEngine::world.physicsServer->bodies.push_back(this);
 }
 
 void cs::RigidbodyComponent::ImGuiDrawComponent()
@@ -22,4 +33,9 @@ void cs::RigidbodyComponent::ImGuiDrawComponent()
 
 		ImGui::TreePop();
 	}
+}
+
+void cs::RigidbodyComponent::AddForce(const Vector3 additionalForce)
+{
+	force += additionalForce;
 }

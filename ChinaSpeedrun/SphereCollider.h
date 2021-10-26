@@ -1,25 +1,18 @@
 #pragma once
 
 #include "Collider.h"
-#include "Component.h"
 
 namespace cs
 {
-	class SphereCollider : public Collider
+	class SphereColliderComponent : public ColliderComponent
 	{
 	public:
-		struct CollisionInfo Intersect(const Collider* collider) const override;
-		CollisionInfo Intersect(const SphereCollider* collider) const override;
-		CollisionInfo Intersect(const PolygonCollider* collider) const override;
-	};
-
-	class SphereColliderComponent : public Component
-	{
-	public:
-		friend SphereCollider;
-
 		float radius{ 1.0f };
 		float friction{ 0.0f };
+
+		struct CollisionInfo Intersect(const class TransformComponent* transform, const ColliderComponent* otherCollider, const TransformComponent* otherTransform) const override;
+		CollisionInfo Intersect(const TransformComponent* transform, const class SphereColliderComponent* otherCollider, const TransformComponent* otherTransform) const override;
+		CollisionInfo Intersect(const TransformComponent* transform, const class PolygonColliderComponent* otherCollider, const TransformComponent* otherTransform) const override;
 
 		virtual void ImGuiDrawComponent() override;
 	};

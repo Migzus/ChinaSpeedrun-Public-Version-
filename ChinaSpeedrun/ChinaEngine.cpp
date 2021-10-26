@@ -53,6 +53,9 @@ float cs::ChinaEngine::AspectRatio()
 
 void cs::ChinaEngine::EngineInit()
 {
+	// For future notice... move this entire function somewhere else...
+	// the head ChinaEngine class has nothing to do with instancing objects (maybe in a scene loader or something...)
+
 	Shader* _shader{ ResourceManager::Load<Shader>("../Resources/shaders/default_shader") };
 	_shader->AssignShaderVertexInputAttrib("position", 0, Shader::Data::VEC3, offsetof(Vertex, position));
 	_shader->AssignShaderVertexInputAttrib("color", 1, Shader::Data::VEC3, offsetof(Vertex, color));
@@ -74,37 +77,38 @@ void cs::ChinaEngine::EngineInit()
 	_material2->cullMode = Material::CullMode::NONE;
 	_material2->shaderParams["texSampler"] = _chaikaSmile;
 	
-	GameObject* _terrain{ world.InstanceObject("Terrain", Vector3(0.0f, -2.0f, 0.0f)) };
-	GameObject* _suzanne{ world.InstanceObject("Suzanne", Vector3(-7.0f, 5.0f, -6.2f)) };
-	GameObject* _physicsBall{ world.InstanceObject("Junko Ball", Vector3(-1.0f, 2.0f, 6.0f)) };
+	GameObject* _terrain{ world.InstanceObject("Terrain", Vector3(0.0f, -6.0f, 0.0f)) };
+	GameObject* _suzanne{ world.InstanceObject("Suzanne", Vector3(-1.0f, 10.0f, 6.0f)) }; // Vector3(-7.0f, 5.0f, -6.2f)
+	GameObject* _physicsBall{ world.InstanceObject("Junko Ball", Vector3(-1.3f, 0.0f, 5.5f)) };
 	GameObject* _camera{ world.InstanceObject("Camera", Vector3(13.0f, 13.0f, 16.0f), Vector3(-33.0f, 35.0f, 0.0f)) };
 
 	MeshRendererComponent& _terrainMesh{ _terrain->AddComponent<MeshRendererComponent>() };
 	_terrainMesh.mesh = ResourceManager::Load<Mesh>("../Resources/models/terrain.obj");
 	_terrainMesh.materials.push_back(_material2);
 
-	_terrain->AddComponent<StaticBodyComponent>();
+	StaticBodyComponent& _rbT{ _terrain->AddComponent<StaticBodyComponent>() };
 	_terrain->AddComponent<PolygonColliderComponent>();
 
 	MeshRendererComponent& _meshRendererMonke{ _suzanne->AddComponent<MeshRendererComponent>() };
 	_meshRendererMonke.mesh = ResourceManager::Load<Mesh>("../Resources/models/suzanne.obj");
 	_meshRendererMonke.materials.push_back(_material1);
 	
+	RigidbodyComponent& _rbZU{ _suzanne->AddComponent<RigidbodyComponent>() };
+	_suzanne->AddComponent<SphereColliderComponent>();
+
 	MeshRendererComponent& _junkoBall{ _physicsBall->AddComponent<MeshRendererComponent>() };
 	_junkoBall.mesh = ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj");
 	_junkoBall.materials.push_back(_material1);
 	
-	_physicsBall->AddComponent<RigidbodyComponent>();
+	StaticBodyComponent& _rbPB{ _physicsBall->AddComponent<StaticBodyComponent>() };
 	_physicsBall->AddComponent<SphereColliderComponent>();
 
 	CameraComponent& _cameraComponent{ _camera->AddComponent<CameraComponent>() };
 	CameraComponent::currentActiveCamera = &_cameraComponent;
 
-	/*AudioComponent& _audioComponent{ _cube->AddComponent<AudioComponent>() };
-	_audioComponent.soundName = "koto";
-
-	_audioComponent = _suzanne->AddComponent<AudioComponent>();
-	_audioComponent.soundName = "kazeoto";*/
+	PhysicsBody::GetAllColliderComponents(&_rbT);
+	PhysicsBody::GetAllColliderComponents(&_rbZU);
+	PhysicsBody::GetAllColliderComponents(&_rbPB);
 }
 
 void cs::ChinaEngine::InitInput()

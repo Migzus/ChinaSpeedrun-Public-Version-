@@ -11,6 +11,7 @@
 #include "AudioSystem.h"
 #include "AudioComponent.h"
 #include "PhysicsServer.h"
+#include "Rigidbody.h"
 
 #include "GameObject.h"
 
@@ -29,7 +30,8 @@ cs::GameObject* cs::World::InstanceObject(const char* name, const Vector3 positi
 	return _newObject;
 }
 
-cs::World::World() : audioSystem{ new AudioSystem }
+cs::World::World() :
+	physicsServer{ new PhysicsServer }, audioSystem{ new AudioSystem }
 {}
 
 void cs::World::Start()
@@ -71,6 +73,17 @@ void cs::World::Step()
 		auto& _camera{ registry.get<CameraComponent>(_cameras.front()) };
 
 		MeshRenderer::UpdateUBO(_meshRenderer, _transform, _camera);
+	}
+
+	physicsServer->Step();
+
+	auto _physicsSimulations{ registry.view<RigidbodyComponent, TransformComponent>() };
+	for (auto e : _physicsSimulations)
+	{
+		auto& _transform{ registry.get<TransformComponent>(e) };
+		auto& _rigidbody{ registry.get<RigidbodyComponent>(e) };
+
+		Rigidbody::CalculatePhysics(_rigidbody, _transform);
 	}
 }
 

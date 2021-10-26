@@ -1,12 +1,16 @@
 #pragma once
 
+#include "Component.h"
+
 namespace cs
 {
-	class Collider
+	class ColliderComponent : public Component
 	{
 	public:
-		virtual struct CollisionInfo Intersect(const Collider* collider) const = 0;
-		virtual CollisionInfo Intersect(const class SphereCollider* collider) const = 0;
-		virtual CollisionInfo Intersect(const class PolygonCollider* collider) const = 0;
+		virtual struct CollisionInfo Intersect(const class TransformComponent* transform, const ColliderComponent* otherCollider, const TransformComponent* otherTransform) const;
+		virtual CollisionInfo Intersect(const TransformComponent* transform, const class SphereColliderComponent* otherCollider, const TransformComponent* otherTransform) const;
+		virtual CollisionInfo Intersect(const TransformComponent* transform, const class PolygonColliderComponent* otherCollider, const TransformComponent* otherTransform) const;
+
+		virtual void ImGuiDrawComponent() override;
 	};
 }

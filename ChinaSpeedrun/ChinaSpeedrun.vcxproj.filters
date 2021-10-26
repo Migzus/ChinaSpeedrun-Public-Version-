@@ -73,18 +73,26 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Variant.cpp" />
-    <ClCompile Include="PhysicsServer.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
     <ClCompile Include="Component.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
-    <ClCompile Include="Rigidbody.cpp" />
-    <ClCompile Include="PhysicsBody.cpp" />
-    <ClCompile Include="StaticBody.cpp" />
     <ClCompile Include="Collider.cpp" />
-    <ClCompile Include="SphereCollider.cpp" />
-    <ClCompile Include="PolygonCollider.cpp" />
+    <ClCompile Include="PhysicsBody.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="PolygonCollider.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="Rigidbody.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="SphereCollider.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticBody.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsServer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -138,18 +146,26 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Variant.h" />
-    <ClInclude Include="PhysicsServer.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
     <ClInclude Include="Component.h">
       <Filter>ecs</Filter>
     </ClInclude>
-    <ClInclude Include="Rigidbody.h" />
-    <ClInclude Include="PhysicsBody.h" />
-    <ClInclude Include="StaticBody.h" />
     <ClInclude Include="Collider.h" />
-    <ClInclude Include="SphereCollider.h" />
-    <ClInclude Include="PolygonCollider.h" />
+    <ClInclude Include="PhysicsBody.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="PolygonCollider.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="Rigidbody.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="SphereCollider.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticBody.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsServer.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

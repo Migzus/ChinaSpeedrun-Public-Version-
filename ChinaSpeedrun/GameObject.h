@@ -5,6 +5,8 @@
 
 #include "World.h"
 #include "ChinaEngine.h"
+#include "Component.h"
+#include "Debug.h"
 
 #include <tuple>
 #include <vector>
@@ -80,7 +82,11 @@ namespace cs
 	template<class T>
 	inline T& GameObject::AddComponent()
 	{
-		return ChinaEngine::world.registry.emplace<T>(entity);
+		auto& _comp{ ChinaEngine::world.registry.emplace<T>(entity) };
+
+		_comp.gameObject = this;
+
+		return _comp;
 	}
 
 	template<class T>

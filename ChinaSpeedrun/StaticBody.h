@@ -14,6 +14,8 @@ namespace cs
 	public:
 		friend StaticBody;
 
+		StaticBodyComponent();
+
 		virtual void ImGuiDrawComponent() override;
 	};
 }

@@ -8,7 +8,7 @@ namespace cs
 	class Rigidbody : public PhysicsBody
 	{
 	public:
-		void CalculatePhysics(class RigidbodyComponent& rigidBody, class TransformComponent& transform);
+		static void CalculatePhysics(class RigidbodyComponent& rigidBody, class TransformComponent& transform);
 	};
 
 	class RigidbodyComponent : public PhysicsBodyComponent
@@ -16,11 +16,17 @@ namespace cs
 	public:
 		friend Rigidbody;
 
-		float mass{ 0.1f };
-		float gravity{ 9.81f };
+		float mass;
+		float gravity;
 
 		Vector3 velocity;
 
+		RigidbodyComponent();
+
+		void AddForce(const Vector3 additionalForce);
 		virtual void ImGuiDrawComponent() override;
+
+	private:
+		Vector3 force;
 	};
 }

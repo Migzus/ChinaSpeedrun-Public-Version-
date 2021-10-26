@@ -1,34 +1,33 @@
 #pragma once
 
 #include "Collider.h"
-#include "Component.h"
 #include "Mathf.h"
 
 #include <vector>
 
 namespace cs
 {
-	class PolygonCollider : public Collider
+	struct PlanePart
 	{
-	public:
-		void CreateBasedOnMesh();
-		struct CollisionInfo Intersect(const Collider* collider) const override;
-		CollisionInfo Intersect(const SphereCollider* collider) const override;
-		CollisionInfo Intersect(const PolygonCollider* collider) const override;
+		Vector3 normal;
+		float length;
 	};
 
-	class PolygonColliderComponent : public Component
+	class PolygonColliderComponent : public ColliderComponent
 	{
 	public:
-		friend PolygonCollider;
-
 		bool useMesh{ false };
 		float friction{ 0.0f };
+
+		void CreateBasedOnMesh();
+
+		struct CollisionInfo Intersect(const class TransformComponent* transform, const ColliderComponent* otherCollider, const TransformComponent* otherTransform) const override;
+		CollisionInfo Intersect(const TransformComponent* transform, const class SphereColliderComponent* otherCollider, const TransformComponent* otherTransform) const override;
+		CollisionInfo Intersect(const TransformComponent* transform, const class PolygonColliderComponent* otherCollider, const TransformComponent* otherTransform) const override;
 
 		virtual void ImGuiDrawComponent() override;
 
 	private:
-		std::vector<Vector3> points;
-		std::vector<Vector3> normals;
+		std::vector<PlanePart> planes;
 	};
 }
