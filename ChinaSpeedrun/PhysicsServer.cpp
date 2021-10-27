@@ -49,19 +49,27 @@ void cs::PhysicsServer::Solve()
 		{
 			RigidbodyComponent* _rbA{ reinterpret_cast<RigidbodyComponent*>(collision.bodyA) };
 			StaticBodyComponent* _sbB{ reinterpret_cast<StaticBodyComponent*>(collision.bodyB) };
+
+			//Vector3 _bouncyForce{ glm::reflect(_rbA->velocity, collision.info.normal) * 10.0f };
+			TransformComponent& _tr{ _rbA->gameObject->GetComponent<TransformComponent>() };
+			_tr.position += collision.info.normal * collision.info.errorLength;
+			Vector3 _proj{ Mathf::Project(collision.info.normal, _rbA->velocity) };
+			_rbA->velocity = -_proj;
+
+			//_rbA->AddForce(collision.info.normal * collision.info.errorLength * 100.0f);
 		}
 		else if (collision.bodyA->bodyType == PhysicsBodyComponent::BodyType::STATIC && collision.bodyB->bodyType == PhysicsBodyComponent::BodyType::RIGID)
 		{
 			StaticBodyComponent* _sbA{ reinterpret_cast<StaticBodyComponent*>(collision.bodyA) };
 			RigidbodyComponent* _rbB{ reinterpret_cast<RigidbodyComponent*>(collision.bodyB) };
 
-
 			TransformComponent& _tr{ _rbB->gameObject->GetComponent<TransformComponent>() };
 			_tr.position += collision.info.normal * collision.info.errorLength;
+			_rbB->velocity += 1.2f * collision.info.normal * _rbB->velocity;
 
 			//_rbB->velocity = glm::reflect(_rbB->velocity, collision.info.normal);
 			//_rbB->velocity = Vector3(0.0f, 0.0f, 0.0f);
-			_rbB->AddForce(collision.info.normal * collision.info.errorLength * 100.0f);
+			//_rbB->AddForce(collision.info.normal * collision.info.errorLength * 100.0f);
 		}
 	}
 
@@ -85,7 +93,17 @@ cs::CollisionInfo cs::collision_tests::SphereSphereIntersection(const TransformC
 
 cs::CollisionInfo cs::collision_tests::SpherePolygonIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const PolygonColliderComponent* oc)
 {
-	return CollisionInfo();
+	CollisionInfo _info{};
+
+	for (auto& plane : oc->GetPlanes())
+	{
+		_info.normal = plane.normal;
+		_info.a = c->radius * _info.normal + t->position;
+		_info.errorLength = Mathf::Project(_info.a, plane) - c->radius;
+		_info.valid = _info.errorLength <= 0.0f;
+	}
+
+	return _info;
 }
 
 cs::Collision::Collision(PhysicsBodyComponent* a, PhysicsBodyComponent* b, CollisionInfo newInfo) :

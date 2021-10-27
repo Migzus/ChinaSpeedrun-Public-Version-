@@ -78,8 +78,8 @@ void cs::ChinaEngine::EngineInit()
 	_material2->shaderParams["texSampler"] = _chaikaSmile;
 	
 	GameObject* _terrain{ world.InstanceObject("Terrain", Vector3(0.0f, -6.0f, 0.0f)) };
-	GameObject* _suzanne{ world.InstanceObject("Suzanne", Vector3(-1.0f, 10.0f, 6.0f)) }; // Vector3(-7.0f, 5.0f, -6.2f)
-	GameObject* _physicsBall{ world.InstanceObject("Junko Ball", Vector3(-1.3f, 0.0f, 5.5f)) };
+	GameObject* _suzanne{ world.InstanceObject("Suzanne", Vector3(0.0f, 10.0f, 4.0f)) }; // Vector3(-7.0f, 5.0f, -6.2f) // -1.0f, 10.0f, 6.0f
+	GameObject* _physicsBall{ world.InstanceObject("Junko Ball", Vector3(-1.3f, 3.0f, 5.5f)) };
 	GameObject* _camera{ world.InstanceObject("Camera", Vector3(13.0f, 13.0f, 16.0f), Vector3(-33.0f, 35.0f, 0.0f)) };
 
 	MeshRendererComponent& _terrainMesh{ _terrain->AddComponent<MeshRendererComponent>() };
@@ -95,17 +95,19 @@ void cs::ChinaEngine::EngineInit()
 	
 	RigidbodyComponent& _rbZU{ _suzanne->AddComponent<RigidbodyComponent>() };
 	_suzanne->AddComponent<SphereColliderComponent>();
+	_rbZU.mass = 1.0f;
 
 	MeshRendererComponent& _junkoBall{ _physicsBall->AddComponent<MeshRendererComponent>() };
 	_junkoBall.mesh = ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj");
 	_junkoBall.materials.push_back(_material1);
 	
-	StaticBodyComponent& _rbPB{ _physicsBall->AddComponent<StaticBodyComponent>() };
+	RigidbodyComponent& _rbPB{ _physicsBall->AddComponent<RigidbodyComponent>() };
 	_physicsBall->AddComponent<SphereColliderComponent>();
 
 	CameraComponent& _cameraComponent{ _camera->AddComponent<CameraComponent>() };
 	CameraComponent::currentActiveCamera = &_cameraComponent;
 
+	// move this elsewhere, i dont want to call this for every physics object...
 	PhysicsBody::GetAllColliderComponents(&_rbT);
 	PhysicsBody::GetAllColliderComponents(&_rbZU);
 	PhysicsBody::GetAllColliderComponents(&_rbPB);

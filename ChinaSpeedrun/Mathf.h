@@ -40,6 +40,10 @@ namespace cs
 		static void Clamp(float& value, float min, float max);
 		// Clamps the value back to the other end of the specified range, pluss excess value is returned
 		static void LoopClamp(float& value, float min, float max);
-	private:
+		static float Project(const Vector3 projVec, const struct Plane plane);
+		static Vector3 Project(const Vector3 projVec, const Vector3 alignVec);
+		static float Magnitude(const Vector3 vec);
+		static Vector3 CrossProduct(const Vector3 vec1, const Vector3 vec2);
+		static float DotProduct(const Vector3 vec1, const Vector3 vec2);
 	};
 }

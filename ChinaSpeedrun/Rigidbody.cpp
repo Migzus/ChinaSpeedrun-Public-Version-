@@ -11,7 +11,7 @@
 void cs::Rigidbody::CalculatePhysics(RigidbodyComponent& rigidBody, TransformComponent& transform)
 {
 	rigidBody.force += PhysicsServer::gravityDirection * rigidBody.mass * rigidBody.gravity;
-	rigidBody.velocity += rigidBody.force / rigidBody.mass * Time::deltaTime;
+	rigidBody.velocity += rigidBody.force / rigidBody.mass * PhysicsServer::airResistance * Time::deltaTime;
 	transform.position += rigidBody.velocity * Time::deltaTime;
 	rigidBody.force = Vector3(0.0f, 0.0f, 0.0f);
 }

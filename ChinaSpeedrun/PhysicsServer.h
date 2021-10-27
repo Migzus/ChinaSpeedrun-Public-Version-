@@ -39,6 +39,7 @@ namespace cs
 	{
 	public:
 		constexpr static Vector3 gravityDirection{ 0.0f, -1.0f, 0.0f };
+		constexpr static float airResistance{ 0.8f };
 
 		std::vector<class PhysicsBodyComponent*> bodies;
 

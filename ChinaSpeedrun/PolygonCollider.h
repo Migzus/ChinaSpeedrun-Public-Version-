@@ -7,7 +7,7 @@
 
 namespace cs
 {
-	struct PlanePart
+	struct Plane
 	{
 		Vector3 normal;
 		float length;
@@ -19,7 +19,10 @@ namespace cs
 		bool useMesh{ false };
 		float friction{ 0.0f };
 
+		PolygonColliderComponent();
+
 		void CreateBasedOnMesh();
+		const std::vector<Plane>& GetPlanes() const;
 
 		struct CollisionInfo Intersect(const class TransformComponent* transform, const ColliderComponent* otherCollider, const TransformComponent* otherTransform) const override;
 		CollisionInfo Intersect(const TransformComponent* transform, const class SphereColliderComponent* otherCollider, const TransformComponent* otherTransform) const override;
@@ -28,6 +31,6 @@ namespace cs
 		virtual void ImGuiDrawComponent() override;
 
 	private:
-		std::vector<PlanePart> planes;
+		std::vector<Plane> planes;
 	};
 }
