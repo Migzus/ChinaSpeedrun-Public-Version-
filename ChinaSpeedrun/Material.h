@@ -22,7 +22,7 @@ namespace cs
 		enum class RenderMode
 		{
 			OPEQUE_,
-			TRANSPARENT_ // because a TRANSPARENT macro is already defined by microsoft, we have to add the underscore
+			TRANSPARENT_ // because a TRANSPARENT macro is already defined by microsoft, we have to add the underscore to avoid conflict
 		} renderMode;
 		
 		enum class FillMode
@@ -43,6 +43,7 @@ namespace cs
 		class Shader* shader;
 		std::unordered_map<std::string, Variant> shaderParams;
 		float lineWidth;
+		bool enableStencil;
 
 		Material();
 

@@ -10,7 +10,9 @@
 #include "Time.h"
 
 #include "ChinaEngine.h"
-#include "EngineEditor.h"
+#include "Editor.h"
+
+//using namespace cs::editor;
 
 void cs::ImGuiLayer::Init()
 {
@@ -61,29 +63,29 @@ void cs::ImGuiLayer::Step()
 
     if (ImGui::Begin("Top Bar"))
     {
-        switch (EngineEditor::GetPlaymodeState())
+        switch (editor::EngineEditor::GetPlaymodeState())
         {
-        case EngineEditor::Playmode::EDITOR:
+        case editor::EngineEditor::Playmode::EDITOR:
             ImGui::Button("Play");
             if (ImGui::IsItemClicked())
-                EngineEditor::SetPlaymode(EngineEditor::Playmode::PLAY);
+                editor::EngineEditor::SetPlaymode(editor::EngineEditor::Playmode::PLAY);
             break;
-        case EngineEditor::Playmode::PLAY:
+        case editor::EngineEditor::Playmode::PLAY:
             ImGui::Button("Pause");
             if (ImGui::IsItemClicked())
-                EngineEditor::SetPlaymode(EngineEditor::Playmode::PAUSE);
+                editor::EngineEditor::SetPlaymode(editor::EngineEditor::Playmode::PAUSE);
             break;
-        case EngineEditor::Playmode::PAUSE:
+        case editor::EngineEditor::Playmode::PAUSE:
             ImGui::Button("Continue");
             if (ImGui::IsItemClicked())
-                EngineEditor::SetPlaymode(EngineEditor::Playmode::PLAY);
+                editor::EngineEditor::SetPlaymode(editor::EngineEditor::Playmode::PLAY);
             break;
         }
 
         ImGui::SameLine();
         ImGui::Button("Stop");
         if (ImGui::IsItemClicked())
-            EngineEditor::SetPlaymode(EngineEditor::Playmode::EDITOR);
+            editor::EngineEditor::SetPlaymode(editor::EngineEditor::Playmode::EDITOR);
     }
     ImGui::End();
 

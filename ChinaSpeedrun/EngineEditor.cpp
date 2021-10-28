@@ -1,18 +1,37 @@
-#include "EngineEditor.h"
+#include "Editor.h"
 
 #include "ChinaEngine.h"
 #include "World.h"
 
-cs::EngineEditor::Playmode cs::EngineEditor::mode;
+cs::editor::EngineEditor::Playmode cs::editor::EngineEditor::mode;
+cs::editor::EditorCamera* cs::editor::EngineEditor::editorCamera;
 
-const cs::EngineEditor::Playmode& cs::EngineEditor::GetPlaymodeState()
+const cs::editor::EngineEditor::Playmode& cs::editor::EngineEditor::GetPlaymodeState()
 {
 	return mode;
 }
 
-void cs::EngineEditor::SetPlaymode(const Playmode newPlaymode)
+void cs::editor::EngineEditor::SetPlaymode(const Playmode newPlaymode)
 {
 	mode = newPlaymode;
 
 	ChinaEngine::world.Start();
+}
+
+void cs::editor::EngineEditor::Start()
+{
+
+}
+
+void cs::editor::EngineEditor::Update()
+{
+	if (mode == Playmode::EDITOR)
+	{
+		editorCamera->Update();
+	}
+}
+
+void cs::editor::EngineEditor::Exit()
+{
+
 }

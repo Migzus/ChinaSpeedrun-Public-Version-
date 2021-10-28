@@ -93,6 +93,7 @@
       <Filter>ecs</Filter>
     </ClCompile>
     <ClCompile Include="PhysicsServer.cpp" />
+    <ClCompile Include="EditorCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -166,6 +167,8 @@
       <Filter>ecs</Filter>
     </ClInclude>
     <ClInclude Include="PhysicsServer.h" />
+    <ClInclude Include="EditorCamera.h" />
+    <ClInclude Include="Editor.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

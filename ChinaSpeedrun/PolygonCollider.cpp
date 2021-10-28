@@ -14,6 +14,8 @@ void cs::PolygonColliderComponent::ImGuiDrawComponent()
 	if (ImGui::TreeNodeEx("Polygon Collider", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::Checkbox("Use Mesh", &useMesh);
+		if (ImGui::IsItemClicked() && useMesh)
+			CreateBasedOnMesh();
 		ImGui::DragFloat("Friction", &friction, 0.01f);
 
 		ImGui::TreePop();
@@ -26,11 +28,10 @@ cs::PolygonColliderComponent::PolygonColliderComponent()
 	//planes.push_back({ glm::normalize(Vector3(0.0f, -1.0f, 0.0f)), 1.0f });
 }
 
-// https://blog.winter.dev/2020/designing-a-physics-engine/
 // This method has yet to be tested
 void cs::PolygonColliderComponent::CreateBasedOnMesh()
 {
-	if (!gameObject->HasComponent<MeshRendererComponent>())
+	if (!gameObject->HasComponent<MeshRendererComponent>() && true)
 	{
 		Debug::LogWarning("Cannot create a polygon collider. No mesh was found on the same gameobject.");
 		return;

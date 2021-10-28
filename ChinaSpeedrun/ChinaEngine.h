@@ -4,6 +4,11 @@
 
 namespace cs
 {
+	namespace editor
+	{
+		class EngineEditor;
+	}
+
 	class ChinaEngine
 	{
 	public:

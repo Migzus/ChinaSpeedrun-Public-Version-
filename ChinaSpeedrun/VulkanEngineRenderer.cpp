@@ -1061,13 +1061,26 @@ void cs::VulkanEngineRenderer::CreateGraphicsPipeline(Material* material)
 
 	VkPipelineDepthStencilStateCreateInfo _depthStencil{};
 	_depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-	_depthStencil.depthTestEnable = VK_TRUE;
-	_depthStencil.depthWriteEnable = VK_TRUE;
-	_depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-	_depthStencil.depthBoundsTestEnable = VK_FALSE;
+	
+	if (material->enableStencil)
+	{
+		_depthStencil.depthTestEnable = VK_FALSE;
+		_depthStencil.depthWriteEnable = VK_FALSE;
+		_depthStencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+		_depthStencil.stencilTestEnable = VK_TRUE;
+		_depthStencil.depthBoundsTestEnable = VK_TRUE;
+	}
+	else
+	{
+		_depthStencil.depthTestEnable = VK_TRUE;
+		_depthStencil.depthWriteEnable = VK_TRUE;
+		_depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+		_depthStencil.stencilTestEnable = VK_FALSE;
+		_depthStencil.depthBoundsTestEnable = VK_FALSE;
+	}
+
 	_depthStencil.minDepthBounds = 0.0f;
 	_depthStencil.maxDepthBounds = 1.0f;
-	_depthStencil.stencilTestEnable = VK_FALSE;
 	_depthStencil.front = {};
 	_depthStencil.back = {};
 
