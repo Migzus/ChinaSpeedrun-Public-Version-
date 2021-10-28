@@ -117,12 +117,6 @@ cs::AudioData* cs::ResourceManager::LoadAudio(const std::string filename)
 		audio.insert({ filename, _audioData });
 		return _audioData;
 	}
-	else
-	{
-		return nullptr;
-	}
-
-	
 
 	return nullptr;
 }
