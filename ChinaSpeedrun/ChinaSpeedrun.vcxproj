@@ -156,14 +156,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Libraries\ImGuizmo\ImGuizmo.cpp" />
-    <ClCompile Include="..\Libraries\imgui\src\imgui.cpp" />
-    <ClCompile Include="..\Libraries\imgui\src\imgui_demo.cpp" />
-    <ClCompile Include="..\Libraries\imgui\src\imgui_draw.cpp" />
-    <ClCompile Include="..\Libraries\imgui\src\imgui_impl_glfw.cpp" />
-    <ClCompile Include="..\Libraries\imgui\src\imgui_impl_vulkan.cpp" />
-    <ClCompile Include="..\Libraries\imgui\src\imgui_tables.cpp" />
-    <ClCompile Include="..\Libraries\imgui\src\imgui_widgets.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui_demo.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui_draw.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui_tables.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui_widgets.cpp" />
     <ClCompile Include="AudioComponent.cpp" />
+    <ClCompile Include="AudioData.cpp" />
     <ClCompile Include="AudioSystem.cpp" />
     <ClCompile Include="BulletManagerComponent.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -208,6 +209,7 @@
   <ItemGroup>
     <ClInclude Include="..\Libraries\ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="AudioComponent.h" />
+    <ClInclude Include="AudioData.h" />
     <ClInclude Include="AudioSystem.h" />
     <ClInclude Include="BulletManagerComponent.h" />
     <ClInclude Include="Camera.h" />
