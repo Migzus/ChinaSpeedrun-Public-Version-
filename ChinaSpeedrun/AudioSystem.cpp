@@ -91,42 +91,58 @@ void cs::AudioSystem::Init()
 	Load("../resources/sounds/pon1.wav");
 }
 
-void cs::AudioSystem::Load(std::string path) {
+bool cs::AudioSystem::Load(std::string path) {
 
-	if (buffer.index + 1 >= buffer.max) {
+	if (buffer.index + 1 >= buffer.max)
+	{
 		std::cerr << "AudioSystem error: " << "Not enough buffers" << std::endl;
-		return;
-	}
-
-	AudioFile<float> file;
-	file.load(path);
-
-	ALenum format;
-
-	if (file.isMono()) {
-		if (file.getBitDepth() == 8) {
-			format = AL_FORMAT_MONO8;
-		}
-		else {
-			format = AL_FORMAT_MONO16;
-		}
-	}
-	else {
-		if (file.getBitDepth() == 8) {
-			format = AL_FORMAT_STEREO8;
-		}
-		else {
-			format = AL_FORMAT_STEREO16;
-		}
+		return false;
 	}
 
 	std::vector<uint8_t> bufferData;
 
-	buffer.meta[buffer.index].rate = file.getSampleRate();
-	buffer.meta[buffer.index].duration = static_cast<float>(file.getLengthInSeconds());
-	buffer.meta[buffer.index].depth = file.getBitDepth();
+	AudioFile<float> file;
+	if (!file.loadBuffer(path, bufferData))
+	{
+		std::cerr << "AudioFile error: " << "Couldn't read file" << std::endl;
+		return false;
+	}
 
-	file.convertPCMToBuffer(bufferData);
+	ALenum format;
+
+	if (file.getNumChannelsAsRead() == 1)
+	{
+		if (file.getBitDepth() == 8)
+		{
+			format = AL_FORMAT_MONO8;
+		}
+		else
+		{
+			format = AL_FORMAT_MONO16;
+		}
+	}
+	else if (file.getNumChannelsAsRead() == 2)
+	{
+		if (file.getBitDepth() == 8)
+		{
+			format = AL_FORMAT_STEREO8;
+		}
+		else
+		{
+			format = AL_FORMAT_STEREO16;
+		}
+	}
+
+	buffer.meta[buffer.index].rate = file.getSampleRate();
+	buffer.meta[buffer.index].depth = file.getBitDepth();
+	buffer.meta[buffer.index].duration =
+		static_cast<float>(bufferData.size()) /
+		static_cast<float>(file.getBitDepth()) /
+		static_cast<float>(file.getNumChannelsAsRead()) /
+		static_cast<float>(file.getSampleRate()) *
+		8.f;
+
+	std::cout << bufferData.size() << ", " << file.getBitDepth() << ", " << file.getNumChannelsAsRead() << ", " << file.getSampleRate() << std::endl;
 
 	alec(alBufferData(buffer[buffer.index], AL_FORMAT_STEREO16, bufferData.data(), static_cast<ALsizei>(bufferData.size()), file.getSampleRate()));
 
@@ -139,6 +155,8 @@ void cs::AudioSystem::Load(std::string path) {
 	soundMap.insert({ pathToName(path), buffer.index });
 
 	buffer.index++;
+
+	return true;
 }
 
 unsigned cs::AudioSystem::Play(std::string name)
