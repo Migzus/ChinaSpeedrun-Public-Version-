@@ -1,4 +1,4 @@
-#version 450 es
+#version 450
 
 layout(binding = 0) uniform UniformBufferObject
 {

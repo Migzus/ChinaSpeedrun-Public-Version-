@@ -7,8 +7,8 @@ void cs::CameraComponent::ImGuiDrawComponent()
 {
 	if (ImGui::TreeNodeEx("Camera", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		const char* _options[]{ "Perspective", "Orthographic" };
-		ImGui::ListBox("Projection", (int*)&projection, _options, 2);
+		const char* _options = { "Perspective\0Orthographic" };
+		ImGui::Combo("Projection", (int*)&projection, _options);
 
 		ImGui::DragFloat("Field of View", &fov, 1.0f, 0.1f, 179.0f);
 		ImGui::DragFloat("Near Plane", &nearPlane, 1.0f, 0.001f);
