@@ -692,6 +692,8 @@ void cs::VulkanEngineRenderer::InitImGui()
 
 	ImGui::StyleColorsDark();
 
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
 	ImGui_ImplGlfw_InitForVulkan(window, false);
 	ImGui_ImplVulkan_InitInfo _initInfo{};
 
