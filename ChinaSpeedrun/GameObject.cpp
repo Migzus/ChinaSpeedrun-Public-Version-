@@ -15,6 +15,7 @@
 #include "Rigidbody.h"
 
 #include "Debug.h"
+#include "PhysicsComponent.h"
 
 cs::GameObject::GameObject() :
 	name { "Object" }, active{ true }
@@ -32,14 +33,16 @@ void cs::GameObject::EditorDrawComponents()
 		GetComponent<AudioComponent>().ImGuiDrawComponent();
 
 	// Physics
-	if (HasComponent<StaticBodyComponent>())
+	if (HasComponent<PhysicsComponent>())
+		GetComponent<PhysicsComponent>().ImGuiDrawComponent();
+	/*if (HasComponent<StaticBodyComponent>())
 		GetComponent<StaticBodyComponent>().ImGuiDrawComponent();
 	if (HasComponent<RigidbodyComponent>())
 		GetComponent<RigidbodyComponent>().ImGuiDrawComponent();
 	if (HasComponent<SphereColliderComponent>())
 		GetComponent<SphereColliderComponent>().ImGuiDrawComponent();
 	if (HasComponent<PolygonColliderComponent>())
-		GetComponent<PolygonColliderComponent>().ImGuiDrawComponent();
+		GetComponent<PolygonColliderComponent>().ImGuiDrawComponent();*/
 }
 
 void cs::GameObject::Init()

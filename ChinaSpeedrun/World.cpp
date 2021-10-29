@@ -10,10 +10,12 @@
 #include "CameraComponent.h"
 #include "AudioSystem.h"
 #include "AudioComponent.h"
-#include "PhysicsServer.h"
-#include "Rigidbody.h"
+#include "PhysicsSystem.h"
+#include "PhysicsLocator.h"
+#include "PhysicsComponent.h"
 
 #include "GameObject.h"
+
 
 cs::GameObject* cs::World::InstanceObject(const char* name, const Vector3 position, const Vector3 rotation, const Vector3 scale)
 {
@@ -30,11 +32,13 @@ cs::GameObject* cs::World::InstanceObject(const char* name, const Vector3 positi
 	return _newObject;
 }
 
-cs::World::World() :
-	physicsServer{ new PhysicsServer }, audioSystem{ new AudioSystem }
-{}
+cs::World::World() : audioSystem{ new AudioSystem }, physicsSystem{ new PhysicsSystem }
+{
+	PhysicsLocator::Provide(physicsSystem);
+	registry.on_construct<PhysicsComponent>().connect<entt::invoke<&PhysicsComponent::CreateBody>>();
+}
 
-void cs::World::Start()
+void cs::World::Start()	
 {
 	
 }
@@ -65,6 +69,16 @@ void cs::World::Step()
 		Camera::UpdateCameraTransform(_camera, _transform);
 	}
 
+	physicsSystem->UpdateWorld();
+
+	auto _physicsEntities{ registry.view<PhysicsComponent, TransformComponent>() };
+	for (auto e : _physicsEntities)
+	{
+		auto& _pc(registry.get<PhysicsComponent>(e));
+		auto& _tc(registry.get<TransformComponent>(e));
+		physicsSystem->UpdatePositions(_pc, _tc);
+	}
+
 	auto _renderableObjects{ registry.view<MeshRendererComponent, TransformComponent>() };
 	for (auto e : _renderableObjects)
 	{
@@ -73,17 +87,6 @@ void cs::World::Step()
 		auto& _camera{ registry.get<CameraComponent>(_cameras.front()) };
 
 		MeshRenderer::UpdateUBO(_meshRenderer, _transform, _camera);
-	}
-
-	physicsServer->Step();
-
-	auto _physicsSimulations{ registry.view<RigidbodyComponent, TransformComponent>() };
-	for (auto e : _physicsSimulations)
-	{
-		auto& _transform{ registry.get<TransformComponent>(e) };
-		auto& _rigidbody{ registry.get<RigidbodyComponent>(e) };
-
-		Rigidbody::CalculatePhysics(_rigidbody, _transform);
 	}
 }
 

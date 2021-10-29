@@ -32,7 +32,9 @@ void cs::ImGuiLayer::Begin()
 void cs::ImGuiLayer::Step()
 {
     static GameObject* _activeObject{ nullptr };
-    
+
+    ImGui::ShowDemoWindow();
+
     if (ImGui::Begin("Hierarchy"))
     {
         if (ImGui::TreeNode("Main Scene"))

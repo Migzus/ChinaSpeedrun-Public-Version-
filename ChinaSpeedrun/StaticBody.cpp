@@ -9,7 +9,7 @@
 cs::StaticBodyComponent::StaticBodyComponent()
 {
 	bodyType = BodyType::STATIC;
-	ChinaEngine::world.physicsServer->bodies.push_back(this);
+	// ChinaEngine::world.physicsServer->bodies.push_back(this);
 }
 
 void cs::StaticBodyComponent::ImGuiDrawComponent()

@@ -20,7 +20,7 @@ cs::RigidbodyComponent::RigidbodyComponent() :
 	mass{ 0.1f }, gravity{ 9.81f }, velocity{ 0.0f, 0.0f, 0.0f }, force{ 0.0f, 0.0f, 0.0f }
 {
 	bodyType = BodyType::RIGID;
-	ChinaEngine::world.physicsServer->bodies.push_back(this);
+	//ChinaEngine::world.physicsServer->bodies.push_back(this);
 }
 
 void cs::RigidbodyComponent::ImGuiDrawComponent()

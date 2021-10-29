@@ -11,7 +11,7 @@ namespace cs
 		friend class GameObject;
 		friend class VulkanEngineRenderer;
 
-		class PhysicsServer* physicsServer;
+		class PhysicsSystem* physicsSystem;
 		class AudioSystem* audioSystem;
 		//class Rednerer* rendererSystem;
 		//class MeshRenderer* meshRendererSystem;

@@ -19,10 +19,7 @@
 #include "GameObject.h"
 #include "CameraComponent.h"
 #include "Camera.h"
-#include "Rigidbody.h"
-#include "StaticBody.h"
-#include "SphereCollider.h"
-#include "PolygonCollider.h"
+#include "PhysicsComponent.h"
 
 #include "Time.h"
 
@@ -76,41 +73,24 @@ void cs::ChinaEngine::EngineInit()
 	_material2->shader = _shader;
 	_material2->cullMode = Material::CullMode::NONE;
 	_material2->shaderParams["texSampler"] = _chaikaSmile;
-	
-	GameObject* _terrain{ world.InstanceObject("Terrain", Vector3(0.0f, -6.0f, 0.0f)) };
-	GameObject* _suzanne{ world.InstanceObject("Suzanne", Vector3(0.0f, 10.0f, 4.0f)) }; // Vector3(-7.0f, 5.0f, -6.2f) // -1.0f, 10.0f, 6.0f
-	GameObject* _physicsBall{ world.InstanceObject("Junko Ball", Vector3(-1.3f, 3.0f, 5.5f)) };
+
+	GameObject* _suzanne{ world.InstanceObject("Suzanne", Vector3(0.0f, 10.0f, 4.0f)) };
+	GameObject* _underSuzanne{ world.InstanceObject("Under Suzanne", {0.f, 0.f, 5.f}) };
 	GameObject* _camera{ world.InstanceObject("Camera", Vector3(13.0f, 13.0f, 16.0f), Vector3(-33.0f, 35.0f, 0.0f)) };
 
-	MeshRendererComponent& _terrainMesh{ _terrain->AddComponent<MeshRendererComponent>() };
-	_terrainMesh.mesh = ResourceManager::Load<Mesh>("../Resources/models/terrain.obj");
-	_terrainMesh.materials.push_back(_material2);
-
-	StaticBodyComponent& _rbT{ _terrain->AddComponent<StaticBodyComponent>() };
-	_terrain->AddComponent<PolygonColliderComponent>();
+	_suzanne->AddComponent<PhysicsComponent>();
+	_underSuzanne->AddComponent<PhysicsComponent>();
 
 	MeshRendererComponent& _meshRendererMonke{ _suzanne->AddComponent<MeshRendererComponent>() };
 	_meshRendererMonke.mesh = ResourceManager::Load<Mesh>("../Resources/models/suzanne.obj");
 	_meshRendererMonke.materials.push_back(_material1);
-	
-	RigidbodyComponent& _rbZU{ _suzanne->AddComponent<RigidbodyComponent>() };
-	_suzanne->AddComponent<SphereColliderComponent>();
-	_rbZU.mass = 1.0f;
 
-	MeshRendererComponent& _junkoBall{ _physicsBall->AddComponent<MeshRendererComponent>() };
-	_junkoBall.mesh = ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj");
-	_junkoBall.materials.push_back(_material1);
-	
-	RigidbodyComponent& _rbPB{ _physicsBall->AddComponent<RigidbodyComponent>() };
-	_physicsBall->AddComponent<SphereColliderComponent>();
+	MeshRendererComponent& _meshRendererIcosphere{ _underSuzanne->AddComponent<MeshRendererComponent>() };
+	_meshRendererIcosphere.mesh = ResourceManager::Load<Mesh>("../Resources/models/icosphere.obj");
+	_meshRendererIcosphere.materials.push_back(_material1);
 
 	CameraComponent& _cameraComponent{ _camera->AddComponent<CameraComponent>() };
 	CameraComponent::currentActiveCamera = &_cameraComponent;
-
-	// move this elsewhere, i dont want to call this for every physics object...
-	PhysicsBody::GetAllColliderComponents(&_rbT);
-	PhysicsBody::GetAllColliderComponents(&_rbZU);
-	PhysicsBody::GetAllColliderComponents(&_rbPB);
 }
 
 void cs::ChinaEngine::InitInput()

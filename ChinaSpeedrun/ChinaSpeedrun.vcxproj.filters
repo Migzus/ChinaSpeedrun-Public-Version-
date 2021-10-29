@@ -56,9 +56,6 @@
       <Filter>ecs</Filter>
     </ClCompile>
     <ClCompile Include="Collider.cpp" />
-    <ClCompile Include="PolygonCollider.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
     <ClCompile Include="EditorCamera.cpp" />
     <ClCompile Include="AudioData.cpp" />
     <ClCompile Include="..\Libraries\imgui\scr\imgui.cpp">
@@ -97,7 +94,18 @@
     <ClCompile Include="PhysicsServer.cpp">
       <Filter>ecs\old physics</Filter>
     </ClCompile>
-    <ClCompile Include="PhysicsSystem.cpp" />
+    <ClCompile Include="PolygonCollider.cpp">
+      <Filter>ecs\old physics</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsSystem.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsComponent.cpp">
+      <Filter>ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsLocator.cpp">
+      <Filter>service</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -155,9 +163,6 @@
       <Filter>ecs</Filter>
     </ClInclude>
     <ClInclude Include="Collider.h" />
-    <ClInclude Include="PolygonCollider.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
     <ClInclude Include="EditorCamera.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="AudioData.h" />
@@ -176,7 +181,18 @@
     <ClInclude Include="PhysicsServer.h">
       <Filter>ecs\old physics</Filter>
     </ClInclude>
-    <ClInclude Include="PhysicsSystem.h" />
+    <ClInclude Include="PolygonCollider.h">
+      <Filter>ecs\old physics</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsSystem.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsComponent.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsLocator.h">
+      <Filter>service</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">
@@ -188,8 +204,8 @@
     <Filter Include="ecs\old physics">
       <UniqueIdentifier>{3e80436e-5be5-49f9-bd84-63f2c951ad81}</UniqueIdentifier>
     </Filter>
-    <Filter Include="b2">
-      <UniqueIdentifier>{88d53e36-9201-46e1-93ca-103a60cbee52}</UniqueIdentifier>
+    <Filter Include="service">
+      <UniqueIdentifier>{173bc623-7614-4698-82e7-c9996e7ac028}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
