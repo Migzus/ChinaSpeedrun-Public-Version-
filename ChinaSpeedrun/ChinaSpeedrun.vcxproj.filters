@@ -55,22 +55,9 @@
       <Filter>ecs</Filter>
     </ClCompile>
     <ClCompile Include="Collider.cpp" />
-    <ClCompile Include="PhysicsBody.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
     <ClCompile Include="PolygonCollider.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
-    <ClCompile Include="Rigidbody.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="SphereCollider.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="StaticBody.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="PhysicsServer.cpp" />
     <ClCompile Include="EditorCamera.cpp" />
     <ClCompile Include="AudioData.cpp" />
     <ClCompile Include="..\Libraries\imgui\scr\imgui.cpp">
@@ -98,6 +85,22 @@
     <ClCompile Include="Script.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
+    <ClCompile Include="Rigidbody.cpp">
+      <Filter>ecs\old physics</Filter>
+    </ClCompile>
+    <ClCompile Include="SphereCollider.cpp">
+      <Filter>ecs\old physics</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticBody.cpp">
+      <Filter>ecs\old physics</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsBody.cpp">
+      <Filter>ecs\old physics</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsServer.cpp">
+      <Filter>ecs\old physics</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChinaEngine.h" />
@@ -154,20 +157,23 @@
       <Filter>ecs</Filter>
     </ClInclude>
     <ClInclude Include="Collider.h" />
-    <ClInclude Include="PhysicsBody.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
     <ClInclude Include="PolygonCollider.h">
       <Filter>ecs</Filter>
     </ClInclude>
+    <ClInclude Include="EditorCamera.h" />
+    <ClInclude Include="Editor.h" />
+    <ClInclude Include="AudioData.h" />
+    <ClInclude Include="StaticBody.h">
+      <Filter>ecs\old physics</Filter>
+    </ClInclude>
     <ClInclude Include="Rigidbody.h">
-      <Filter>ecs</Filter>
+      <Filter>ecs\old physics</Filter>
     </ClInclude>
     <ClInclude Include="SphereCollider.h">
-      <Filter>ecs</Filter>
+      <Filter>ecs\old physics</Filter>
     </ClInclude>
-    <ClInclude Include="StaticBody.h">
-      <Filter>ecs</Filter>
+    <ClInclude Include="PhysicsBody.h">
+      <Filter>ecs\old physics</Filter>
     </ClInclude>
     <ClInclude Include="PhysicsServer.h" />
     <ClInclude Include="EditorCamera.h" />
@@ -178,6 +184,10 @@
     <ClInclude Include="Script.h">
       <Filter>ecs</Filter>
     </ClInclude>
+    <ClInclude Include="PhysicsServer.h">
+      <Filter>ecs\old physics</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">
@@ -185,6 +195,12 @@
     </Filter>
     <Filter Include="imgui">
       <UniqueIdentifier>{d860dc33-4a84-436d-b4b6-192856f904b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ecs\old physics">
+      <UniqueIdentifier>{3e80436e-5be5-49f9-bd84-63f2c951ad81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="b2">
+      <UniqueIdentifier>{88d53e36-9201-46e1-93ca-103a60cbee52}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

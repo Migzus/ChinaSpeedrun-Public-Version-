@@ -9,7 +9,7 @@ namespace cs
 	public:
 		static float time;
 		static float deltaTime;
-		static float fixedDeltaTime; // for physics (currently unused)
+		static float fixedDeltaTime;
 
 		static void CycleInit();
 		static void CycleStart();

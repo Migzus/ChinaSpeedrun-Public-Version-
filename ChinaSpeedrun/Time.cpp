@@ -2,7 +2,7 @@
 
 float cs::Time::time{ 0.0f };
 float cs::Time::deltaTime{ 0.0f };
-float cs::Time::fixedDeltaTime{ 0.0f };
+float cs::Time::fixedDeltaTime{ 1.f / 60.f };
 std::chrono::steady_clock::time_point cs::Time::initTime;
 std::chrono::steady_clock::time_point cs::Time::startFrameTime;
 
