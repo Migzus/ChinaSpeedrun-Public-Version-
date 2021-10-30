@@ -24,17 +24,23 @@
 #include "SphereCollider.h"
 #include "PolygonCollider.h"
 
+#include "Editor.h"
+
 #include "Time.h"
 
 cs::ImGuiLayer cs::ChinaEngine::imGuiLayer;
 cs::World cs::ChinaEngine::world;
 cs::VulkanEngineRenderer cs::ChinaEngine::renderer;
+cs::editor::EngineEditor cs::ChinaEngine::editor;
 
 void cs::ChinaEngine::Run()
 {
 	Time::CycleInit();
+	Mathf::InitRand();
 
 	renderer.Create(800, 600, "China Speedrun");
+
+	editor.Start();
 
 	EngineInit();
 	renderer.Resolve();
@@ -49,6 +55,11 @@ void cs::ChinaEngine::Run()
 float cs::ChinaEngine::AspectRatio()
 {
 	return renderer.AspectRatio();
+}
+
+void cs::ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight)
+{
+	Camera::CalculatePerspective(*world.mainCamera);
 }
 
 void cs::ChinaEngine::EngineInit()
@@ -105,7 +116,7 @@ void cs::ChinaEngine::EngineInit()
 	_physicsBall->AddComponent<SphereColliderComponent>();
 
 	CameraComponent& _cameraComponent{ _camera->AddComponent<CameraComponent>() };
-	CameraComponent::currentActiveCamera = &_cameraComponent;
+	//CameraComponent::currentActiveCamera = &_cameraComponent;
 
 	// move this elsewhere, i dont want to call this for every physics object...
 	PhysicsBody::GetAllColliderComponents(&_rbT);
@@ -116,6 +127,10 @@ void cs::ChinaEngine::EngineInit()
 void cs::ChinaEngine::InitInput()
 {
 	glfwSetKeyCallback(renderer.GetWindow(), Input::GlfwKeyfunCallback);
+	glfwSetCursorPosCallback(renderer.GetWindow(), Input::GlfwCursorPosCallback);
+	glfwSetScrollCallback(renderer.GetWindow(), Input::GlfwScrollCallback);
+	glfwSetMouseButtonCallback(renderer.GetWindow(), Input::GlfwMouseButtonCallback);
+
 	Input::AddMapping("accept", GLFW_KEY_ENTER);
 	Input::AddMapping("space", GLFW_KEY_SPACE);
 	Input::AddMapping("shift", GLFW_KEY_LEFT_SHIFT);
@@ -137,6 +152,8 @@ void cs::ChinaEngine::MainLoop()
 		imGuiLayer.Step();
 		imGuiLayer.End();
 
+		editor.Update();
+
 		world.Step();
 
 		renderer.Resolve();
@@ -151,6 +168,7 @@ void cs::ChinaEngine::MainLoop()
 
 void cs::ChinaEngine::EngineExit()
 {
+	editor.Exit();
 	world.DeleteAllObjects();
 	ResourceManager::ClearAllResourcePools();
 }

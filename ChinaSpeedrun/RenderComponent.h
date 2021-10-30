@@ -20,13 +20,12 @@ namespace cs
 	class RenderComponent : public Component
 	{
 	public:
-		//friend class SpriteRenderer;
+		friend class Renderer;
 		friend class MeshRenderer;
 		friend class VulkanEngineRenderer;
 
-		std::vector<class Material*> materials;
-
 		virtual void ImGuiDrawComponent() override;
+		virtual bool IsRendererValid() const;
 
 	protected:
 		UniformBufferObject ubo;
@@ -38,6 +37,5 @@ namespace cs
 	class Renderer
 	{
 	public:
-
 	};
 }

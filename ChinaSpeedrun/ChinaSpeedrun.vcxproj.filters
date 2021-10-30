@@ -51,7 +51,6 @@
     <ClCompile Include="Signal.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneManager.cpp" />
-    <ClCompile Include="Variant.cpp" />
     <ClCompile Include="Component.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
@@ -94,6 +93,10 @@
     </ClCompile>
     <ClCompile Include="..\Libraries\imgui\scr\imgui_widgets.cpp">
       <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="SpriteRenderer.cpp" />
+    <ClCompile Include="Script.cpp">
+      <Filter>ecs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -147,7 +150,6 @@
     <ClInclude Include="Signal.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
-    <ClInclude Include="Variant.h" />
     <ClInclude Include="Component.h">
       <Filter>ecs</Filter>
     </ClInclude>
@@ -171,6 +173,11 @@
     <ClInclude Include="EditorCamera.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="AudioData.h" />
+    <ClInclude Include="SpriteRenderer.h" />
+    <ClInclude Include="CameraBase.h" />
+    <ClInclude Include="Script.h">
+      <Filter>ecs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

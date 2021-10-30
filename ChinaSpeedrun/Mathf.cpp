@@ -2,18 +2,38 @@
 
 #include "PolygonCollider.h"
 
+#include <random>
+#include <ctime>
+
+void cs::Mathf::InitRand()
+{
+    srand(time(nullptr));
+}
+
+int cs::Mathf::Rand()
+{
+    return rand();
+}
+
+float cs::Mathf::RandRange(const float min, const float max)
+{
+    return min + (rand() / (float)INT_MAX) * (max - min);
+}
+
 void cs::Mathf::Clamp(float& value, float min, float max)
 {
     value =
         max * (value > max) +
-        min * (value < min);
+        min * (value < min) +
+        value * (value >= min && value <= max);
 }
 
 void cs::Mathf::LoopClamp(float& value, float min, float max)
 {
     value =
         (value - max) * (value > max) +
-        (value - min + max) * (value < min);
+        (value - min + max) * (value < min) +
+        value * (value >= min && value <= max);
 }
 
 float cs::Mathf::Project(const Vector3 projVec, const Plane plane)

@@ -22,7 +22,10 @@
 
 cs::VulkanEngineRenderer::VulkanEngineRenderer() :
 	vertexBuffer{ VulkanBufferInfo(MAX_BUFFER_SIZE) }, indexBuffer{ VulkanBufferInfo(MAX_BUFFER_SIZE) }
-{}
+{
+	status.indexDataSize = &indexBuffer.dataSize;
+	status.vertexDataSize = &vertexBuffer.dataSize;
+}
 
 void cs::VulkanEngineRenderer::FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight)
 {
@@ -30,6 +33,8 @@ void cs::VulkanEngineRenderer::FramebufferResizeCallback(GLFWwindow* window, int
 	_app->framebufferResized = true;
 	_app->width = newWidth;
 	_app->height = newHeight;
+
+	ChinaEngine::FramebufferResizeCallback(window, newWidth, newHeight);
 }
 
 void cs::VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
@@ -90,6 +95,9 @@ void cs::VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
 	vkFreeMemory(device, _stagingBufferMemory, nullptr);
 
 	mesh->indexBufferRef = indexBuffer.buffer;
+
+	status.vertexDataFractionSize = vertexBuffer.UsedSpace();
+	status.indexDataFractionSize = indexBuffer.UsedSpace();
 }
 
 void cs::VulkanEngineRenderer::AllocateTexture(Texture* texture)
@@ -149,26 +157,56 @@ void cs::VulkanEngineRenderer::AllocateTexture(Texture* texture)
 
 void cs::VulkanEngineRenderer::SolveMesh(Mesh* mesh, Solve solveMode)
 {
+	if (mesh == nullptr)
+	{
+		Debug::LogIssue("Cannot assign a non existing mesh. -> mesh == nullptr");
+		return;
+	}
+
 	solveMeshes[mesh] = solveMode;
 }
 
 void cs::VulkanEngineRenderer::SolveShader(Shader* shader, Solve solveMode)
 {
+	if (shader == nullptr)
+	{
+		Debug::LogIssue("Cannot assign a non existing shader. -> shader == nullptr");
+		return;
+	}
+
 	solveShaders[shader] = solveMode;
 }
 
 void cs::VulkanEngineRenderer::SolveTexture(Texture* texture, Solve solveMode)
 {
+	if (texture == nullptr)
+	{
+		Debug::LogIssue("Cannot assign a non existing texture. -> texture == nullptr");
+		return;
+	}
+
 	solveTextures[texture] = solveMode;
 }
 
 void cs::VulkanEngineRenderer::SolveMaterial(Material* material, Solve solveMode)
 {
+	if (material == nullptr)
+	{
+		Debug::LogIssue("Cannot assign a non existing material. -> material == nullptr");
+		return;
+	}
+
 	solveMaterials[material] = solveMode;
 }
 
 void cs::VulkanEngineRenderer::SolveRenderer(MeshRendererComponent* renderer, Solve solveMode)
 {
+	if (renderer == nullptr)
+	{
+		Debug::LogIssue("Cannot assign a new render type to vulkan. -> renderer == nullptr");
+		return;
+	}
+
 	solveRenderers[renderer] = solveMode;
 }
 
@@ -494,6 +532,11 @@ VkDevice const& cs::VulkanEngineRenderer::GetDevice()
 	return device;
 }
 
+const cs::VulkanStatus& cs::VulkanEngineRenderer::GetStatus() const
+{
+	return status;
+}
+
 float cs::VulkanEngineRenderer::AspectRatio() const
 {
 	// This will change, I want to remove the if statement, and I want to not use this every frame, for every object
@@ -699,8 +742,6 @@ void cs::VulkanEngineRenderer::InitImGui()
 
 	glfwSetWindowFocusCallback(window, ImGui_ImplGlfw_WindowFocusCallback);
 	glfwSetCursorEnterCallback(window, ImGui_ImplGlfw_CursorEnterCallback);
-	glfwSetMouseButtonCallback(window, ImGui_ImplGlfw_MouseButtonCallback);
-	glfwSetScrollCallback(window, ImGui_ImplGlfw_ScrollCallback);
 	glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
 	glfwSetMonitorCallback(ImGui_ImplGlfw_MonitorCallback);
 
@@ -1378,6 +1419,9 @@ void cs::VulkanEngineRenderer::CreateUniformBuffers()
 
 void cs::VulkanEngineRenderer::CreateDescriptorPool(MeshRendererComponent& renderer)
 {
+	if (renderer.mesh == nullptr || renderer.materials.empty())
+		return;
+
 	uint32_t _swapChainSize{ static_cast<uint32_t>(swapChainImages.size()) };
 	VkDescriptorPoolSize _poolSizes[]
 	{
@@ -1397,6 +1441,9 @@ void cs::VulkanEngineRenderer::CreateDescriptorPool(MeshRendererComponent& rende
 
 void cs::VulkanEngineRenderer::CreateDescriptorSets(MeshRendererComponent& renderer)
 {
+	if (renderer.mesh == nullptr || renderer.materials.empty())
+		return;
+
 	std::vector<VkDescriptorSetLayout> _layouts(swapChainImages.size(), renderer.materials[0]->shader->descriptorSetLayout);
 	VkDescriptorSetAllocateInfo _allocInfo{};
 	_allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -1430,7 +1477,7 @@ void cs::VulkanEngineRenderer::CreateDescriptorSets(MeshRendererComponent& rende
 				VkDescriptorBufferInfo _bufferInfo{};
 				_bufferInfo.buffer = uniformBuffers[i];
 				_bufferInfo.offset = renderer.uboOffset;
-				_bufferInfo.range = sizeof(UniformBufferObject);
+				_bufferInfo.range = static_cast<VkDeviceSize>(UniformBufferObject::GetByteSize());
 
 				_descriptor.pBufferInfo = &_bufferInfo;
 				break;
@@ -1533,6 +1580,9 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 		for (auto e : _renderers)
 		{
 			MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
+
+			if (_meshRenderer.mesh == nullptr || _meshRenderer.materials.empty())
+				continue;
 
 			// for now, let's support only one material per model
 			vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _meshRenderer.materials[0]->pipeline);
@@ -1751,6 +1801,9 @@ void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 	for (auto e : _renderers)
 	{
 		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
+
+		if (_meshRenderer.mesh == nullptr || _meshRenderer.materials.empty())
+			continue;
 
 		void* _data;
 		vkMapMemory(device, uniformBuffersMemory[currentImage], _meshRenderer.uboOffset, UniformBufferObject::GetByteSize(), 0, &_data);
@@ -1983,6 +2036,10 @@ void cs::VulkanEngineRenderer::CleanupSwapChain()
 	for (auto e : _renderers)
 	{
 		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
+
+		if (!_meshRenderer.IsRendererValid())
+			continue;
+
 		vkDestroyDescriptorPool(device, _meshRenderer.descriptorPool, nullptr);
 	}
 
@@ -2256,7 +2313,7 @@ void cs::VulkanEngineRenderer::DestroyDebugUtilsMessengerEXT(VkInstance instance
 
 VKAPI_ATTR VkBool32 VKAPI_CALL cs::VulkanEngineRenderer::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-	Debug::LogIssue("Validation layers :" + static_cast<std::string>(pCallbackData->pMessage));
+	Debug::LogValidationLayer(static_cast<std::string>(pCallbackData->pMessage));
 	
 	return VK_FALSE;
 }
@@ -2268,4 +2325,13 @@ bool cs::QueueFamilyIndices::IsComplete()
 
 cs::VulkanBufferInfo::VulkanBufferInfo(VkDeviceSize newBufferSize) :
 	buffer{ nullptr }, bufferMemory{ nullptr }, bufferSize{ newBufferSize }, dataSize{ 0 }
+{}
+
+const float cs::VulkanBufferInfo::UsedSpace() const
+{
+	return dataSize / (float)bufferSize;
+}
+
+cs::VulkanStatus::VulkanStatus() :
+	indexDataFractionSize{ 0.0f }, vertexDataFractionSize{ 0.0f }, indexDataSize{ nullptr }, vertexDataSize{ nullptr }
 {}

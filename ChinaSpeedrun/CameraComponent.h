@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Mathf.h"
 #include "Component.h"
+#include "CameraBase.h"
 
 namespace cs
 {
-	class CameraComponent : public Component
+	class CameraComponent : public Component, public CameraBase
 	{
 	public:
 		friend class Camera;
 
-		static CameraComponent* currentActiveCamera;
+		//static CameraComponent* currentActiveCamera;
 
 		enum class Projection
 		{
@@ -18,11 +18,6 @@ namespace cs
 			PERSPECTIVE
 		} projection;
 
-		float fov{ 50.0f }, nearPlane{ 0.01f }, farPlane{ 1000.0f };
-
 		virtual void ImGuiDrawComponent() override;
-
-	private:
-		Matrix4x4 view, proj;
 	};
 }

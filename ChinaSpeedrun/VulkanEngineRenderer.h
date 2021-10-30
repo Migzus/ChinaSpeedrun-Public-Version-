@@ -23,6 +23,15 @@ namespace cs
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
+	struct VulkanStatus
+	{
+		float indexDataFractionSize, vertexDataFractionSize;
+		VkDeviceSize* indexDataSize;
+		VkDeviceSize* vertexDataSize;
+
+		VulkanStatus();
+	};
+
 	struct VulkanBufferInfo
 	{
 		VkBuffer buffer;
@@ -30,6 +39,8 @@ namespace cs
 		VkDeviceSize bufferSize, dataSize;
 
 		VulkanBufferInfo(VkDeviceSize newBufferSize);
+
+		const float UsedSpace() const;
 	};
 
 	enum class Solve
@@ -45,7 +56,7 @@ namespace cs
 	public:
 		VulkanEngineRenderer();
 
-		constexpr static unsigned int MAX_BUFFER_SIZE{ UINT32_MAX / 16 };
+		constexpr static unsigned int MAX_BUFFER_SIZE{ UINT32_MAX / 512 };
 
 		static void FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight);
 
@@ -63,7 +74,8 @@ namespace cs
 		void GetViewportSize(int& widthRef, int& heightRef) const;
 		void DrawFrame();
 		VkDevice const& GetDevice();
-
+		const VulkanStatus& GetStatus() const;
+		
 		float AspectRatio() const;
 
 		GLFWwindow* GetWindow();
@@ -81,6 +93,8 @@ namespace cs
 #else
 		const bool enableValidationLayers{ true };
 #endif
+
+		VulkanStatus status;
 
 		// This member can be moved into the shader class
 		VkSampleCountFlagBits msaaSamples{ VK_SAMPLE_COUNT_1_BIT };

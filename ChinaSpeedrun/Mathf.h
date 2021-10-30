@@ -12,6 +12,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <glm/gtx/quaternion.hpp>
+
 typedef glm::vec1 Vector1;
 typedef glm::vec2 Vector2;
 typedef glm::vec3 Vector3;
@@ -22,20 +24,19 @@ typedef glm::mat4 Matrix4x4;
 
 typedef glm::quat Quaternion;
 
-/*
-namespace glm
-{
-	constexpr static Vector3 up{ Vector3(0.0f, 1.0f, 0.0f) };
-}*/
-
 namespace cs
 {
 	class Mathf
 	{
 	public:
+		constexpr static float PI_2{ (float)M_PI_2 };
 		constexpr static float PI{ (float)M_PI };
 		constexpr static float TAU{ (float)M_PI * 2.0f };
+		constexpr static float E{ (float)M_E };
 
+		static void InitRand();
+		static int Rand();
+		static float RandRange(const float min, const float max);
 		// Clamps the value within the specified range
 		static void Clamp(float& value, float min, float max);
 		// Clamps the value back to the other end of the specified range, pluss excess value is returned

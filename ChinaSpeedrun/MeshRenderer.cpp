@@ -13,7 +13,7 @@ void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformC
 	meshRenderer.ubo.model = transform;
 }
 
-void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformComponent& transform, CameraComponent& camera)
+void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformComponent& transform, CameraBase& camera)
 {
 	meshRenderer.ubo.model = transform;
 	meshRenderer.ubo.proj = Camera::GetProjectionMatrix(camera);
@@ -46,4 +46,9 @@ void cs::MeshRendererComponent::ImGuiDrawComponent()
 
 		ImGui::TreePop();
 	}
+}
+
+bool cs::MeshRendererComponent::IsRendererValid() const
+{
+	return RenderComponent::IsRendererValid() && mesh != nullptr && !materials.empty();
 }

@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "EngineEditor.h"
+#include "Editor.h"
 
 #include "Transform.h"
 #include "MeshRenderer.h"
@@ -14,6 +14,8 @@
 #include "Rigidbody.h"
 
 #include "GameObject.h"
+
+cs::CameraBase* cs::World::mainCamera;
 
 cs::GameObject* cs::World::InstanceObject(const char* name, const Vector3 position, const Vector3 rotation, const Vector3 scale)
 {
@@ -36,10 +38,37 @@ cs::World::World() :
 
 void cs::World::Start()
 {
+	auto _cameras{ registry.view<CameraComponent>() };
+
+	for (auto e : _cameras)
+	{
+		mainCamera = &registry.get<CameraComponent>(e);
+		Camera::CalculatePerspective(*mainCamera);
+		break;
+	}
+}
+
+void cs::World::Stop()
+{
 	
 }
 
 void cs::World::Step()
+{
+	switch (ChinaEngine::editor.GetPlaymodeState())
+	{
+	case cs::editor::EngineEditor::Playmode::EDITOR:
+		StepEditor();
+		break;
+	case cs::editor::EngineEditor::Playmode::PLAY:
+		StepEngine();
+		break;
+	case cs::editor::EngineEditor::Playmode::PAUSE:
+		break;
+	}
+}
+
+void cs::World::StepEngine()
 {
 	auto _audioComponentView{ registry.view<AudioComponent>() };
 	for (auto e : _audioComponentView)
@@ -61,7 +90,6 @@ void cs::World::Step()
 		auto& _transform{ registry.get<TransformComponent>(e) };
 		auto& _camera{ registry.get<CameraComponent>(e) };
 
-		Camera::CalculatePerspective(_camera);
 		Camera::UpdateCameraTransform(_camera, _transform);
 	}
 
@@ -70,9 +98,8 @@ void cs::World::Step()
 	{
 		auto& _transform{ registry.get<TransformComponent>(e) };
 		auto& _meshRenderer{ registry.get<MeshRendererComponent>(e) };
-		auto& _camera{ registry.get<CameraComponent>(_cameras.front()) };
 
-		MeshRenderer::UpdateUBO(_meshRenderer, _transform, _camera);
+		MeshRenderer::UpdateUBO(_meshRenderer, _transform, *World::mainCamera);
 	}
 
 	physicsServer->Step();
@@ -84,6 +111,25 @@ void cs::World::Step()
 		auto& _rigidbody{ registry.get<RigidbodyComponent>(e) };
 
 		Rigidbody::CalculatePhysics(_rigidbody, _transform);
+	}
+}
+
+void cs::World::StepEditor()
+{
+	auto _transformComponentView{ registry.view<TransformComponent>() };
+	for (auto e : _transformComponentView)
+	{
+		auto& _transformComponent{ registry.get<TransformComponent>(e) };
+		Transform::CalculateMatrix(_transformComponent);
+	}
+	
+	auto _renderableObjects{ registry.view<MeshRendererComponent, TransformComponent>() };
+	for (auto e : _renderableObjects)
+	{
+		auto& _transform{ registry.get<TransformComponent>(e) };
+		auto& _meshRenderer{ registry.get<MeshRendererComponent>(e) };
+
+		MeshRenderer::UpdateUBO(_meshRenderer, _transform, *World::mainCamera);
 	}
 }
 

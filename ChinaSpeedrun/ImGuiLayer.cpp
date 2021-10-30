@@ -9,6 +9,7 @@
 #include "GameObject.h"
 #include "Time.h"
 
+#include "VulkanEngineRenderer.h"
 #include "ChinaEngine.h"
 #include "Editor.h"
 
@@ -89,9 +90,27 @@ void cs::ImGuiLayer::Step()
     }
     ImGui::End();
 
-	if (ImGui::Begin("Profiler"))
-		ImGui::Text("Delta Time: %f", Time::deltaTime);
+    if (ImGui::Begin("Profiler"))
+    {
+        ImGui::Text("Delta Time: %f", Time::deltaTime);
+        
+        const auto& _status{ ChinaEngine::renderer.GetStatus() };
+
+        ImGui::Text("Index Buffer");
+        ImGui::SameLine();
+        ImGui::ProgressBar(_status.indexDataFractionSize);
+        ImGui::Text("%f kB", (float)(*_status.indexDataSize) * 0.0001f);
+
+        ImGui::Text("Vertex Buffer");
+        ImGui::SameLine();
+        ImGui::ProgressBar(_status.vertexDataFractionSize);
+        ImGui::Text("%f kB", (float)(*_status.vertexDataSize) * 0.0001f);
+    }
 	ImGui::End();
+
+    if (ImGui::Begin("Debugger"))
+        Debug::ImGuiDrawMessages();
+    ImGui::End();
 }
 
 void cs::ImGuiLayer::End()
@@ -154,4 +173,3 @@ void cs::ImGuiLayer::EndButtonDropDown()
     ImGui::PopStyleColor(3);
     ImGui::EndPopup();
 }
-
