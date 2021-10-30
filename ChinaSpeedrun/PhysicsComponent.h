@@ -28,17 +28,18 @@ namespace cs
 		b2Body* body;
 		PhysicsDelta delta;
 
-		void UpdateBody();
-		void CreateBody();
+		/*
+		 * Make this dynamically changable in the future
+		 */
+		b2CircleShape* shape;
+
 		PhysicsComponent();
 		~PhysicsComponent();
 
 		void ImGuiDrawComponent() override;
 
 	private:
-		/*
-		 * Make this dynamically changable in the future
-		 */
-		b2CircleShape* shape;
+		void QueueForUpdate();
+		void QueueForCreation();
 	};
 }

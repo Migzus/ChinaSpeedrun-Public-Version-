@@ -35,7 +35,7 @@ cs::GameObject* cs::World::InstanceObject(const char* name, const Vector3 positi
 cs::World::World() : audioSystem{ new AudioSystem }, physicsSystem{ new PhysicsSystem }
 {
 	PhysicsLocator::Provide(physicsSystem);
-	registry.on_construct<PhysicsComponent>().connect<entt::invoke<&PhysicsComponent::CreateBody>>();
+	//registry.on_construct<PhysicsComponent>().connect<entt::invoke<&PhysicsComponent::QueueForCreation>>();
 }
 
 void cs::World::Start()	
@@ -68,6 +68,8 @@ void cs::World::Step()
 		Camera::CalculatePerspective(_camera);
 		Camera::UpdateCameraTransform(_camera, _transform);
 	}
+
+	physicsSystem->UpdateComponents();
 
 	physicsSystem->UpdateWorld();
 

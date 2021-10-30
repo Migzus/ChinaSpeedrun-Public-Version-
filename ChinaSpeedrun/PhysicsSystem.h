@@ -11,10 +11,16 @@ namespace cs {
 	{
 	public:
 		b2World* world;
-		int velocityIterations, positionIterations;
 		void UpdateWorld();
 		void UpdatePositions(PhysicsComponent& pc, TransformComponent& tc);
+		void UpdateComponents();
 		PhysicsSystem();
+
+		void QueueComponentUpdate(PhysicsComponent* pc);
+		void QueueComponentCreate(PhysicsComponent* pc);
+	private:
+		std::vector<PhysicsComponent*> componentToUpdate, componentToCreate;
+		int velocityIterations, positionIterations;
 	};
 }
 

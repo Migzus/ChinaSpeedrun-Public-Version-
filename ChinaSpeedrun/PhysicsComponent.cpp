@@ -29,33 +29,6 @@ cs::PhysicsDelta::PhysicsDelta() : positionDifference({0.f}), angleDifference(0.
 {
 }
 
-/*
- * This should probably be in physics system
- */
-void cs::PhysicsComponent::UpdateBody()
-{
-	if (body)
-	{
-		body->SetTransform(definition.position, body->GetAngle());
-		body->SetGravityScale(definition.gravityScale);
-		body->SetLinearVelocity(definition.linearVelocity);
-		body->SetAngularVelocity(definition.angularVelocity);
-		body->SetAwake(definition.awake);
-	}
-	else
-	{
-		Debug::LogWarning("PhysicsComponent: Didn't update body, body doesn't exist");
-	}
-}
-
-void cs::PhysicsComponent::CreateBody()
-{
-	auto _ps(PhysicsLocator::GetPhysicsSystem());
-	if (body) _ps->world->DestroyBody(body);
-	body = _ps->world->CreateBody(&definition);
-	body->CreateFixture(shape, 1.f);
-}
-
 cs::PhysicsComponent::PhysicsComponent() : body(nullptr), shape(new b2CircleShape)
 {
 	shape->m_radius = 1.f;
@@ -75,6 +48,9 @@ cs::PhysicsComponent::~PhysicsComponent()
 
 void cs::PhysicsComponent::ImGuiDrawComponent()
 {
+	/*
+	 * Detecting changes in definition etc. should be automatic
+	 */
 	bool _recreate(false), _update(false);
 
 	if (ImGui::TreeNodeEx("Physics Component", ImGuiTreeNodeFlags_DefaultOpen))
@@ -96,10 +72,20 @@ void cs::PhysicsComponent::ImGuiDrawComponent()
 		_update |= ImGui::Checkbox("Awake", &definition.awake);
 
 		if (_recreate || ImGui::Button("Recreate Body"))
-			CreateBody();
+			QueueForCreation();
 		else if (_update)
-			UpdateBody();
+			QueueForUpdate();
 
 		ImGui::TreePop();
 	}
+}
+
+void cs::PhysicsComponent::QueueForUpdate()
+{
+	PhysicsLocator::GetPhysicsSystem()->QueueComponentUpdate(this);
+}
+
+void cs::PhysicsComponent::QueueForCreation()
+{
+	PhysicsLocator::GetPhysicsSystem()->QueueComponentCreate(this);
 }
