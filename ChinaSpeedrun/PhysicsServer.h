@@ -25,6 +25,13 @@ namespace cs
 		Collision(PhysicsBodyComponent* a, PhysicsBodyComponent* b, CollisionInfo newInfo);
 	};
 
+	struct RaycastHit
+	{
+		bool valid;
+		float distance;
+		Vector3 hitPosition, surfaceNormal;
+	};
+
 	class TransformComponent;
 	class SphereColliderComponent;
 	class PolygonColliderComponent;
@@ -43,6 +50,8 @@ namespace cs
 
 		std::vector<class PhysicsBodyComponent*> bodies;
 
+		static RaycastHit Raycast(const Vector3 origin, const Vector3 direction, const float distance, const OBB& obb, const Matrix4x4& matrix);
+
 		void Step();
 		void Test();
 		// The solver, solves the queued collisions
@@ -50,5 +59,7 @@ namespace cs
 
 	private:
 		std::vector<Collision> collisionQueue;
+
+		static bool TestRayAgainstAxis(const Vector3 axis, const Vector3& delta, const Vector3& direction, float& minDistance, float& maxDistance, const float& obbMin, const float& obbMax);
 	};
 }

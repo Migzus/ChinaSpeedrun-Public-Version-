@@ -1505,34 +1505,6 @@ void cs::VulkanEngineRenderer::CreateDescriptorSets(MeshRendererComponent& rende
 			_descriptorWrites.push_back(_descriptor);
 		}
 
-		/*VkDescriptorBufferInfo _bufferInfo{};
-		_bufferInfo.buffer = uniformBuffers[i];
-		_bufferInfo.offset = _meshRenderer.uboOffset;
-		_bufferInfo.range = sizeof(UniformBufferObject);
-
-		VkDescriptorImageInfo _imageInfo{};
-		_imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		_imageInfo.imageView = textureImageView;
-		_imageInfo.sampler = textureSampler;
-
-		std::array<VkWriteDescriptorSet, 2> _descriptorWrites{};
-
-		_descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		_descriptorWrites[0].dstSet = _meshRenderer.descriptorSets[i];
-		_descriptorWrites[0].dstBinding = 0;
-		_descriptorWrites[0].dstArrayElement = 0;
-		_descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		_descriptorWrites[0].descriptorCount = 1;
-		_descriptorWrites[0].pBufferInfo = &_bufferInfo;
-
-		_descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		_descriptorWrites[1].dstSet = _meshRenderer.descriptorSets[i];
-		_descriptorWrites[1].dstBinding = 1;
-		_descriptorWrites[1].dstArrayElement = 0;
-		_descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		_descriptorWrites[1].descriptorCount = 1;
-		_descriptorWrites[1].pImageInfo = &_imageInfo;*/
-
 		vkUpdateDescriptorSets(device, static_cast<uint32_t>(_descriptorWrites.size()), _descriptorWrites.data(), 0, nullptr);
 	}
 }
@@ -1797,6 +1769,7 @@ VkFormat cs::VulkanEngineRenderer::FindSupportedFormat(const std::vector<VkForma
 
 void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 {
+	VkDeviceSize _index{ 0 };
 	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
 	for (auto e : _renderers)
 	{
@@ -1809,7 +1782,14 @@ void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 		vkMapMemory(device, uniformBuffersMemory[currentImage], _meshRenderer.uboOffset, UniformBufferObject::GetByteSize(), 0, &_data);
 		memcpy(_data, &_meshRenderer.ubo, UniformBufferObject::GetByteSize());
 		vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
+
+		_index++;
 	}
+
+	/*void* _data;
+	vkMapMemory(device, uniformBuffersMemory[currentImage], 0, (VkDeviceSize)UniformBufferObject::GetByteSize() * 2, 0, &_data);
+	memcpy(_data, ubos, (size_t)UniformBufferObject::GetByteSize() * 2);
+	vkUnmapMemory(device, uniformBuffersMemory[currentImage]);*/
 }
 
 VkCommandBuffer cs::VulkanEngineRenderer::BeginSingleTimeCommands()
@@ -2181,7 +2161,7 @@ uint32_t cs::VulkanEngineRenderer::FindMemoryType(uint32_t typeFilter, VkMemoryP
 	Debug::LogFail("Failed to find suitable memory type.");
 }
 
-// currently an unused function, will use it in the future (probably)
+// currently an unused function, will use it in the future (probably) (not)
 int cs::VulkanEngineRenderer::RateDeviceSuitability(VkPhysicalDevice device)
 {
 	int _score{ 0 };

@@ -32,6 +32,8 @@ namespace cs
 		VkDeviceSize uboOffset;
 		VkDescriptorPool descriptorPool;
 		std::vector<VkDescriptorSet> descriptorSets;
+		
+		bool dirtyUpdatedUBO;
 	};
 
 	class Renderer

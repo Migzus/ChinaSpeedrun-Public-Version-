@@ -119,6 +119,7 @@ namespace cs
 		std::vector<VkImage> swapChainImages;
 		std::vector<VkBuffer> uniformBuffers;
 		std::vector<VkDeviceMemory> uniformBuffersMemory;
+
 		VulkanBufferInfo vertexBuffer, indexBuffer;
 
 		// Spesific to ImGui Stuff

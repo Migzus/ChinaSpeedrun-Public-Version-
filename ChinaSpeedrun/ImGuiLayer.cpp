@@ -1,28 +1,33 @@
-#include "ImGuiLayer.h"
+#include "Editor.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 #include "ImGuizmo.h"
 
+#include <glm/gtx/quaternion.hpp>
 #include "Mathf.h"
 #include "GameObject.h"
 #include "Time.h"
 
+#include "Transform.h"
 #include "VulkanEngineRenderer.h"
 #include "ChinaEngine.h"
-#include "Editor.h"
+#include "World.h"
+#include "Camera.h"
 
-//using namespace cs::editor;
+cs::editor::ImGuiLayer::ImGuiLayer(EngineEditor* root) :
+    editorRoot{ root }, activeObject{ nullptr }, isManipulating{ false }, isWindowActive{ false }
+{}
 
-void cs::ImGuiLayer::Init()
+void cs::editor::ImGuiLayer::Init()
 {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& _io{ ImGui::GetIO() }; (void)_io;
 }
 
-void cs::ImGuiLayer::Begin()
+void cs::editor::ImGuiLayer::Begin()
 {
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -30,10 +35,52 @@ void cs::ImGuiLayer::Begin()
 	ImGuizmo::BeginFrame();
 }
 
-void cs::ImGuiLayer::Step()
+void cs::editor::ImGuiLayer::Step()
 {
-    static GameObject* _activeObject{ nullptr };
+    bool _gizmoWindow{ true };
+
+    isWindowActive = false;
     
+    if (ImGui::Begin("Gizmos", &_gizmoWindow, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground))
+    {
+        int _width, _height;
+        ChinaEngine::renderer.GetViewportSize(_width, _height);
+
+        ImGui::SetWindowPos({ 0.0f, 0.0f });
+        ImGui::SetWindowSize({ static_cast<float>(_width), static_cast<float>(_height) });
+
+        if (activeObject != nullptr && activeObject->HasComponent<TransformComponent>())
+        {
+            TransformComponent& _transform{ activeObject->GetComponent<TransformComponent>() };
+            Matrix4x4 _viewMatrix{ Camera::GetViewMatrix(*ChinaEngine::world.mainCamera) }, _projectionMatrix{ Camera::GetProjectionMatrix(*ChinaEngine::world.mainCamera) };
+            Matrix4x4& _transformMatrix{ Transform::GetMatrixTransform(_transform) };
+
+            ImGuizmo::SetOrthographic(false);
+            ImGuizmo::SetDrawlist();
+            ImGuizmo::SetRect(0.0f, 0.0f, static_cast<float>(_width), static_cast<float>(_height));
+            
+            _projectionMatrix[1][1] *= -1.0f;
+
+            ImGuizmo::Manipulate(glm::value_ptr(_viewMatrix), glm::value_ptr(_projectionMatrix),
+                editorRoot->GetOperationState(), editorRoot->GetMode(), glm::value_ptr(_transformMatrix));
+
+            isManipulating = ImGuizmo::IsUsing();
+
+            if (isManipulating)
+            {
+                Vector3 _position{}, _rotation{}, _scale{};
+                //Mathf::DecomposeMatrix(_transformMatrix, _position, _rotation, _scale); // This doesn't work...
+
+                ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(_transformMatrix), &_position[0], &_rotation[0], &_scale[0]);
+
+                _transform.position = _position;
+                _transform.rotationDegrees = _rotation;
+                _transform.scale = _scale;
+            }
+        }
+    }
+    ImGui::End();
+
     if (ImGui::Begin("Hierarchy"))
     {
         if (ImGui::TreeNode("Main Scene"))
@@ -42,51 +89,57 @@ void cs::ImGuiLayer::Step()
             {
                 ImGui::Text(object->name.c_str());
                 if (ImGui::IsItemClicked())
-                    _activeObject = object;
+                    activeObject = object;
             }
             ImGui::TreePop();
         }
+
+        IsWindowHovered();
     }
     ImGui::End();
 
 	if (ImGui::Begin("Inspector"))
 	{
-		if (_activeObject != nullptr)
+		if (activeObject != nullptr)
 		{
-            ImGui::Checkbox("", &_activeObject->active);
+            ImGui::Checkbox("", &activeObject->active);
             ImGui::SameLine();
-			ImGui::Text(_activeObject->name.c_str());
+			ImGui::Text(activeObject->name.c_str());
 
-            _activeObject->EditorDrawComponents();
+            activeObject->EditorDrawComponents();
 		}
+
+        IsWindowHovered();
 	}
 	ImGui::End();
 
     if (ImGui::Begin("Top Bar"))
     {
-        switch (editor::EngineEditor::GetPlaymodeState())
+        switch (editorRoot->GetPlaymodeState())
         {
-        case editor::EngineEditor::Playmode::EDITOR:
+        case EngineEditor::Playmode::EDITOR:
             ImGui::Button("Play");
             if (ImGui::IsItemClicked())
-                editor::EngineEditor::SetPlaymode(editor::EngineEditor::Playmode::PLAY);
+                editorRoot->SetPlaymode(EngineEditor::Playmode::PLAY);
             break;
         case editor::EngineEditor::Playmode::PLAY:
             ImGui::Button("Pause");
             if (ImGui::IsItemClicked())
-                editor::EngineEditor::SetPlaymode(editor::EngineEditor::Playmode::PAUSE);
+                editorRoot->SetPlaymode(EngineEditor::Playmode::PAUSE);
             break;
-        case editor::EngineEditor::Playmode::PAUSE:
+        case EngineEditor::Playmode::PAUSE:
             ImGui::Button("Continue");
             if (ImGui::IsItemClicked())
-                editor::EngineEditor::SetPlaymode(editor::EngineEditor::Playmode::PLAY);
+                editorRoot->SetPlaymode(EngineEditor::Playmode::PLAY);
             break;
         }
 
         ImGui::SameLine();
         ImGui::Button("Stop");
         if (ImGui::IsItemClicked())
-            editor::EngineEditor::SetPlaymode(editor::EngineEditor::Playmode::EDITOR);
+            editorRoot->SetPlaymode(EngineEditor::Playmode::EDITOR);
+
+        IsWindowHovered();
     }
     ImGui::End();
 
@@ -105,71 +158,40 @@ void cs::ImGuiLayer::Step()
         ImGui::SameLine();
         ImGui::ProgressBar(_status.vertexDataFractionSize);
         ImGui::Text("%f kB", (float)(*_status.vertexDataSize) * 0.0001f);
+
+        IsWindowHovered();
     }
 	ImGui::End();
 
     if (ImGui::Begin("Debugger"))
+    {
         Debug::ImGuiDrawMessages();
+        IsWindowHovered();
+    }
     ImGui::End();
 }
 
-void cs::ImGuiLayer::End()
+void cs::editor::ImGuiLayer::End()
 {
     ImGui::Render();
 }
 
-void cs::ImGuiLayer::SetStyle()
+void cs::editor::ImGuiLayer::SetStyle()
 {
     ImGuiStyle* _style{ &ImGui::GetStyle() };
 }
 
-bool cs::ImGuiLayer::BeginButtonDropDown(const char* label, ImVec2 buttonSize)
+const bool& cs::editor::ImGuiLayer::IsManipulating() const
 {
-    ImGui::SameLine(0.f, 0.f);
-
-    ImVec2 _pos{ ImGui::GetWindowPos() };
-    
-    float x = ImGui::GetCursorPosX();
-    float y = ImGui::GetCursorPosY();
-
-    ImVec2 size(20, buttonSize.y);
-    bool pressed{ ImGui::Button("##", size) };
-
-    // Arrow
-    ImVec2 center(_pos.x + x + 10, _pos.y + y + buttonSize.y / 2);
-    float r = 8.0f;
-    center.y -= r * 0.25f;
-    /*ImVec2 a = center + ImVec2(0, 1) * r;
-    ImVec2 b = center + ImVec2(-0.866f, -0.5f) * r;
-    ImVec2 c = center + ImVec2(0.866f, -0.5f) * r;
-
-    window->DrawList->AddTriangleFilled(a, b, c, ImGui::GetColorU32(ImGuiCol_Text));*/
-
-    // Popup
-
-    ImVec2 popupPos;
-
-    popupPos.x = _pos.x + x - buttonSize.x;
-    popupPos.y = _pos.y + y + buttonSize.y;
-
-    ImGui::SetNextWindowPos(popupPos);
-
-    if (pressed)
-        ImGui::OpenPopup(label);
-
-    if (ImGui::BeginPopup(label))
-    {
-        //ImGui::PushStyleColor(ImGuiCol_FrameBg, style.Colors[ImGuiCol_Button]);
-        //ImGui::PushStyleColor(ImGuiCol_WindowBg, style.Colors[ImGuiCol_Button]);
-        //ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, style.Colors[ImGuiCol_Button]);
-        return true;
-    }
-
-    return false;
+    return isManipulating;
 }
 
-void cs::ImGuiLayer::EndButtonDropDown()
+const bool& cs::editor::ImGuiLayer::IsInteractingWithWindow() const
 {
-    ImGui::PopStyleColor(3);
-    ImGui::EndPopup();
+    return isWindowActive;
+}
+
+void cs::editor::ImGuiLayer::IsWindowHovered()
+{
+    isWindowActive |= ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
 }

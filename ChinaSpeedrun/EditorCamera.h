@@ -13,10 +13,11 @@ namespace cs
 		public:
 			friend Camera;
 
+			class EngineEditor* editorRoot;
 			Vector3 position, rotation;
 			float movementsSpeed, rotationSpeed;
 
-			EditorCamera();
+			EditorCamera(EngineEditor* root);
 
 			void Update();
 

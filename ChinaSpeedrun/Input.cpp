@@ -39,6 +39,8 @@ void Input::AddMapping(std::string name, int keycode)
 
 void Input::RemoveMapping(std::string name, int keycode)
 {
+	return; // still doesn't actually work... (maybe because of some similar keys)
+
 	auto _it{ mappings.find(name) };
 
 	if (_it != mappings.end())

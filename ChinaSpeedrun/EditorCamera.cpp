@@ -1,13 +1,17 @@
-#include "EditorCamera.h"
+#include "Editor.h"
 
 #include "Time.h"
 #include "Input.h"
 #include "Debug.h"
 
-#include <GLFW/glfw3.h>
+#include "World.h"
+#include "PhysicsServer.h"
+#include "ChinaEngine.h"
+#include "Transform.h"
+#include "GameObject.h"
 
-cs::editor::EditorCamera::EditorCamera() :
-	position{ Vector3(0.0f) }, rotation{ Vector3(0.0f) }, movementsSpeed{ 10.0f }, rotationSpeed{ 2.0f }
+cs::editor::EditorCamera::EditorCamera(EngineEditor* root) :
+	editorRoot{ root }, position{ Vector3(0.0f) }, rotation{ Vector3(0.0f) }, movementsSpeed{ 10.0f }, rotationSpeed{ 0.002f }
 {}
 
 void cs::editor::EditorCamera::Update()
@@ -19,16 +23,14 @@ void cs::editor::EditorCamera::Update()
 		Movement();
 	}
 
-	if (Input::GetMouseHeld(0))
-	{
+	if (Input::GetMousePressed(0) && !editorRoot->uiLayer->IsManipulating() && !editorRoot->uiLayer->IsInteractingWithWindow())
 		SelectTest();
-	}
 }
 
 void cs::editor::EditorCamera::RotateCamera()
 {
-	rotation.y -= Input::mouseMovement.x * rotationSpeed * Time::deltaTime;
-	rotation.x -= Input::mouseMovement.y * rotationSpeed * Time::deltaTime;
+	rotation.y -= Input::mouseMovement.x * rotationSpeed;
+	rotation.x -= Input::mouseMovement.y * rotationSpeed;
 
 	Mathf::Clamp(rotation.x, -Mathf::PI_2, Mathf::PI_2);
 }
@@ -53,5 +55,27 @@ void cs::editor::EditorCamera::ScrollAdjustmentSpeed()
 
 void cs::editor::EditorCamera::SelectTest()
 {
-	Debug::LogInfo("select");
+	Vector3 _mouseDirection{ World::MouseToWorldSpace() };
+	bool _objectHit{ false };
+
+	//_mouseDirection.z *= -1.0f;
+
+	auto _transformView{ ChinaEngine::world.GetRegistry().view<TransformComponent>() };
+	for (auto e : _transformView)
+	{
+		auto& _transformComponent{ ChinaEngine::world.GetRegistry().get<TransformComponent>(e) };
+		RaycastHit _hit{ PhysicsServer::Raycast(position, _mouseDirection, farPlane, _transformComponent.obb, Transform::GetMatrixTransform(_transformComponent)) };
+
+		if (_hit.valid)
+		{
+			Debug::Log("Clicked: ", _transformComponent.gameObject->name, " with a distance of: ", _hit.distance);
+
+			_objectHit = true;
+			editorRoot->uiLayer->activeObject = _transformComponent.gameObject;
+			break;
+		}
+	}
+
+	if (!_objectHit)
+		editorRoot->uiLayer->activeObject = nullptr;
 }

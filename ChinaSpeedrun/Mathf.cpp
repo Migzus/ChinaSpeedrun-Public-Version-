@@ -5,6 +5,8 @@
 #include <random>
 #include <ctime>
 
+#include <glm/gtx/matrix_decompose.hpp>
+
 void cs::Mathf::InitRand()
 {
     srand(time(nullptr));
@@ -59,4 +61,23 @@ Vector3 cs::Mathf::CrossProduct(const Vector3 vec1, const Vector3 vec2)
 float cs::Mathf::DotProduct(const Vector3 vec1, const Vector3 vec2)
 {
     return glm::dot(vec1, vec2);
+}
+
+void cs::Mathf::DecomposeMatrix(const Matrix4x4& transform, Vector3& position, Vector3& rotation, Vector3& scale)
+{
+    Matrix4x4 _localMatrix{ transform };
+
+    scale.x = glm::length(_localMatrix[0]);
+    scale.y = glm::length(_localMatrix[1]);
+    scale.z = glm::length(_localMatrix[2]);
+
+    glm::normalize<3, float, glm::packed_highp>(_localMatrix[0]);
+    glm::normalize<3, float, glm::packed_highp>(_localMatrix[1]);
+    glm::normalize<3, float, glm::packed_highp>(_localMatrix[2]);
+
+    rotation.x = atan2f(_localMatrix[1][2], _localMatrix[2][2]);
+    rotation.y = atan2f(-_localMatrix[0][2], sqrtf(_localMatrix[1][2] * _localMatrix[1][2] + _localMatrix[2][2] * _localMatrix[2][2]));
+    rotation.z = atan2f(_localMatrix[0][1], _localMatrix[0][0]);
+
+    position = Vector3(_localMatrix[3]);
 }

@@ -11,6 +11,7 @@ namespace cs
 	{
 	public:
 		friend class GameObject;
+		friend class EngineCamera;
 		friend class VulkanEngineRenderer;
 
 		static CameraBase* mainCamera;
@@ -21,6 +22,9 @@ namespace cs
 		
 		World();
 		
+		static Vector2 MouseToScreenSpace();
+		static Vector3 MouseToWorldSpace();
+
 		class GameObject* InstanceObject(const char* name, const Vector3 position = Vector3(0.0f), const Vector3 rotation = Vector3(0.0f), const Vector3 scale = Vector3(1.0f));
 		
 		// Start all the components
@@ -34,6 +38,7 @@ namespace cs
 		const uint64_t GetUBONextOffset() const;
 
 		const std::vector<GameObject*>& GetObjects();
+		entt::registry& GetRegistry();
 
 	private:
 		entt::registry registry;

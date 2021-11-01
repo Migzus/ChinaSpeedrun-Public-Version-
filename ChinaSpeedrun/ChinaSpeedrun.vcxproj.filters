@@ -175,7 +175,6 @@
     <ClInclude Include="PhysicsBody.h">
       <Filter>ecs\old physics</Filter>
     </ClInclude>
-    <ClInclude Include="PhysicsServer.h" />
     <ClInclude Include="EditorCamera.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="AudioData.h" />
@@ -188,6 +187,9 @@
       <Filter>ecs\old physics</Filter>
     </ClInclude>
     <ClInclude Include="PhysicsSystem.h" />
+    <ClInclude Include="PhysicsServer.h">
+      <Filter>ecs\old physics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ecs">

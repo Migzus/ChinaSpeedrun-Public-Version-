@@ -7,25 +7,40 @@ struct ImVec2;
 
 namespace cs
 {
-	class ImGuiLayer
+	class VulkanEngineRenderer;
+	class GameObject;
+
+	namespace editor
 	{
-	public:
-		friend class VulkanEngineRenderer;
+		class ImGuiLayer
+		{
+		public:
+			friend VulkanEngineRenderer;
 
-		void Init();
-		void Begin();
-		void Step();
-		void End();
-		void SetStyle();
+			class EngineEditor* editorRoot;
+			GameObject* activeObject;
 
-		bool BeginButtonDropDown(const char* label, ImVec2 buttonSize);
-		void EndButtonDropDown();
+			ImGuiLayer(EngineEditor* root);
 
-	private:
-		VkRenderPass renderPass;
-		VkDescriptorPool descriptorPool;
-		VkCommandPool commandPool;
-		std::vector<VkCommandBuffer> commandBuffers;
-		std::vector<VkFramebuffer> framebuffers;
-	};
+			void Init();
+			void Begin();
+			void Step();
+			void End();
+			void SetStyle();
+			const bool& IsManipulating() const;
+			const bool& IsInteractingWithWindow() const;
+
+		private:
+			bool isManipulating;
+			bool isWindowActive;
+
+			VkRenderPass renderPass;
+			VkDescriptorPool descriptorPool;
+			VkCommandPool commandPool;
+			std::vector<VkCommandBuffer> commandBuffers;
+			std::vector<VkFramebuffer> framebuffers;
+
+			void IsWindowHovered();
+		};
+	}
 }

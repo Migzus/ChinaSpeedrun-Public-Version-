@@ -6,25 +6,24 @@ void cs::BulletManagerComponent::CreateSystem()
 		readyBullets.push_back(new Bullet);
 }
 
-void cs::BulletManagerComponent::SpawnCircle(BulletInfo* info, const uint16_t bulletCount, const float radius, const float overrideSpacing)
+void cs::BulletManagerComponent::SpawnCircle(BulletInfo& info, const uint16_t bulletCount, const float radius, const float overrideSpacing)
 {
-	const Vector2 _origin{ info->position };
+	const Vector2 _origin{ info.position };
 	const float _rotationOffset{ Mathf::TAU / float(bulletCount) };
 	const float _spacing{ overrideSpacing < 0.0f ? 1.0f : overrideSpacing };
 
 	for (uint16_t i{ 0 }; i < bulletCount; i++)
 	{
-		BulletInfo _modifyInfo{ *info };
 		const float _currentRotation{ _rotationOffset * i * _spacing };
 
-		_modifyInfo.position = _origin + Vector2(cos(_currentRotation), sin(_currentRotation)) * radius;
-		_modifyInfo.rotation = _currentRotation;
+		info.position = _origin + Vector2(cos(_currentRotation), sin(_currentRotation)) * radius;
+		info.rotation = _currentRotation;
 
-		SpawnBullet(&_modifyInfo);
+		SpawnBullet(info);
 	}
 }
 
-cs::Bullet* cs::BulletManagerComponent::SpawnBullet(const BulletInfo* info)
+cs::Bullet* cs::BulletManagerComponent::SpawnBullet(const BulletInfo& info)
 {
 	if (readyBullets.empty())
 		return nullptr;

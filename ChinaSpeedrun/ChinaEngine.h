@@ -13,7 +13,6 @@ namespace cs
 	{
 	public:
 		static editor::EngineEditor editor;
-		static class ImGuiLayer imGuiLayer;
 		static class World world;
 		static class VulkanEngineRenderer renderer;
 

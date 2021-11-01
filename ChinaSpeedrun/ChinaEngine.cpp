@@ -28,7 +28,6 @@
 
 #include "Time.h"
 
-cs::ImGuiLayer cs::ChinaEngine::imGuiLayer;
 cs::World cs::ChinaEngine::world;
 cs::VulkanEngineRenderer cs::ChinaEngine::renderer;
 cs::editor::EngineEditor cs::ChinaEngine::editor;
@@ -45,7 +44,6 @@ void cs::ChinaEngine::Run()
 	EngineInit();
 	renderer.Resolve();
 
-	imGuiLayer.SetStyle();
 	InitInput();
 
 	MainLoop();
@@ -88,7 +86,26 @@ void cs::ChinaEngine::EngineInit()
 	_material2->cullMode = Material::CullMode::NONE;
 	_material2->shaderParams["texSampler"] = _chaikaSmile;
 	
-	GameObject* _terrain{ world.InstanceObject("Terrain", Vector3(0.0f, -6.0f, 0.0f)) };
+	const uint16_t width{ 2 }, length{ 2 }, height{ 2 };
+	Mesh* _sphereModel{ ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj") };
+
+	for (size_t x{ 0 }; x < width; x++)
+	{
+		for (size_t y{ 0 }; y < height; y++)
+		{
+			for (size_t z{ 0 }; z < length; z++)
+			{
+				const char _name[]{ x + 48, ',', ' ', y + 48, ',', ' ', z + 48, '\000' };
+				GameObject* _object{ world.InstanceObject(_name, Vector3((float)x, (float)y, (float)z) * 2.0f) };
+
+				MeshRendererComponent& _terrainMesh{ _object->AddComponent<MeshRendererComponent>() };
+				_terrainMesh.mesh = _sphereModel;
+				_terrainMesh.materials.push_back(_material1);
+			}
+		}
+	}
+
+	/*GameObject* _terrain{ world.InstanceObject("Terrain", Vector3(0.0f, -6.0f, 0.0f)) };
 	GameObject* _suzanne{ world.InstanceObject("Suzanne", Vector3(0.0f, 10.0f, 4.0f)) }; // Vector3(-7.0f, 5.0f, -6.2f) // -1.0f, 10.0f, 6.0f
 	GameObject* _physicsBall{ world.InstanceObject("Junko Ball", Vector3(-1.3f, 3.0f, 5.5f)) };
 	GameObject* _camera{ world.InstanceObject("Camera", Vector3(13.0f, 13.0f, 16.0f), Vector3(-33.0f, 35.0f, 0.0f)) };
@@ -121,7 +138,7 @@ void cs::ChinaEngine::EngineInit()
 	// move this elsewhere, i dont want to call this for every physics object...
 	PhysicsBody::GetAllColliderComponents(&_rbT);
 	PhysicsBody::GetAllColliderComponents(&_rbZU);
-	PhysicsBody::GetAllColliderComponents(&_rbPB);
+	PhysicsBody::GetAllColliderComponents(&_rbPB);*/
 }
 
 void cs::ChinaEngine::InitInput()
@@ -148,12 +165,7 @@ void cs::ChinaEngine::MainLoop()
 
 		glfwPollEvents();
 
-		imGuiLayer.Begin();
-		imGuiLayer.Step();
-		imGuiLayer.End();
-
 		editor.Update();
-
 		world.Step();
 
 		renderer.Resolve();
