@@ -4,6 +4,7 @@
 
 #include "Component.h"
 
+#include "CollisionShape.h"
 #include "Mathf.h"
 
 namespace cs
@@ -27,19 +28,16 @@ namespace cs
 		b2BodyDef definition;
 		b2Body* body;
 		PhysicsDelta delta;
+		CollisionShape shape;
+		
+		void QueueForUpdate();
+		void QueueForCreation();
 
-		/*
-		 * Make this dynamically changable in the future
-		 */
-		b2CircleShape* shape;
+		void UpdateFixture();
 
 		PhysicsComponent();
 		~PhysicsComponent();
 
 		void ImGuiDrawComponent() override;
-
-	private:
-		void QueueForUpdate();
-		void QueueForCreation();
 	};
 }

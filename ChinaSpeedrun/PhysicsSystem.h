@@ -11,9 +11,9 @@ namespace cs {
 	{
 	public:
 		b2World* world;
+		void UpdateComponents();
 		void UpdateWorld();
 		void UpdatePositions(PhysicsComponent& pc, TransformComponent& tc);
-		void UpdateComponents();
 		PhysicsSystem();
 
 		void QueueComponentUpdate(PhysicsComponent* pc);
@@ -21,6 +21,7 @@ namespace cs {
 	private:
 		std::vector<PhysicsComponent*> componentToUpdate, componentToCreate;
 		int velocityIterations, positionIterations;
+		float frequency;
 	};
 }
 

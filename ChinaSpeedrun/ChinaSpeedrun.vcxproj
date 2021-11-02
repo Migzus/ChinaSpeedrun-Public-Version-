@@ -171,6 +171,7 @@
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="ChinaEngine.cpp" />
     <ClCompile Include="Collider.cpp" />
+    <ClCompile Include="CollisionShape.cpp" />
     <ClCompile Include="Color.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="Debug.cpp" />
@@ -220,6 +221,7 @@
     <ClInclude Include="ChinaCoreHeader.h" />
     <ClInclude Include="ChinaEngine.h" />
     <ClInclude Include="Collider.h" />
+    <ClInclude Include="CollisionShape.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Debug.h" />

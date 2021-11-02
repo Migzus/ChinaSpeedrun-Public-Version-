@@ -51,6 +51,9 @@ namespace cs
 		// Gets a component of this type
 		template<class T>
 		T& GetComponent();
+		// Gets a constant component reference of this type
+		template<class T>
+		const T& GetComponentConst() const;
 		// Gets the component at the specified index (This is the fastes method to get a component)
 		template<class T>
 		T& GetComponentAt(const uint8_t componentIndex);
@@ -93,6 +96,12 @@ namespace cs
 	inline T& GameObject::GetComponent()
 	{
 		return ChinaEngine::world.registry.get<T>(entity);
+	}
+
+	template<class T>
+	inline const T& GameObject::GetComponentConst() const
+	{
+		return static_cast<const T&>(ChinaEngine::world.registry.get<T>(entity));
 	}
 
 	template<class T>
