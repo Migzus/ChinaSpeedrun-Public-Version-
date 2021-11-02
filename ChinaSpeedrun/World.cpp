@@ -36,7 +36,7 @@ cs::GameObject* cs::World::InstanceObject(const char* name, const Vector3 positi
 	return _newObject;
 }
 
-cs::World::World() : audioSystem{ new AudioSystem }, physicsSystem{ new PhysicsSystem }
+cs::World::World() : physicsSystem{ new PhysicsSystem }, audioSystem{ new AudioSystem }
 {
 	PhysicsLocator::Provide(physicsSystem);
 }

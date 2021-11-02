@@ -15,7 +15,7 @@ namespace cs
 		friend class VulkanEngineRenderer;
 
 		static CameraBase* mainCamera;
-		class PhysicsServer* physicsServer;
+		class PhysicsSystem* physicsSystem;
 		class AudioSystem* audioSystem;
 		//class Rednerer* rendererSystem;
 		//class MeshRenderer* meshRendererSystem;

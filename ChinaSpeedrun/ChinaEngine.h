@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ChinaCoreHeader.h"
+
 namespace cs
 {
 	namespace editor
