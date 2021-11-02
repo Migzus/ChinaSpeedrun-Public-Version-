@@ -28,19 +28,12 @@ namespace cs
 		std::string name;
 		bool active;
 		entt::entity entity;
+		OBB obb;
 		// TODO : Make this hashable (it's faster and we can make it readable)
-		std::vector<std::string> tags;
+		std::set<std::string> tags;
 
 		GameObject();
 
-		// Called at the start of the program
-		virtual void Init();
-		// Called when the object is instanced
-		virtual void Start();
-		// Called every frame
-		virtual void Update();
-		// Called every physics frame
-		virtual void FixedUpdate();
 		// Called when the object is destroyed
 		virtual void ExitTree();
 
@@ -71,6 +64,8 @@ namespace cs
 		template<class T>
 		void RemoveAllComponentsOfType();
 
+		void GenerateOBBExtents();
+
 		~GameObject();
 
 	private:
@@ -90,6 +85,7 @@ namespace cs
 		auto& _comp{ ChinaEngine::world.registry.emplace<T>(entity) };
 
 		_comp.gameObject = this;
+		GenerateOBBExtents();
 
 		return _comp;
 	}

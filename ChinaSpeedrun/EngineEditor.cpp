@@ -96,18 +96,18 @@ void cs::editor::EngineEditor::Update()
 void cs::editor::EngineEditor::Exit()
 {
 	// might be useful to remove mappings when disableing the editor
-	Input::RemoveMapping("editor_forward", GLFW_KEY_W);
-	Input::RemoveMapping("editor_backward", GLFW_KEY_S);
-	Input::RemoveMapping("editor_left", GLFW_KEY_A);
-	Input::RemoveMapping("editor_right", GLFW_KEY_D);
-	Input::RemoveMapping("editor_up", GLFW_KEY_Q);
-	Input::RemoveMapping("editor_down", GLFW_KEY_E);
+	Input::RemoveMapping("editor_forward");
+	Input::RemoveMapping("editor_backward");
+	Input::RemoveMapping("editor_left");
+	Input::RemoveMapping("editor_right");
+	Input::RemoveMapping("editor_up");
+	Input::RemoveMapping("editor_down");
 
-	Input::RemoveMapping("editor_translate", GLFW_KEY_W);
-	Input::RemoveMapping("editor_rotate", GLFW_KEY_E);
-	Input::RemoveMapping("editor_scale", GLFW_KEY_R);
-	Input::RemoveMapping("editor_mode_switch", GLFW_KEY_LEFT_CONTROL);
-	Input::RemoveMapping("editor_snap", GLFW_KEY_LEFT_SHIFT);
+	Input::RemoveMapping("editor_translate");
+	Input::RemoveMapping("editor_rotate");
+	Input::RemoveMapping("editor_scale");
+	Input::RemoveMapping("editor_mode_switch");
+	Input::RemoveMapping("editor_snap");
 
 	delete editorCamera;
 	delete uiLayer;

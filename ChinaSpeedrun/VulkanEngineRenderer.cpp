@@ -1775,7 +1775,7 @@ void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 	{
 		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
 
-		if (_meshRenderer.mesh == nullptr || _meshRenderer.materials.empty())
+		if (_meshRenderer.mesh == nullptr || _meshRenderer.materials.empty() || !_meshRenderer.visible)
 			continue;
 
 		void* _data;

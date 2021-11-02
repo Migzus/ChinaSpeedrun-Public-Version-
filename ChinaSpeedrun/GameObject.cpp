@@ -13,6 +13,7 @@
 #include "PolygonCollider.h"
 #include "StaticBody.h"
 #include "Rigidbody.h"
+#include "Mesh.h"
 
 #include "Debug.h"
 
@@ -42,24 +43,46 @@ void cs::GameObject::EditorDrawComponents()
 		GetComponent<PolygonColliderComponent>().ImGuiDrawComponent();
 }
 
-void cs::GameObject::Init()
+void cs::GameObject::GenerateOBBExtents()
 {
+	obb = { Vector3(-0.25f), Vector3(0.25f) };
+	return;
 
-}
+	// If we have a mesh, then we use that.
+	if (HasComponent<MeshRendererComponent>())
+	{
+		Mesh* _mesh{ GetComponent<MeshRendererComponent>().mesh };
 
-void cs::GameObject::Start()
-{
+		if (_mesh == nullptr || _mesh->GetVertices().empty())
+			return;
 
-}
+		Vector3 _maxExtent{ Vector3(0.0f) }, _minExtent{ Vector3(0.0f) };
+		for (auto& vertex : _mesh->GetVertices())
+		{
+			_maxExtent.x = max(_maxExtent.x, vertex.position.x);
+			_maxExtent.y = max(_maxExtent.y, vertex.position.y);
+			_maxExtent.z = max(_maxExtent.z, vertex.position.z);
 
-void cs::GameObject::Update()
-{
+			_minExtent.x = min(_minExtent.x, vertex.position.x);
+			_minExtent.y = min(_minExtent.y, vertex.position.y);
+			_minExtent.z = min(_minExtent.z, vertex.position.z);
+		}
 
-}
-
-void cs::GameObject::FixedUpdate()
-{
-
+		obb = { _minExtent, _maxExtent };
+		return;
+	}
+	
+	// if we only have a transform, resort to that
+	if (HasComponent<TransformComponent>())
+	{
+		Debug::LogWarning("Cannot create OBB on ", name, " because it has no mesh. Creating default extents.");
+		obb = { Vector3(-0.5f), Vector3(0.5f) };
+		return;
+	}
+	
+	// if we have none of these components, the obb is null (extents == 0.0f)
+	Debug::LogIssue("Cannot generate OBB; ", name, " has no transform or mesh.");
+	obb = { Vector3(0.0f), Vector3(0.0f) };
 }
 
 void cs::GameObject::ExitTree()

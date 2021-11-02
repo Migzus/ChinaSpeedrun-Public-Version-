@@ -9,6 +9,8 @@
 #include "ChinaEngine.h"
 #include "Transform.h"
 #include "GameObject.h"
+#include "Camera.h"
+#include "MeshRenderer.h"
 
 cs::editor::EditorCamera::EditorCamera(EngineEditor* root) :
 	editorRoot{ root }, position{ Vector3(0.0f) }, rotation{ Vector3(0.0f) }, movementsSpeed{ 10.0f }, rotationSpeed{ 0.002f }
@@ -25,6 +27,21 @@ void cs::editor::EditorCamera::Update()
 
 	if (Input::GetMousePressed(0) && !editorRoot->uiLayer->IsManipulating() && !editorRoot->uiLayer->IsInteractingWithWindow())
 		SelectTest();
+
+	// frustum testing
+	auto _entities{ ChinaEngine::world.GetRegistry().view<TransformComponent, MeshRendererComponent>() };
+	Matrix4x4 _pv{ proj * view };
+
+	for (auto& e : _entities)
+	{
+		auto* _transform{ ChinaEngine::world.GetRegistry().try_get<TransformComponent>(e) };
+		auto* _meshRenderer{ ChinaEngine::world.GetRegistry().try_get<MeshRendererComponent>(e) };
+
+		if (_transform == nullptr || _meshRenderer == nullptr)
+			return;
+
+		_meshRenderer->visible = Camera::FrustumTest(_transform->gameObject->obb, _pv * Transform::GetMatrixTransform(*_transform));
+	}
 }
 
 void cs::editor::EditorCamera::RotateCamera()
@@ -58,18 +75,14 @@ void cs::editor::EditorCamera::SelectTest()
 	Vector3 _mouseDirection{ World::MouseToWorldSpace() };
 	bool _objectHit{ false };
 
-	//_mouseDirection.z *= -1.0f;
-
 	auto _transformView{ ChinaEngine::world.GetRegistry().view<TransformComponent>() };
 	for (auto e : _transformView)
 	{
 		auto& _transformComponent{ ChinaEngine::world.GetRegistry().get<TransformComponent>(e) };
-		RaycastHit _hit{ PhysicsServer::Raycast(position, _mouseDirection, farPlane, _transformComponent.obb, Transform::GetMatrixTransform(_transformComponent)) };
+		RaycastHit _hit{ PhysicsServer::Raycast(position, _mouseDirection, farPlane, _transformComponent.gameObject->obb, Transform::GetMatrixTransform(_transformComponent)) };
 
 		if (_hit.valid)
 		{
-			Debug::Log("Clicked: ", _transformComponent.gameObject->name, " with a distance of: ", _hit.distance);
-
 			_objectHit = true;
 			editorRoot->uiLayer->activeObject = _transformComponent.gameObject;
 			break;

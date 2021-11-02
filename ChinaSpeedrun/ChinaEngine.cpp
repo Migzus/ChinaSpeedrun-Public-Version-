@@ -57,7 +57,8 @@ float cs::ChinaEngine::AspectRatio()
 
 void cs::ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight)
 {
-	Camera::CalculatePerspective(*world.mainCamera);
+	if (newWidth * newHeight > 0)
+		Camera::CalculatePerspective(*world.mainCamera);
 }
 
 void cs::ChinaEngine::EngineInit()
@@ -69,6 +70,7 @@ void cs::ChinaEngine::EngineInit()
 	_shader->AssignShaderVertexInputAttrib("position", 0, Shader::Data::VEC3, offsetof(Vertex, position));
 	_shader->AssignShaderVertexInputAttrib("color", 1, Shader::Data::VEC3, offsetof(Vertex, color));
 	_shader->AssignShaderVertexInputAttrib("texCoord", 2, Shader::Data::VEC2, offsetof(Vertex, texCoord));
+	//_shader->AssignShaderVertexInputAttrib("normal", 3, Shader::Data::VEC3, offsetof(Vertex, normal));
 
 	_shader->AssignShaderDescriptor("ubo", 0, Shader::Type::VERTEX, Shader::Data::UNIFORM);
 	_shader->AssignShaderDescriptor("texSampler", 1, Shader::Type::FRAGMENT, Shader::Data::SAMPLER2D);
@@ -86,7 +88,7 @@ void cs::ChinaEngine::EngineInit()
 	_material2->cullMode = Material::CullMode::NONE;
 	_material2->shaderParams["texSampler"] = _chaikaSmile;
 	
-	const uint16_t width{ 2 }, length{ 2 }, height{ 2 };
+	const uint16_t width{ 4 }, length{ 4 }, height{ 4 };
 	Mesh* _sphereModel{ ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj") };
 
 	for (size_t x{ 0 }; x < width; x++)
@@ -95,8 +97,7 @@ void cs::ChinaEngine::EngineInit()
 		{
 			for (size_t z{ 0 }; z < length; z++)
 			{
-				const char _name[]{ x + 48, ',', ' ', y + 48, ',', ' ', z + 48, '\000' };
-				GameObject* _object{ world.InstanceObject(_name, Vector3((float)x, (float)y, (float)z) * 2.0f) };
+				GameObject* _object{ world.InstanceObject(std::to_string(x + (y * 4) + (z * 16)).c_str(), Vector3((float)x, (float)y, (float)z) * 2.0f) };
 
 				MeshRendererComponent& _terrainMesh{ _object->AddComponent<MeshRendererComponent>() };
 				_terrainMesh.mesh = _sphereModel;
