@@ -18,6 +18,9 @@ namespace cs {
 
 		void QueueComponentUpdate(PhysicsComponent* pc);
 		void QueueComponentCreate(PhysicsComponent* pc);
+		void UpdateBody(PhysicsComponent* pc);
+		void CreateBody(PhysicsComponent* pc);
+		void DestroyBody(PhysicsComponent* pc);
 	private:
 		std::vector<PhysicsComponent*> componentToUpdate, componentToCreate;
 		int velocityIterations, positionIterations;

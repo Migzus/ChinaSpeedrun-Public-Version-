@@ -32,7 +32,6 @@ cs::PhysicsDelta::PhysicsDelta() : positionDifference({0.f}), angleDifference(0.
 
 cs::PhysicsComponent::PhysicsComponent() : body(nullptr)
 {
-	QueueForCreation();
 	definition.awake = false;
 	definition.type = b2_staticBody;
 }
@@ -48,19 +47,13 @@ cs::PhysicsComponent::~PhysicsComponent()
 
 void cs::PhysicsComponent::ImGuiDrawComponent()
 {
-	/*
-	 * Detecting changes in definition etc.
-	 * Once scenes exist we wont need this any more
-	 */
-	bool _recreate(false), _update(false);
-
 	if (ImGui::TreeNodeEx("Physics Component", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		const float dragSpeed(0.1f);
 
 		{
-			const char* _options = { "Static\0Kinematic\0Dynamic" };
-			ImGui::Combo("Type", (int*)&definition.type, _options);
+			const char* _options[]{ "Static", "Kinematic", "Dynamic" };
+			ImGui::Combo("Type", (int*)&definition.type, _options, IM_ARRAYSIZE(_options));
 		}
 
 		if (body)
@@ -69,13 +62,12 @@ void cs::PhysicsComponent::ImGuiDrawComponent()
 			ImGui::Text(&_positionString[0]);
 		}
 
-		const char* _options("None\0Circle\0Rectangle" );
+		const char* _options[]{ "None", "Circle", "Rectangle" };
 		int _type(static_cast<int>(shape.GetType()));
-		if (ImGui::Combo("Shape", &_type, _options))
+		if (ImGui::Combo("Shape", &_type, _options, IM_ARRAYSIZE(_options)));
 		{
 			CollisionShape::Type _newType(static_cast<CollisionShape::Type>(_type));
 			shape.SetType(_newType);
-			_recreate = true;
 		}
 
 		/*
@@ -86,7 +78,7 @@ void cs::PhysicsComponent::ImGuiDrawComponent()
 		{
 			case CollisionShape::Type::Circle:
 				ImGui::TreeNodeEx("Circle Shape", ImGuiTreeNodeFlags_DefaultOpen);
-				_recreate |= ImGui::DragFloat("Radius", &shape.shape->m_radius, dragSpeed, -1000.f, 1000.f);
+				ImGui::DragFloat("Radius", &shape.shape->m_radius, dragSpeed, -1000.f, 1000.f);
 				ImGui::TreePop();
 				break;
 
@@ -97,21 +89,15 @@ void cs::PhysicsComponent::ImGuiDrawComponent()
 				if (ImGui::DragFloat2("Extents", &_extents.x, dragSpeed, -1000.f, 1000.f))
 				{
 					_rectangle->SetExtents(_extents);
-					_recreate = true;
 				}
 				ImGui::TreePop();
 				break;
 		}
 
-		_update |= ImGui::DragFloat("Gravity Scale", &definition.gravityScale, dragSpeed, -10.0f, 10.0f);
-		_update |= ImGui::DragFloat2("Linear Velocity", &definition.linearVelocity.x, dragSpeed * 10.f, -100.f, 100.f);
-		_update |= ImGui::DragFloat("Angular Velocity", &definition.angularVelocity, dragSpeed * 10.f, -100.f, 100.f);
-		_update |= ImGui::Checkbox("Awake", &definition.awake);
-
-		if (_recreate || ImGui::Button("Recreate Body"))
-			QueueForCreation();
-		else if (_update)
-			QueueForUpdate();
+		ImGui::DragFloat("Gravity Scale", &definition.gravityScale, dragSpeed, -10.0f, 10.0f);
+		ImGui::DragFloat2("Linear Velocity", &definition.linearVelocity.x, dragSpeed * 10.f, -100.f, 100.f);
+		ImGui::DragFloat("Angular Velocity", &definition.angularVelocity, dragSpeed * 10.f, -100.f, 100.f);
+		ImGui::Checkbox("Awake On Start", &definition.awake);
 
 		ImGui::TreePop();
 	}
@@ -125,6 +111,10 @@ void cs::PhysicsComponent::QueueForUpdate()
 void cs::PhysicsComponent::QueueForCreation()
 {
 	PhysicsLocator::GetPhysicsSystem()->QueueComponentCreate(this);
+}
+
+void cs::PhysicsComponent::QueueForDeletion()
+{
 }
 
 void cs::PhysicsComponent::UpdateFixture()

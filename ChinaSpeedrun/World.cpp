@@ -64,7 +64,10 @@ void cs::World::Start()
 	auto _cameras{ registry.view<CameraComponent>() };
 
 	if (_cameras.empty())
+	{
 		Debug::LogError("No camera is active in the current scene.");
+		return;
+	}
 
 	for (auto e : _cameras)
 	{
@@ -72,11 +75,23 @@ void cs::World::Start()
 		Camera::CalculatePerspective(*mainCamera);
 		break;
 	}
+
+	auto _physicsEntities{ registry.view<PhysicsComponent>() };
+	for (auto e : _physicsEntities)
+	{
+		auto& _pc{ registry.get<PhysicsComponent>(e) };
+		_pc.QueueForCreation();
+	}
 }
 
 void cs::World::Stop()
 {
-
+	auto _physicsEntities{ registry.view<PhysicsComponent>() };
+	for (auto e : _physicsEntities)
+	{
+		auto& _pc{ registry.get<PhysicsComponent>(e) };
+		
+	}
 }
 
 void cs::World::Step()
@@ -123,13 +138,13 @@ void cs::World::StepEngine()
 
 	physicsSystem->UpdateWorld();
 
-	auto _physicsEntities{ registry.view<PhysicsComponent, TransformComponent>() };
+	/*auto _physicsEntities{ registry.view<PhysicsComponent, TransformComponent>() };
 	for (auto e : _physicsEntities)
 	{
 		auto& _pc(registry.get<PhysicsComponent>(e));
 		auto& _tc(registry.get<TransformComponent>(e));
 		physicsSystem->UpdatePositions(_pc, _tc);
-	}
+	}*/
 
 	auto _renderableObjects{ registry.view<MeshRendererComponent, TransformComponent>() };
 	for (auto e : _renderableObjects)

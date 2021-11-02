@@ -193,5 +193,7 @@ const bool& cs::editor::ImGuiLayer::IsInteractingWithWindow() const
 
 void cs::editor::ImGuiLayer::IsWindowHovered()
 {
-    isWindowActive |= ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+    isWindowActive |= ImGui::IsWindowHovered(
+        ImGuiHoveredFlags_AllowWhenBlockedByActiveItem |
+		ImGuiHoveredFlags_RootAndChildWindows);
 }

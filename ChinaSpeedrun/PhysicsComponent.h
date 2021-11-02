@@ -12,6 +12,7 @@ namespace cs
 	struct PhysicsDelta
 	{
 	public:
+		// These can be removed
 		Vector2 positionDifference;
 		float angleDifference;
 		void Step(const Vector2& newPosition, float newAngle);
@@ -32,6 +33,7 @@ namespace cs
 		
 		void QueueForUpdate();
 		void QueueForCreation();
+		void QueueForDeletion();
 
 		void UpdateFixture();
 

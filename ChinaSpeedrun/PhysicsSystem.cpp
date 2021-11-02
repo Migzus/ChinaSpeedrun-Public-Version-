@@ -36,33 +36,13 @@ void cs::PhysicsSystem::UpdateComponents()
 	 * Updating components this way probably causes cache misses.
 	 * Though this is the exception not the norm, so it should be fine.
 	 */
-	for (auto c : componentToUpdate)
-	{
-		c->body->SetGravityScale(c->definition.gravityScale);
-		c->body->SetLinearVelocity(c->definition.linearVelocity);
-		c->body->SetAngularVelocity(c->definition.angularVelocity);
-		c->body->SetAwake(c->definition.awake);
-	}
+	for (auto pc : componentToUpdate)
+		UpdateBody(pc);
 
 	componentToUpdate.clear();
 
-	for (auto c : componentToCreate)
-	{
-		auto& _tc(c->gameObject->GetComponentConst<TransformComponent>());
-		Vector2 _position(_tc.position);
-		float _angle(_tc.rotation.x);
-		c->definition.angle = _angle;
-		c->definition.position = { _position.x, _position.y };
-		c->delta.Teleport(_position, _angle);
-
-		if (c->body)
-			world->DestroyBody(c->body);
-
-		c->body = world->CreateBody(&c->definition);
-
-		if (c->shape.shape)
-			c->UpdateFixture();
-	}
+	for (auto pc : componentToCreate)
+		CreateBody(pc);
 
 	componentToCreate.clear();
 }
@@ -80,4 +60,37 @@ void cs::PhysicsSystem::QueueComponentUpdate(PhysicsComponent* pc)
 void cs::PhysicsSystem::QueueComponentCreate(PhysicsComponent* pc)
 {
 	componentToCreate.push_back(pc);
+}
+
+void cs::PhysicsSystem::UpdateBody(PhysicsComponent* pc)
+{
+	pc->body->SetGravityScale(pc->definition.gravityScale);
+	pc->body->SetLinearVelocity(pc->definition.linearVelocity);
+	pc->body->SetAngularVelocity(pc->definition.angularVelocity);
+	pc->body->SetAwake(pc->definition.awake);
+}
+
+void cs::PhysicsSystem::CreateBody(PhysicsComponent* pc)
+{
+	auto& _tc(pc->gameObject->GetComponentConst<TransformComponent>());
+	Vector2 _position(_tc.position);
+	float _angle(_tc.rotation.x);
+	pc->definition.angle = _angle;
+	pc->definition.position = { _position.x, _position.y };
+	pc->delta.Teleport(_position, _angle);
+
+	DestroyBody(pc);
+	pc->body = world->CreateBody(&pc->definition);
+
+	if (pc->shape.shape)
+		pc->UpdateFixture();
+}
+
+void cs::PhysicsSystem::DestroyBody(PhysicsComponent* pc)
+{
+	if (pc->body)
+	{
+		world->DestroyBody(pc->body);
+		pc->body = nullptr;
+	}
 }

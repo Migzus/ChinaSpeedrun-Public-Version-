@@ -86,21 +86,30 @@ void cs::ChinaEngine::EngineInit()
 	const uint16_t width{ 2 }, length{ 2 }, height{ 2 };
 	Mesh* _sphereModel{ ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj") };
 
-	for (size_t x{ 0 }; x < width; x++)
-	{
-		for (size_t y{ 0 }; y < height; y++)
-		{
-			for (size_t z{ 0 }; z < length; z++)
-			{
-				const char _name[]{ x + 48, ',', ' ', y + 48, ',', ' ', z + 48, '\000' };
-				GameObject* _object{ world.InstanceObject(_name, Vector3((float)x, (float)y, (float)z) * 2.0f) };
+	//for (size_t x{ 0 }; x < width; x++)
+	//{
+	//	for (size_t y{ 0 }; y < height; y++)
+	//	{
+	//		for (size_t z{ 0 }; z < length; z++)
+	//		{
+	//			const char _name[]{ x + 48, ',', ' ', y + 48, ',', ' ', z + 48, '\000' };
+	//			GameObject* _object{ world.InstanceObject(_name, Vector3((float)x, (float)y, (float)z) * 2.0f) };
 
-				MeshRendererComponent& _terrainMesh{ _object->AddComponent<MeshRendererComponent>() };
-				_terrainMesh.mesh = _sphereModel;
-				_terrainMesh.materials.push_back(_material1);
-			}
-		}
-	}
+	//			MeshRendererComponent& _terrainMesh{ _object->AddComponent<MeshRendererComponent>() };
+	//			_terrainMesh.mesh = _sphereModel;
+	//			_terrainMesh.materials.push_back(_material1);
+	//		}
+	//	}
+	//}
+
+	GameObject* _ball{ world.InstanceObject("Ball", Vector3(0.0f, 0.0f, -10.f), Vector3(0.f, -135.f, 0.f))};
+	auto& _ballMesh = _ball->AddComponent<MeshRendererComponent>();
+	_ballMesh.mesh = ResourceManager::Load<Mesh>("../Resources/models/icosphere.obj");
+	_ballMesh.materials.push_back(_material1);
+	_ball->AddComponent<PhysicsComponent>();
+
+	GameObject* _camera{ world.InstanceObject("Camera", Vector3(0.f)) };
+	_camera->AddComponent<CameraComponent>();
 
 	/*GameObject* _terrain{ world.InstanceObject("Terrain", Vector3(0.0f, -6.0f, 0.0f)) };
 	GameObject* _suzanne{ world.InstanceObject("Suzanne", Vector3(0.0f, 10.0f, 4.0f)) }; // Vector3(-7.0f, 5.0f, -6.2f) // -1.0f, 10.0f, 6.0f
