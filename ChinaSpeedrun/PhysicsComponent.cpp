@@ -32,7 +32,6 @@ cs::PhysicsDelta::PhysicsDelta() : positionDifference({0.f}), angleDifference(0.
 
 cs::PhysicsComponent::PhysicsComponent() : body(nullptr)
 {
-	definition.awake = false;
 	definition.type = b2_staticBody;
 }
 
@@ -77,20 +76,25 @@ void cs::PhysicsComponent::ImGuiDrawComponent()
 		switch (shape.GetType())
 		{
 			case CollisionShape::Type::Circle:
-				ImGui::TreeNodeEx("Circle Shape", ImGuiTreeNodeFlags_DefaultOpen);
-				ImGui::DragFloat("Radius", &shape.shape->m_radius, dragSpeed, -1000.f, 1000.f);
-				ImGui::TreePop();
+				if (ImGui::TreeNodeEx("Circle Shape", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					ImGui::DragFloat("Radius", &shape.shape->m_radius, dragSpeed, -1000.f, 1000.f);
+					ImGui::TreePop();
+				}
 				break;
 
 			case CollisionShape::Type::Rectangle:
-				ImGui::TreeNodeEx("Rectangle Shape", ImGuiTreeNodeFlags_DefaultOpen);
-				auto* _rectangle(reinterpret_cast<b2BoxShape*>(shape.shape));
-				b2Vec2 _extents(_rectangle->GetExtents());
-				if (ImGui::DragFloat2("Extents", &_extents.x, dragSpeed, -1000.f, 1000.f))
+				if (ImGui::TreeNodeEx("Rectangle Shape", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					_rectangle->SetExtents(_extents);
+					auto* _rectangle(reinterpret_cast<b2BoxShape*>(shape.shape));
+					b2Vec2 _extents(_rectangle->GetExtents());
+					if (ImGui::DragFloat2("Extents", &_extents.x, dragSpeed, -1000.f, 1000.f))
+					{
+						_rectangle->SetExtents(_extents);
+					}
+					ImGui::TreePop();
 				}
-				ImGui::TreePop();
+				
 				break;
 		}
 
@@ -113,12 +117,43 @@ void cs::PhysicsComponent::QueueForCreation()
 	PhysicsLocator::GetPhysicsSystem()->QueueComponentCreate(this);
 }
 
-void cs::PhysicsComponent::QueueForDeletion()
+void cs::PhysicsComponent::UpdateFixtures()
 {
+	DeleteFixtures();
+
+	if (shape.shape)
+	{
+		body->CreateFixture(shape.shape, 1.f);
+	}
+	else
+	{
+		const b2FixtureDef _fDef(CreateDefaultFixtureDefinition());
+		body->CreateFixture(&_fDef);
+	}
 }
 
-void cs::PhysicsComponent::UpdateFixture()
+void cs::PhysicsComponent::DeleteFixtures()
 {
-	body->DestroyFixture(&body->GetFixtureList()[0]);
-	body->CreateFixture(shape.shape, 1.f);
+	auto _fixtureList = body->GetFixtureList();
+	while (_fixtureList)
+	{
+		body->DestroyFixture(_fixtureList);
+		_fixtureList++;
+	}
+}
+
+b2Shape* cs::PhysicsComponent::CreateDefaultShape() const
+{
+	auto _boxShape(new b2BoxShape);
+	_boxShape->SetExtents({ 1.0f, 1.0f });
+	return reinterpret_cast<b2Shape*>(_boxShape);
+}
+
+b2FixtureDef cs::PhysicsComponent::CreateDefaultFixtureDefinition() const
+{
+	b2FixtureDef _fDef;
+	_fDef.shape = CreateDefaultShape();
+	_fDef.density = 1.f;
+	_fDef.isSensor = true;
+	return _fDef;
 }

@@ -30,12 +30,17 @@ namespace cs
 		b2Body* body;
 		PhysicsDelta delta;
 		CollisionShape shape;
-		
+
+		/*
+		 * These might be obsolete once scripting is implemented
+		 */
 		void QueueForUpdate();
 		void QueueForCreation();
-		void QueueForDeletion();
 
-		void UpdateFixture();
+		void UpdateFixtures();
+		void DeleteFixtures();
+		b2Shape* CreateDefaultShape() const;
+		b2FixtureDef CreateDefaultFixtureDefinition() const;
 
 		PhysicsComponent();
 		~PhysicsComponent();

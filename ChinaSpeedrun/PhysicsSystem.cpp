@@ -81,9 +81,7 @@ void cs::PhysicsSystem::CreateBody(PhysicsComponent* pc)
 
 	DestroyBody(pc);
 	pc->body = world->CreateBody(&pc->definition);
-
-	if (pc->shape.shape)
-		pc->UpdateFixture();
+	pc->UpdateFixtures();
 }
 
 void cs::PhysicsSystem::DestroyBody(PhysicsComponent* pc)

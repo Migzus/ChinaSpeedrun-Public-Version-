@@ -80,7 +80,7 @@ void cs::World::Start()
 	for (auto e : _physicsEntities)
 	{
 		auto& _pc{ registry.get<PhysicsComponent>(e) };
-		_pc.QueueForCreation();
+		physicsSystem->CreateBody(&_pc);
 	}
 }
 
@@ -90,7 +90,7 @@ void cs::World::Stop()
 	for (auto e : _physicsEntities)
 	{
 		auto& _pc{ registry.get<PhysicsComponent>(e) };
-		
+		physicsSystem->DestroyBody(&_pc);
 	}
 }
 
@@ -138,20 +138,19 @@ void cs::World::StepEngine()
 
 	physicsSystem->UpdateWorld();
 
-	/*auto _physicsEntities{ registry.view<PhysicsComponent, TransformComponent>() };
+	auto _physicsEntities{ registry.view<PhysicsComponent, TransformComponent>() };
 	for (auto e : _physicsEntities)
 	{
 		auto& _pc(registry.get<PhysicsComponent>(e));
 		auto& _tc(registry.get<TransformComponent>(e));
 		physicsSystem->UpdatePositions(_pc, _tc);
-	}*/
+	}
 
 	auto _renderableObjects{ registry.view<MeshRendererComponent, TransformComponent>() };
 	for (auto e : _renderableObjects)
 	{
 		auto& _transform{ registry.get<TransformComponent>(e) };
 		auto& _meshRenderer{ registry.get<MeshRendererComponent>(e) };
-
 		MeshRenderer::UpdateUBO(_meshRenderer, _transform, *World::mainCamera);
 	}
 }
