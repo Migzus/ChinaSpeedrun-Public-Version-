@@ -40,7 +40,7 @@ namespace cs
 	inline void ConnectionPair::Activate(const Any ...rest)
 	{
 #ifdef CHAIKA_EDITOR
-		Debug::LogIssue("[WARNING] : Function references do not match the targeted function!");
+		Debug::LogIssue("Function references do not match the targeted function!");
 		return;
 #endif // CHAIKA_EDITOR
 

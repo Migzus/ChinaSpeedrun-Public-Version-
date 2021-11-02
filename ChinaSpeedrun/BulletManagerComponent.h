@@ -3,8 +3,10 @@
 #include "Color.h"
 #include "Mathf.h"
 
+#include "RenderComponent.h"
+
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 namespace cs
 {
@@ -78,7 +80,7 @@ namespace cs
 	};
 
 	// The manager, does what the name says
-	class BulletManagerComponent
+	class BulletManagerComponent : public RenderComponent
 	{
 	public:
 		uint64_t bulletCapacity;
@@ -86,8 +88,8 @@ namespace cs
 
 		void CreateSystem();
 
-		void SpawnCircle(BulletInfo* info, const uint16_t bulletCount, const float radius = 0.0f, const float overrideSpacing = -1.0f);
-		Bullet* SpawnBullet(const BulletInfo* info);
+		void SpawnCircle(BulletInfo& info, const uint16_t bulletCount, const float radius = 0.0f, const float overrideSpacing = -1.0f);
+		Bullet* SpawnBullet(const BulletInfo& info);
 		void DespawnBullet(const uint64_t index);
 		void DespawnBullet(Bullet* bullet);
 

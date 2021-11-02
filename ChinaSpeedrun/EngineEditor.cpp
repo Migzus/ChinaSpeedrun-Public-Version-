@@ -1,10 +1,21 @@
 #include "Editor.h"
 
+#include "imgui.h"
+#include "ImGuizmo.h"
 #include "ChinaEngine.h"
 #include "World.h"
+#include "Input.h"
+#include "Camera.h"
 
-cs::editor::EngineEditor::Playmode cs::editor::EngineEditor::mode;
-cs::editor::EditorCamera* cs::editor::EngineEditor::editorCamera;
+const ImGuizmo::OPERATION& cs::editor::EngineEditor::GetOperationState()
+{
+	return operation;
+}
+
+const ImGuizmo::MODE& cs::editor::EngineEditor::GetMode()
+{
+	return operationMode;
+}
 
 const cs::editor::EngineEditor::Playmode& cs::editor::EngineEditor::GetPlaymodeState()
 {
@@ -15,23 +26,89 @@ void cs::editor::EngineEditor::SetPlaymode(const Playmode newPlaymode)
 {
 	mode = newPlaymode;
 
-	ChinaEngine::world.Start();
+	switch (mode)
+	{
+	case cs::editor::EngineEditor::Playmode::EDITOR:
+		ChinaEngine::world.mainCamera = editorCamera;
+		ChinaEngine::world.Stop();
+		break;
+	case cs::editor::EngineEditor::Playmode::PLAY:
+		ChinaEngine::world.Start();
+		break;
+	case cs::editor::EngineEditor::Playmode::PAUSE:
+		ChinaEngine::world.Stop();
+		break;
+	}
 }
 
 void cs::editor::EngineEditor::Start()
 {
+	Input::AddMapping("editor_forward", GLFW_KEY_W);
+	Input::AddMapping("editor_backward", GLFW_KEY_S);
+	Input::AddMapping("editor_left", GLFW_KEY_A);
+	Input::AddMapping("editor_right", GLFW_KEY_D);
+	Input::AddMapping("editor_up", GLFW_KEY_Q);
+	Input::AddMapping("editor_down", GLFW_KEY_E);
 
+	Input::AddMapping("editor_translate", GLFW_KEY_W);
+	Input::AddMapping("editor_rotate", GLFW_KEY_E);
+	Input::AddMapping("editor_scale", GLFW_KEY_R);
+	Input::AddMapping("editor_mode_switch", GLFW_KEY_LEFT_CONTROL);
+	Input::AddMapping("editor_snap", GLFW_KEY_LEFT_SHIFT);
+
+	editorCamera = new EditorCamera(this);
+	Camera::CalculatePerspective(*editorCamera);
+
+	uiLayer = new ImGuiLayer(this);
+
+	SetPlaymode(Playmode::EDITOR);
+	operation = ImGuizmo::TRANSLATE;
+	operationMode = ImGuizmo::LOCAL;
 }
 
 void cs::editor::EngineEditor::Update()
 {
+	if (Input::GetActionPressed("editor_mode_switch"))
+		operationMode = operationMode == ImGuizmo::WORLD ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
+
+	// by moving the ui layer (editor ui) here, we have more control over when things are executed
+	uiLayer->Begin();
+	uiLayer->Step();
+
 	if (mode == Playmode::EDITOR)
 	{
 		editorCamera->Update();
+
+		if (!Input::GetMouseHeld(1))
+		{
+			if (Input::GetActionPressed("editor_translate"))
+				operation = ImGuizmo::TRANSLATE;
+			else if (Input::GetActionPressed("editor_rotate"))
+				operation = ImGuizmo::ROTATE;
+			else if (Input::GetActionPressed("editor_scale"))
+				operation = ImGuizmo::SCALE;
+		}
 	}
+
+	uiLayer->End();
 }
 
 void cs::editor::EngineEditor::Exit()
 {
+	// might be useful to remove mappings when disableing the editor
+	Input::RemoveMapping("editor_forward", GLFW_KEY_W);
+	Input::RemoveMapping("editor_backward", GLFW_KEY_S);
+	Input::RemoveMapping("editor_left", GLFW_KEY_A);
+	Input::RemoveMapping("editor_right", GLFW_KEY_D);
+	Input::RemoveMapping("editor_up", GLFW_KEY_Q);
+	Input::RemoveMapping("editor_down", GLFW_KEY_E);
 
+	Input::RemoveMapping("editor_translate", GLFW_KEY_W);
+	Input::RemoveMapping("editor_rotate", GLFW_KEY_E);
+	Input::RemoveMapping("editor_scale", GLFW_KEY_R);
+	Input::RemoveMapping("editor_mode_switch", GLFW_KEY_LEFT_CONTROL);
+	Input::RemoveMapping("editor_snap", GLFW_KEY_LEFT_SHIFT);
+
+	delete editorCamera;
+	delete uiLayer;
 }

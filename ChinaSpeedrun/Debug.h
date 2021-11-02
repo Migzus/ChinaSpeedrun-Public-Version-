@@ -1,7 +1,11 @@
 #pragma once
 
+#include <sstream>
 #include <iostream>
 #include <string>
+#include <deque>
+
+#include "Color.h"
 
 namespace cs
 {
@@ -17,13 +21,13 @@ namespace cs
 	class Debug
 	{
 	public:
-		enum class Status
+		struct DebugMessage
 		{
-			NONE,
-			PING,
-			NOTICE,
-			LETHAL
+			Color color;
+			std::string message;
 		};
+
+		constexpr static uint8_t messageCapacity{ 10 };
 
 		// Log, here you may log anything.
 		template<class ...Params>
@@ -43,13 +47,25 @@ namespace cs
 		// Calling this will prevent your game from running, calling it in-game will stop the game.
 		template<class ...Params>
 		static void LogError(Params&&...message);
+		// Log Validation layers
+		template<class ...Params>
+		static void LogValidationLayer(Params&&...message);
 		// Calling this closes the engine, potentially preventing damage.
 		// It will also write a log file to the logs folder. (hehe not really...)
 		template<class ...Params>
 		static void LogFail(Params&&...message);
-		// Send your own custom message
-		//template<class ...Params>
-		//static void LogCustom(std::string message, class Texture* texture, class Color color, Status status, Params...all);
+
+		static void ImGuiDrawMessages();
+
+		template<typename T, class ...Targs>
+		static std::string GetStringFromParameterPack(T& first, Targs&& ...rest);
+
+	private:
+		template<typename T>
+		static std::string GetStringFromParameterPack(T& last);
+
+		static void QueueMessage(Color color, std::string message);
+		static std::deque<DebugMessage> messages;
 	};
 	
 	template<class ...Params>
@@ -58,6 +74,8 @@ namespace cs
 		std::cout << iocolors::WHITE << "[LOG]\t\t" << iocolors::WHITE << ": ";
 		((std::cout << std::forward<Params>(message)), ...);
 		std::cout << '\n';
+
+		QueueMessage(Color::white, GetStringFromParameterPack(message...));
 	}
 	
 	template<class ...Params>
@@ -66,6 +84,8 @@ namespace cs
 		std::cout << iocolors::CYAN << "[INFO]\t\t" << iocolors::WHITE << ": ";
 		((std::cout << std::forward<Params>(message)), ...);
 		std::cout << '\n';
+
+		QueueMessage(Color::cyan, GetStringFromParameterPack(message...));
 	}
 	
 	template<class ...Params>
@@ -74,6 +94,8 @@ namespace cs
 		std::cout << iocolors::GREEN << "[SUCCESS]\t" << iocolors::WHITE << ": ";
 		((std::cout << std::forward<Params>(message)), ...);
 		std::cout << '\n';
+
+		QueueMessage(Color::lime, GetStringFromParameterPack(message...));
 	}
 	
 	template<class ...Params>
@@ -82,6 +104,8 @@ namespace cs
 		std::cout << iocolors::LIGHT_YELLOW << "[WARNING]\t" << iocolors::WHITE << ": ";
 		((std::cout << std::forward<Params>(message)), ...);
 		std::cout << '\n';
+		
+		QueueMessage(Color::yellow, GetStringFromParameterPack(message...));
 	}
 	
 	template<class ...Params>
@@ -90,12 +114,24 @@ namespace cs
 		std::cout << iocolors::RED << "[ISSUE]\t\t" << iocolors::WHITE << ": ";
 		((std::cout << std::forward<Params>(message)), ...);
 		std::cout << '\n';
+
+		QueueMessage(Color::orange, GetStringFromParameterPack(message...));
 	}
 	
 	template<class ...Params>
 	inline void Debug::LogError(Params&&...message)
 	{
 		std::cout << iocolors::RED << "[ERROR]\t\t" << iocolors::WHITE << ": ";
+		((std::cout << std::forward<Params>(message)), ...);
+		std::cout << '\n';
+
+		QueueMessage(Color::red, GetStringFromParameterPack(message...));
+	}
+
+	template<class ...Params>
+	inline void Debug::LogValidationLayer(Params && ...message)
+	{
+		std::cout << iocolors::RED << "[VALIDATION LAYERS] " << iocolors::WHITE << ": ";
 		((std::cout << std::forward<Params>(message)), ...);
 		std::cout << '\n';
 	}
@@ -106,5 +142,21 @@ namespace cs
 		std::cout << iocolors::RED << "[FAIL]\t\t" << iocolors::WHITE << ": ";
 		((std::cout << std::forward<Params>(message)), ...);
 		throw std::runtime_error("\n--- TERMINATED ---------------------------------------------\n");
+	}
+	
+	template<typename T, class ...Targs>
+	inline std::string Debug::GetStringFromParameterPack(T& first, Targs && ...rest)
+	{
+		std::ostringstream oss;
+		oss << first;
+		return oss.str() + GetStringFromParameterPack(rest...);
+	}
+
+	template<typename T>
+	inline std::string Debug::GetStringFromParameterPack(T& last)
+	{
+		std::ostringstream oss;
+		oss << last;
+		return oss.str();
 	}
 }

@@ -12,6 +12,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <glm/gtx/quaternion.hpp>
+
 typedef glm::vec1 Vector1;
 typedef glm::vec2 Vector2;
 typedef glm::vec3 Vector3;
@@ -22,20 +24,26 @@ typedef glm::mat4 Matrix4x4;
 
 typedef glm::quat Quaternion;
 
-/*
-namespace glm
-{
-	constexpr static Vector3 up{ Vector3(0.0f, 1.0f, 0.0f) };
-}*/
-
 namespace cs
 {
+	struct OBB
+	{
+		Vector3 minExtent{ Vector3(-0.8f) }, maxExtent{ Vector3(0.8f) };
+	};
+
 	class Mathf
 	{
 	public:
+		constexpr static float PI_2{ (float)M_PI_2 };
 		constexpr static float PI{ (float)M_PI };
 		constexpr static float TAU{ (float)M_PI * 2.0f };
+		constexpr static float E{ (float)M_E };
+		constexpr static float DEG2RAD{ (float)PI / 180.0f };
+		constexpr static float RAD2DEG{ (float)180.0f / PI };
 
+		static void InitRand();
+		static int Rand();
+		static float RandRange(const float min, const float max);
 		// Clamps the value within the specified range
 		static void Clamp(float& value, float min, float max);
 		// Clamps the value back to the other end of the specified range, pluss excess value is returned
@@ -45,5 +53,7 @@ namespace cs
 		static float Magnitude(const Vector3 vec);
 		static Vector3 CrossProduct(const Vector3 vec1, const Vector3 vec2);
 		static float DotProduct(const Vector3 vec1, const Vector3 vec2);
+
+		static void DecomposeMatrix(const Matrix4x4& transform, Vector3& position, Vector3& rotation, Vector3& scale);
 	};
 }

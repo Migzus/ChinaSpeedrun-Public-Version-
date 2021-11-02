@@ -1,12 +1,24 @@
 #pragma once
 
+namespace ImGuizmo
+{
+	enum OPERATION;
+	enum MODE;
+}
+
 namespace cs
 {
 	namespace editor
 	{
+		class EditorCamera;
+		class ImGuiLayer;
+
 		class EngineEditor
 		{
 		public:
+			friend EditorCamera;
+			friend ImGuiLayer;
+
 			enum class Playmode
 			{
 				EDITOR,
@@ -14,16 +26,21 @@ namespace cs
 				PAUSE
 			};
 
-			static const Playmode& GetPlaymodeState();
-			static void SetPlaymode(const Playmode newPlaymode);
+			const ImGuizmo::OPERATION& GetOperationState();
+			const ImGuizmo::MODE& GetMode();
+			const Playmode& GetPlaymodeState();
+			void SetPlaymode(const Playmode newPlaymode);
 
-			static void Start();
-			static void Update();
-			static void Exit();
+			void Start();
+			void Update();
+			void Exit();
 
 		private:
-			static Playmode mode;
-			static class EditorCamera* editorCamera;
+			ImGuizmo::OPERATION operation;
+			ImGuizmo::MODE operationMode;
+			Playmode mode;
+			ImGuiLayer* uiLayer;
+			EditorCamera* editorCamera;
 		};
 	}
 }

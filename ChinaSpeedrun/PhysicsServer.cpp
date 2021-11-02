@@ -11,6 +11,22 @@
 
 #include "Debug.h"
 
+cs::RaycastHit cs::PhysicsServer::Raycast(const Vector3 origin, const Vector3 direction, const float distance, const OBB& obb, const Matrix4x4& matrix)
+{
+	RaycastHit _hit{};
+	
+	float _minDistance{ 0.0f }, _maxDistance{ distance };
+	const Vector3 _delta{ Vector3(matrix[3]) - origin }, _xAxis{ matrix[0] }, _yAxis{ matrix[1] }, _zAxis{ matrix[2] };
+	bool _xTest{ TestRayAgainstAxis(_xAxis, _delta, direction, _minDistance, _maxDistance, obb.minExtent.x, obb.maxExtent.x) };
+	bool _yTest{ TestRayAgainstAxis(_yAxis, _delta, direction, _minDistance, _maxDistance, obb.minExtent.y, obb.maxExtent.y) };
+	bool _zTest{ TestRayAgainstAxis(_zAxis, _delta, direction, _minDistance, _maxDistance, obb.minExtent.z, obb.maxExtent.z) };
+	
+	_hit.valid = _xTest && _yTest && _zTest;
+	_hit.distance = _minDistance * _hit.valid; // if we didn't hit anything, the distance is 0
+
+	return _hit;
+}
+
 void cs::PhysicsServer::Step()
 {
 	Test();
@@ -76,6 +92,41 @@ void cs::PhysicsServer::Solve()
 	collisionQueue.clear();
 }
 
+bool cs::PhysicsServer::TestRayAgainstAxis(const Vector3 axis, const Vector3& delta, const Vector3& direction, float& minDistance, float& maxDistance, const float& obbMin, const float& obbMax)
+{
+	float _e{ Mathf::DotProduct(axis, delta) }, _f{ Mathf::DotProduct(direction, axis) };
+
+	float _t1{ 0.0f };
+	float _t2{ 0.0f };
+
+	if (_f != 0.0f)
+	{
+		_t1 = (_e + obbMin) / _f;
+		_t2 = (_e + obbMax) / _f;
+	}
+	else
+		return -_e + obbMin > 0.0f || -_e + obbMax < 0.0f;
+
+	// swap if t1 is larger than t2
+	if (_t1 > _t2)
+	{
+		float _w{ _t1 };
+		_t1 = _t2;
+		_t2 = _w;
+	}
+
+	//if (_t2 < maxDistance)
+	//	maxDistance = _t2;
+
+	//if (_t1 > minDistance)
+	//	minDistance = _t1;
+
+	minDistance = _t1 * (_t1 > minDistance) + minDistance * (_t1 <= minDistance);
+	maxDistance = _t2 * (_t2 < maxDistance) + maxDistance * (_t2 >= maxDistance);
+
+	return minDistance <= maxDistance;
+}
+
 cs::CollisionInfo cs::collision_tests::SphereSphereIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const SphereColliderComponent* oc)
 {
 	CollisionInfo _info{};
@@ -95,12 +146,13 @@ cs::CollisionInfo cs::collision_tests::SpherePolygonIntersection(const Transform
 {
 	CollisionInfo _info{};
 
+	// currently only supports convex shapes (will hopefully support concave shapes in the future)
 	for (auto& plane : oc->GetPlanes())
 	{
 		_info.normal = plane.normal;
 		_info.a = c->radius * _info.normal + t->position;
 		_info.errorLength = Mathf::Project(_info.a, plane) - c->radius;
-		_info.valid = _info.errorLength <= 0.0f;
+		_info.valid = _info.valid && _info.errorLength <= 0.0f;
 	}
 
 	return _info;

@@ -1,6 +1,5 @@
 #include "Transform.h"
 
-#include <glm/gtx/quaternion.hpp>
 #include "imgui.h"
 
 void cs::Transform::DrawComponent()
@@ -26,32 +25,6 @@ cs::TransformComponent::operator Matrix4x4& ()
 
 void cs::TransformComponent::ImGuiDrawComponent()
 {
-	/*
-	Matrix4x4 _viewMatrix{ glm::inverse(Camera::GetViewMatrix(*CameraComponent::currentActiveCamera)) }, _projectionMatrix{ Camera::GetProjectionMatrix(*CameraComponent::currentActiveCamera) }, _identityMatrix{ Matrix4x4(1.0f) };
-
-	ImGuizmo::SetOrthographic(false);
-	ImGuizmo::SetDrawlist();
-
-	int _width, _height;
-	renderer.GetViewportSize(_width, _height);
-
-	ImGuizmo::SetRect(0.0f, 0.0f, static_cast<float>(_width), static_cast<float>(_height));
-	ImGuizmo::DrawGrid(glm::value_ptr(_viewMatrix), glm::value_ptr(_projectionMatrix), glm::value_ptr(_identityMatrix), 100.0f);
-
-	---------------------------------------------------------------------
-	
-	TransformComponent& _transform{ _activeObject->GetComponent<TransformComponent>() };
-				Matrix4x4 _mainMatrix{ _transform };
-
-				ImGuizmo::Manipulate(glm::value_ptr(_viewMatrix), glm::value_ptr(_projectionMatrix),
-					ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(_mainMatrix));
-				
-				if (ImGuizmo::IsUsing())
-				{
-					_transform.position = _mainMatrix[3];
-				}
-	*/
-
 	if (ImGui::TreeNodeEx("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::DragFloat3("Position", &position.x, 0.1f);

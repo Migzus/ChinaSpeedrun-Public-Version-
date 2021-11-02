@@ -10,13 +10,14 @@ namespace cs
 	class ChinaEngine
 	{
 	public:
-		static class EngineEditor editor;
-		static class ImGuiLayer imGuiLayer;
+		static editor::EngineEditor editor;
 		static class World world;
 		static class VulkanEngineRenderer renderer;
 
 		static void Run();
 		static float AspectRatio();
+
+		static void FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight);
 
 	private:
 		static void EngineInit();

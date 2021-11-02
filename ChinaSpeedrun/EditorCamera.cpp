@@ -1,15 +1,81 @@
-#include "EditorCamera.h"
-
-#include <GLFW/glfw3.h>
-#include <glm/gtx/quaternion.hpp>
+#include "Editor.h"
 
 #include "Time.h"
+#include "Input.h"
+#include "Debug.h"
+
+#include "World.h"
+#include "PhysicsServer.h"
+#include "ChinaEngine.h"
+#include "Transform.h"
+#include "GameObject.h"
+
+cs::editor::EditorCamera::EditorCamera(EngineEditor* root) :
+	editorRoot{ root }, position{ Vector3(0.0f) }, rotation{ Vector3(0.0f) }, movementsSpeed{ 10.0f }, rotationSpeed{ 0.002f }
+{}
 
 void cs::editor::EditorCamera::Update()
 {
-	Mathf::Clamp(rotation.y, -179.9f, 179.9f);
-	Matrix4x4 _rotation{ glm::toMat4(Quaternion(rotation)) };
-	
-	//position += glm::translate(_rotation, Vector3(1.0f, 0.0f, 0.0f) * Time::deltaTime);
-	view = glm::translate(Matrix4x4(1.0f), position) * _rotation;
+	if (Input::GetMouseHeld(1))
+	{
+		ScrollAdjustmentSpeed();
+		RotateCamera();
+		Movement();
+	}
+
+	if (Input::GetMousePressed(0) && !editorRoot->uiLayer->IsManipulating() && !editorRoot->uiLayer->IsInteractingWithWindow())
+		SelectTest();
+}
+
+void cs::editor::EditorCamera::RotateCamera()
+{
+	rotation.y -= Input::mouseMovement.x * rotationSpeed;
+	rotation.x -= Input::mouseMovement.y * rotationSpeed;
+
+	Mathf::Clamp(rotation.x, -Mathf::PI_2, Mathf::PI_2);
+}
+
+void cs::editor::EditorCamera::Movement()
+{
+	Vector3 _moveInput{ Vector3(
+			Input::GetActionHeld("editor_right") - Input::GetActionHeld("editor_left"),
+			Input::GetActionHeld("editor_up") - Input::GetActionHeld("editor_down"),
+			Input::GetActionHeld("editor_backward") - Input::GetActionHeld("editor_forward")) };
+	Vector4 _moveDirection{ glm::toMat4(Quaternion(rotation)) * Vector4(_moveInput, 1.0f) };
+
+	position += Vector3(_moveDirection.x, _moveDirection.y, _moveDirection.z) * movementsSpeed * Time::deltaTime;
+	view = glm::inverse(glm::translate(Matrix4x4(1.0f), position) * glm::toMat4(Quaternion(rotation)));
+}
+
+void cs::editor::EditorCamera::ScrollAdjustmentSpeed()
+{
+	movementsSpeed += Input::scrollOffset.y * 2.0f;
+	Mathf::Clamp(movementsSpeed, 1.0f, 60.0f);
+}
+
+void cs::editor::EditorCamera::SelectTest()
+{
+	Vector3 _mouseDirection{ World::MouseToWorldSpace() };
+	bool _objectHit{ false };
+
+	//_mouseDirection.z *= -1.0f;
+
+	auto _transformView{ ChinaEngine::world.GetRegistry().view<TransformComponent>() };
+	for (auto e : _transformView)
+	{
+		auto& _transformComponent{ ChinaEngine::world.GetRegistry().get<TransformComponent>(e) };
+		RaycastHit _hit{ PhysicsServer::Raycast(position, _mouseDirection, farPlane, _transformComponent.obb, Transform::GetMatrixTransform(_transformComponent)) };
+
+		if (_hit.valid)
+		{
+			Debug::Log("Clicked: ", _transformComponent.gameObject->name, " with a distance of: ", _hit.distance);
+
+			_objectHit = true;
+			editorRoot->uiLayer->activeObject = _transformComponent.gameObject;
+			break;
+		}
+	}
+
+	if (!_objectHit)
+		editorRoot->uiLayer->activeObject = nullptr;
 }

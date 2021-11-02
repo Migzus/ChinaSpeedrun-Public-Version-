@@ -15,10 +15,15 @@
 
 namespace cs
 {
+	namespace editor
+	{
+		class ImGuiLayer;
+	}
+
 	class GameObject
 	{
 	public:
-		friend class ImGuiLayer;
+		friend editor::ImGuiLayer;
 
 		std::string name;
 		bool active;

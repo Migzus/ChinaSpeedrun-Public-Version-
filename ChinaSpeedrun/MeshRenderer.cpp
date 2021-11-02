@@ -13,7 +13,7 @@ void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformC
 	meshRenderer.ubo.model = transform;
 }
 
-void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformComponent& transform, CameraComponent& camera)
+void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformComponent& transform, CameraBase& camera)
 {
 	meshRenderer.ubo.model = transform;
 	meshRenderer.ubo.proj = Camera::GetProjectionMatrix(camera);
@@ -26,7 +26,6 @@ void cs::MeshRenderer::VulkanDraw(MeshRendererComponent& meshRenderer, VkCommand
 	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, meshRenderer.mesh->indexBufferOffset, VK_INDEX_TYPE_UINT32);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &meshRenderer.descriptorSets[index], 0, nullptr);
 
-	// the current mesh index, with its indices goes down below
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(meshRenderer.mesh->GetIndices().size()), 1, 0, 0, 0);
 }
 
@@ -46,4 +45,9 @@ void cs::MeshRendererComponent::ImGuiDrawComponent()
 
 		ImGui::TreePop();
 	}
+}
+
+bool cs::MeshRendererComponent::IsRendererValid() const
+{
+	return RenderComponent::IsRendererValid() && mesh != nullptr && !materials.empty();
 }

@@ -18,3 +18,8 @@ void cs::RenderComponent::ImGuiDrawComponent()
 		ImGui::TreePop();
 	}
 }
+
+bool cs::RenderComponent::IsRendererValid() const
+{
+	return descriptorPool != nullptr && !descriptorSets.empty();
+}

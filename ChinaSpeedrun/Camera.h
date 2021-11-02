@@ -4,12 +4,16 @@
 
 namespace cs
 {
+	class CameraBase;
+
 	class Camera
 	{
 	public:
-		static const Matrix4x4& GetProjectionMatrix(class CameraComponent& camera);
-		static const Matrix4x4& GetViewMatrix(CameraComponent& camera);
-		static void UpdateCameraTransform(CameraComponent& camera, class TransformComponent& transform);
-		static void CalculatePerspective(CameraComponent& camera);
+		friend CameraBase;
+
+		static const Matrix4x4& GetProjectionMatrix(CameraBase& camera);
+		static const Matrix4x4& GetViewMatrix(CameraBase& camera);
+		static void UpdateCameraTransform(CameraBase& camera, class TransformComponent& transform);
+		static void CalculatePerspective(CameraBase& camera);
 	};
 }
