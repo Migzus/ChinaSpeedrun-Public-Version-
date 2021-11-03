@@ -18,7 +18,7 @@ public:
 	static Vector2 scrollOffset;
 
 	static void AddMapping(std::string name, int keycode);
-	static void RemoveMapping(std::string name, int keycode);
+	static void RemoveMapping(std::string name);
 	static void GlfwKeyfunCallback(GLFWwindow* window, int keycode, int scancode, int action, int mods);
 	static void GlfwCursorPosCallback(GLFWwindow* window, double x, double y);
 	static void GlfwScrollCallback(GLFWwindow* window, double offsetX, double offsetY);

@@ -1,11 +1,9 @@
 #include "Transform.h"
 
 #include "imgui.h"
-
-void cs::Transform::DrawComponent()
-{
-
-}
+#include "GameObject.h"
+#include "MeshRenderer.h"
+#include "Mesh.h"
 
 void cs::Transform::CalculateMatrix(TransformComponent& transform)
 {

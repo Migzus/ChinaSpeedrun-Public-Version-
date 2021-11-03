@@ -24,6 +24,8 @@ namespace cs
 		friend class MeshRenderer;
 		friend class VulkanEngineRenderer;
 
+		bool visible;
+
 		virtual void ImGuiDrawComponent() override;
 		virtual bool IsRendererValid() const;
 

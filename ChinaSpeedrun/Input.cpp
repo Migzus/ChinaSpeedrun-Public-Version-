@@ -37,21 +37,16 @@ void Input::AddMapping(std::string name, int keycode)
 		cs::Debug::LogInfo("This mapping name already exists.");
 }
 
-void Input::RemoveMapping(std::string name, int keycode)
+void Input::RemoveMapping(std::string name)
 {
-	return; // still doesn't actually work... (maybe because of some similar keys)
+	return;
 
 	auto _it{ mappings.find(name) };
 
 	if (_it != mappings.end())
 	{
-		Key* _keyref{ _it->second };
-
 		mappings.erase(name);
-		access.erase(keycode);
-		input.erase(std::find(input.begin(), input.end(), _keyref));
-
-		delete _keyref;
+		delete _it->second;
 	}
 	else
 		cs::Debug::LogInfo("Cannot delete a non existing key-bind.");
