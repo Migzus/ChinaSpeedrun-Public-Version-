@@ -14,14 +14,9 @@ void cs::AudioComponent::ImGuiDrawComponent()
 		ImGui::InputText("Sound Name", &buf[0], sizeof(buf));
 		soundName = buf;
 
-		if (ImGui::Button("Play"))
-			play = true;
-
+		ImGui::Checkbox("Play", &play);
 		ImGui::SameLine();
-
-		if (ImGui::Button("Stop"))
-			stop = true;
-
+		ImGui::Checkbox("Stop", &stop);
 		ImGui::SameLine();
 		ImGui::ProgressBar(time / duration);
 

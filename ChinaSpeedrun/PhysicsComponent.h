@@ -12,7 +12,7 @@ namespace cs
 	struct PhysicsDelta
 	{
 	public:
-		// These can be removed
+		// TODO: Replace these variables with functions
 		Vector2 positionDifference;
 		float angleDifference;
 		void Step(const Vector2& newPosition, float newAngle);
