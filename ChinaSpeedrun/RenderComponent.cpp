@@ -1,6 +1,8 @@
 #include "RenderComponent.h"
 
 #include "imgui.h"
+#include "ChinaEngine.h"
+#include "VulkanEngineRenderer.h"
 
 cs::UniformBufferObject::UniformBufferObject() :
 	model{ Matrix4x4(1.0f) }, view{ Matrix4x4(1.0f) }, proj{ Matrix4x4(1.0f) }
@@ -21,5 +23,21 @@ void cs::RenderComponent::ImGuiDrawComponent()
 
 bool cs::RenderComponent::IsRendererValid() const
 {
-	return descriptorPool != nullptr && !descriptorSets.empty();
+	return descriptorPool != nullptr && !descriptorSets.empty() && visible;
+}
+
+void cs::RenderComponent::VulkanDraw(VkCommandBuffer& commandBuffer, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer)
+{}
+
+void cs::RenderComponent::SetVisible(const bool status)
+{
+	if (status != visible)
+	{
+		visible = status;
+
+		if (visible)
+			ChinaEngine::renderer.AddToRenderQueue(this);
+		else
+			ChinaEngine::renderer.RemoveFromRenderQueue(this);
+	}
 }

@@ -48,7 +48,7 @@ void cs::GameObject::EditorDrawComponents()
 
 void cs::GameObject::GenerateOBBExtents()
 {
-	obb = { Vector3(-0.25f), Vector3(0.25f) };
+	obb = { Vector3(-1.0f), Vector3(1.0f) };
 	return;
 
 	// If we have a mesh, then we use that.
@@ -90,7 +90,9 @@ void cs::GameObject::GenerateOBBExtents()
 
 void cs::GameObject::ExitTree()
 {
+	RemoveAllComponents();
 
+	ChinaEngine::world.registry.destroy(entity);
 }
 
 void cs::GameObject::QueueFree()
@@ -105,5 +107,5 @@ cs::GameObject::~GameObject()
 
 void cs::GameObject::RemoveAllComponents()
 {
-
+	
 }

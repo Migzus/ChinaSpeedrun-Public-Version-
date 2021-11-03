@@ -7,6 +7,8 @@
 #include "World.h"
 #include "CameraComponent.h"
 #include "Camera.h"
+#include "Material.h"
+#include "Shader.h"
 
 void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformComponent& transform)
 {
@@ -20,19 +22,11 @@ void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformC
 	meshRenderer.ubo.view = Camera::GetViewMatrix(camera);
 }
 
-void cs::MeshRenderer::VulkanDraw(MeshRendererComponent& meshRenderer, VkCommandBuffer& commandBuffer, VkPipelineLayout& layout, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer)
-{
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &meshRenderer.mesh->vertexBufferOffset);
-	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, meshRenderer.mesh->indexBufferOffset, VK_INDEX_TYPE_UINT32);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &meshRenderer.descriptorSets[index], 0, nullptr);
-
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(meshRenderer.mesh->GetIndices().size()), 1, 0, 0, 0);
-}
-
 cs::MeshRendererComponent::MeshRendererComponent() :
 	mesh{ nullptr }
 {
 	ChinaEngine::renderer.SolveRenderer(this, Solve::ADD);
+	ChinaEngine::renderer.AddToRenderQueue(this);
 	// perhaps move this line to the vulkan renderer...
 	uboOffset = ChinaEngine::world.GetUBONextOffset();
 }
@@ -41,7 +35,9 @@ void cs::MeshRendererComponent::ImGuiDrawComponent()
 {
 	if (ImGui::TreeNodeEx("Mesh Renderer", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-
+		bool _visible{ visible };
+		ImGui::Checkbox("Visible", &_visible);
+		SetVisible(_visible);
 
 		ImGui::TreePop();
 	}
@@ -50,4 +46,23 @@ void cs::MeshRendererComponent::ImGuiDrawComponent()
 bool cs::MeshRendererComponent::IsRendererValid() const
 {
 	return RenderComponent::IsRendererValid() && mesh != nullptr && !materials.empty();
+}
+
+void cs::MeshRendererComponent::VulkanDraw(VkCommandBuffer& commandBuffer, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer)
+{
+	if (!IsRendererValid())
+		return;
+
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materials[0]->pipeline);
+
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &mesh->vertexBufferOffset);
+	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, mesh->indexBufferOffset, VK_INDEX_TYPE_UINT32);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materials[0]->shader->layout, 0, 1, &descriptorSets[index], 0, nullptr);
+
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh->GetIndices().size()), 1, 0, 0, 0);
+}
+
+cs::MeshRendererComponent::~MeshRendererComponent()
+{
+	ChinaEngine::renderer.RemoveFromRenderQueue(this);
 }

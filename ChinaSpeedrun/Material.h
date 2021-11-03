@@ -18,6 +18,7 @@ namespace cs
 	public:
 		friend class VulkanEngineRenderer;
 		friend class ResourceManager;
+		friend class MeshRendererComponent;
 
 		enum class RenderMode
 		{

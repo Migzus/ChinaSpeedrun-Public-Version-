@@ -70,6 +70,9 @@ namespace cs
 		void SolveMaterial(class Material* material, Solve solveMode);
 		void SolveRenderer(class MeshRendererComponent* renderer, Solve solveMode);
 
+		void AddToRenderQueue(class RenderComponent* renderer);
+		void RemoveFromRenderQueue(RenderComponent* renderer);
+
 		void Create(int newWidth, int newHeight, const char* appTitle);
 		void GetViewportSize(int& widthRef, int& heightRef) const;
 		void DrawFrame();
@@ -104,6 +107,8 @@ namespace cs
 		GLFWwindow* window;
 		int width, height;
 		std::string appName;
+
+		std::vector<RenderComponent*> visibleObjects;
 
 		std::unordered_map<Mesh*, Solve> solveMeshes;
 		std::unordered_map<Shader*, Solve> solveShaders;
@@ -177,6 +182,8 @@ namespace cs
 		void ImGuiDescriptorPool();
 		void ImGuiCommandPool();
 		void ImGuiCommandBuffers();
+		void ImGuiUpdateDrawCommands(const uint32_t& imageIndex);
+		void UpdateDrawCommands(const uint32_t& imageIndex);
 
 		void CreateInstance();
 		void SetupDebugMessenger();
