@@ -111,12 +111,12 @@ namespace cs
 	template<class T>
 	inline void GameObject::RemoveComponent()
 	{
-		return ChinaEngine::world.registry.remove_if_exists<T>(entity);
+		ChinaEngine::world.registry.remove_if_exists<T>(entity);
 	}
 
 	template<class T>
 	inline void GameObject::RemoveAllComponentsOfType()
 	{
-
+		
 	}
 }

@@ -13,6 +13,7 @@
 #include "Material.h"
 #include "Texture.h"
 #include "Mesh.h"
+#include "RenderComponent.h"
 #include "MeshRenderer.h"
 #include "CameraComponent.h"
 #include "ChinaEngine.h"
@@ -208,6 +209,19 @@ void cs::VulkanEngineRenderer::SolveRenderer(MeshRendererComponent* renderer, So
 	}
 
 	solveRenderers[renderer] = solveMode;
+}
+
+void cs::VulkanEngineRenderer::AddToRenderQueue(RenderComponent* renderer)
+{
+	visibleObjects.push_back(renderer);
+}
+
+void cs::VulkanEngineRenderer::RemoveFromRenderQueue(RenderComponent* renderer)
+{
+	auto _it{ std::find(visibleObjects.begin(), visibleObjects.end(), renderer) };
+
+	if (_it != visibleObjects.end())
+		visibleObjects.erase(_it);
 }
 
 void cs::VulkanEngineRenderer::AllocateShader(Shader* shader)
@@ -452,35 +466,14 @@ void cs::VulkanEngineRenderer::DrawFrame()
 
 	UpdateUniformBuffer(_imageIndex);
 
-	// -------------------------------------------------------------------------------------------------------
-	// ImGui dynamic DrawCommands (Maybe if we wanted we could hash these calls, and call set new draw calls whenever the ui needs to update)
-
 	if (_imageIndex == 0)
+	{
 		vkResetCommandPool(device, imGuiCommandPool, 0);
-	VkCommandBufferBeginInfo _beginInfo{};
-	_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	_beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	vkBeginCommandBuffer(imGuiCommandBuffers[_imageIndex], &_beginInfo);
-
-	VkClearValue _clearValue{ 0.0f, 0.0f, 0.0f, 1.0f };
-	VkRenderPassBeginInfo _renderPassInfo{};
-	_renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	_renderPassInfo.renderPass = imGuiRenderPass;
-	_renderPassInfo.framebuffer = imGuiFramebuffers[_imageIndex];
-	_renderPassInfo.renderArea.offset = { 0, 0 };
-	_renderPassInfo.renderArea.extent = swapChainExtent;
-	_renderPassInfo.clearValueCount = 1;
-	_renderPassInfo.pClearValues = &_clearValue;
-
-	vkCmdBeginRenderPass(imGuiCommandBuffers[_imageIndex], &_renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imGuiCommandBuffers[_imageIndex]);
-
-	vkCmdEndRenderPass(imGuiCommandBuffers[_imageIndex]);
-	if (vkEndCommandBuffer(imGuiCommandBuffers[_imageIndex]) != VK_SUCCESS)
-		Debug::LogFail("Failed to record ImGui command buffer.");
-
-	// -------------------------------------------------------------------------------------------------------
+		vkResetCommandPool(device, commandPool, 0);
+	}
+	
+	ImGuiUpdateDrawCommands(_imageIndex);
+	UpdateDrawCommands(_imageIndex);
 
 	VkSubmitInfo _submitInfo{};
 	_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -719,6 +712,59 @@ void cs::VulkanEngineRenderer::ImGuiCommandBuffers()
 
 	if (vkAllocateCommandBuffers(device, &_commandBufferAllocateInfo, imGuiCommandBuffers.data()) != VK_SUCCESS)
 		Debug::LogFail("Failed to allocate ImGui command buffers.");
+}
+
+void cs::VulkanEngineRenderer::ImGuiUpdateDrawCommands(const uint32_t& imageIndex)
+{
+	VkCommandBufferBeginInfo _beginInfo{};
+	_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	_beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	vkBeginCommandBuffer(imGuiCommandBuffers[imageIndex], &_beginInfo);
+
+	VkClearValue _clearValue{ 0.0f, 0.0f, 0.0f, 1.0f };
+	VkRenderPassBeginInfo _renderPassInfo{};
+	_renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	_renderPassInfo.renderPass = imGuiRenderPass;
+	_renderPassInfo.framebuffer = imGuiFramebuffers[imageIndex];
+	_renderPassInfo.renderArea.offset = { 0, 0 };
+	_renderPassInfo.renderArea.extent = swapChainExtent;
+	_renderPassInfo.clearValueCount = 1;
+	_renderPassInfo.pClearValues = &_clearValue;
+
+	vkCmdBeginRenderPass(imGuiCommandBuffers[imageIndex], &_renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imGuiCommandBuffers[imageIndex]);
+
+	vkCmdEndRenderPass(imGuiCommandBuffers[imageIndex]);
+	if (vkEndCommandBuffer(imGuiCommandBuffers[imageIndex]) != VK_SUCCESS)
+		Debug::LogFail("Failed to record ImGui command buffer.");
+}
+
+void cs::VulkanEngineRenderer::UpdateDrawCommands(const uint32_t& imageIndex)
+{
+	VkCommandBufferBeginInfo _beginInfo{};
+	_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	_beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	vkBeginCommandBuffer(commandBuffers[imageIndex], &_beginInfo);
+
+	VkClearValue _clearValue[]{ {0.0f, 0.0f, 0.0f, 1.0f}, { 1.0f, 0 } };
+	VkRenderPassBeginInfo _renderPassInfo{};
+	_renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	_renderPassInfo.renderPass = renderPass;
+	_renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+	_renderPassInfo.renderArea.offset = { 0, 0 };
+	_renderPassInfo.renderArea.extent = swapChainExtent;
+	_renderPassInfo.clearValueCount = 2;
+	_renderPassInfo.pClearValues = &_clearValue[0];
+
+	vkCmdBeginRenderPass(commandBuffers[imageIndex], &_renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	for (auto* renderer : visibleObjects)
+		renderer->VulkanDraw(commandBuffers[imageIndex], imageIndex, vertexBuffer.buffer, indexBuffer.buffer);
+
+	vkCmdEndRenderPass(commandBuffers[imageIndex]);
+	if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS)
+		Debug::LogFail("Failed to record command buffer.");
 }
 
 void cs::VulkanEngineRenderer::InitImGui()
@@ -1522,7 +1568,7 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 	if (vkAllocateCommandBuffers(device, &_allocInfo, commandBuffers.data()) != VK_SUCCESS)
 		Debug::LogFail("Failed to allocate command buffers.");
 
-	for (size_t i{ 0 }; i < commandBuffers.size(); i++)
+	/*for (size_t i{ 0 }; i < commandBuffers.size(); i++)
 	{
 		VkCommandBufferBeginInfo _beginInfo{};
 		_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1565,7 +1611,7 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 
 		if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
 			Debug::LogFail("Failed to record command buffer.");
-	}
+	}*/
 }
 
 void cs::VulkanEngineRenderer::CreateSyncObjects()
@@ -1774,9 +1820,6 @@ void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 	for (auto e : _renderers)
 	{
 		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
-
-		if (_meshRenderer.mesh == nullptr || _meshRenderer.materials.empty() || !_meshRenderer.visible)
-			continue;
 
 		void* _data;
 		vkMapMemory(device, uniformBuffersMemory[currentImage], _meshRenderer.uboOffset, UniformBufferObject::GetByteSize(), 0, &_data);

@@ -11,14 +11,14 @@ namespace cs
 {
 	class VulkanEngineRenderer;
 	class ResourceManager;
-	class MeshRenderer;
+	class MeshRendererComponent;
 
 	class Mesh : public Resource
 	{
 	public:
 		friend VulkanEngineRenderer;
 		friend ResourceManager;
-		friend MeshRenderer;
+		friend MeshRendererComponent;
 
 		Mesh();
 		Mesh(std::vector<class cs::Vertex> vertexArray, std::vector<uint32_t> indexArray);

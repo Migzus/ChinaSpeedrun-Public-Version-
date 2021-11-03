@@ -8,11 +8,16 @@
 
 namespace cs
 {
+	class VulkanEngineRenderer;
+	class ResourceManager;
+	class MeshRendererComponent;
+
 	class Shader : public Resource
 	{
 	public:
-		friend class VulkanEngineRenderer;
-		friend class ResourceManager;
+		friend VulkanEngineRenderer;
+		friend ResourceManager;
+		friend MeshRendererComponent;
 
 		enum class Type
 		{

@@ -28,6 +28,8 @@ namespace cs
 
 		virtual void ImGuiDrawComponent() override;
 		virtual bool IsRendererValid() const;
+		virtual void VulkanDraw(VkCommandBuffer& commandBuffer, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer);
+		virtual void SetVisible(const bool status);
 
 	protected:
 		UniformBufferObject ubo;
