@@ -92,6 +92,16 @@ void cs::World::Stop()
 		auto& _pc{ registry.get<PhysicsComponent>(e) };
 		physicsSystem->DestroyBody(&_pc);
 	}
+
+	auto _audioEntities{ registry.view<AudioComponent>() };
+	for (auto e : _audioEntities)
+	{
+		auto& _ac{ registry.get<AudioComponent>(e) };
+		if (_ac.isPlaying)
+		{
+			audioSystem->Stop(_ac.soundId);
+		}
+	}
 }
 
 void cs::World::Step()
