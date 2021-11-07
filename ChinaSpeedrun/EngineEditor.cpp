@@ -3,7 +3,7 @@
 #include "imgui.h"
 #include "ImGuizmo.h"
 #include "ChinaEngine.h"
-#include "World.h"
+#include "SceneManager.h"
 #include "Input.h"
 #include "Camera.h"
 
@@ -29,16 +29,26 @@ void cs::editor::EngineEditor::SetPlaymode(const Playmode newPlaymode)
 	switch (mode)
 	{
 	case cs::editor::EngineEditor::Playmode::EDITOR:
-		ChinaEngine::world.mainCamera = editorCamera;
-		ChinaEngine::world.Stop();
+		SceneManager::mainCamera = editorCamera;
+		
 		break;
 	case cs::editor::EngineEditor::Playmode::PLAY:
-		ChinaEngine::world.Start();
+		
 		break;
 	case cs::editor::EngineEditor::Playmode::PAUSE:
-		ChinaEngine::world.Stop();
+		
 		break;
 	}
+}
+
+cs::GameObject* cs::editor::EngineEditor::GetSelectedGameObject() const
+{
+	return uiLayer->activeObject;
+}
+
+void cs::editor::EngineEditor::SetSelectedGameObject(GameObject* gameObject)
+{
+	uiLayer->activeObject = gameObject;
 }
 
 void cs::editor::EngineEditor::Start()

@@ -13,7 +13,7 @@
 #include "Transform.h"
 #include "VulkanEngineRenderer.h"
 #include "ChinaEngine.h"
-#include "World.h"
+#include "SceneManager.h"
 #include "Camera.h"
 
 cs::editor::ImGuiLayer::ImGuiLayer(EngineEditor* root) :
@@ -52,7 +52,7 @@ void cs::editor::ImGuiLayer::Step()
         if (activeObject != nullptr && activeObject->HasComponent<TransformComponent>())
         {
             TransformComponent& _transform{ activeObject->GetComponent<TransformComponent>() };
-            Matrix4x4 _viewMatrix{ Camera::GetViewMatrix(*ChinaEngine::world.mainCamera) }, _projectionMatrix{ Camera::GetProjectionMatrix(*ChinaEngine::world.mainCamera) };
+            Matrix4x4 _viewMatrix{ Camera::GetViewMatrix(*SceneManager::mainCamera) }, _projectionMatrix{ Camera::GetProjectionMatrix(*SceneManager::mainCamera) };
             Matrix4x4& _transformMatrix{ Transform::GetMatrixTransform(_transform) };
 
             ImGuizmo::SetOrthographic(false);
@@ -83,17 +83,7 @@ void cs::editor::ImGuiLayer::Step()
 
     if (ImGui::Begin("Hierarchy"))
     {
-        if (ImGui::TreeNode("Main Scene"))
-        {
-            for (GameObject* object : ChinaEngine::world.GetObjects())
-            {
-                ImGui::Text(object->name.c_str());
-                if (ImGui::IsItemClicked())
-                    activeObject = object;
-            }
-            ImGui::TreePop();
-        }
-
+        SceneManager::DrawScenes();
         IsWindowHovered();
     }
     ImGui::End();

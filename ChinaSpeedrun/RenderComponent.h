@@ -26,6 +26,8 @@ namespace cs
 
 		bool visible;
 
+		RenderComponent();
+
 		virtual void ImGuiDrawComponent() override;
 		virtual bool IsRendererValid() const;
 		virtual void VulkanDraw(VkCommandBuffer& commandBuffer, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer);

@@ -4,13 +4,15 @@
 #include "Input.h"
 #include "Debug.h"
 
-#include "World.h"
 #include "PhysicsServer.h"
 #include "ChinaEngine.h"
 #include "Transform.h"
 #include "GameObject.h"
 #include "Camera.h"
 #include "MeshRenderer.h"
+
+#include "Scene.h"
+#include "SceneManager.h"
 
 cs::editor::EditorCamera::EditorCamera(EngineEditor* root) :
 	editorRoot{ root }, position{ Vector3(0.0f) }, rotation{ Vector3(0.0f) }, movementsSpeed{ 10.0f }, rotationSpeed{ 0.002f }
@@ -29,13 +31,13 @@ void cs::editor::EditorCamera::Update()
 		SelectTest();
 
 	// frustum testing
-	auto _entities{ ChinaEngine::world.GetRegistry().view<TransformComponent, MeshRendererComponent>() };
+	auto _entities{ SceneManager::GetRegistry().view<TransformComponent, MeshRendererComponent>() };
 	Matrix4x4 _pv{ proj * view };
 
 	for (auto& e : _entities)
 	{
-		auto* _transform{ ChinaEngine::world.GetRegistry().try_get<TransformComponent>(e) };
-		auto* _meshRenderer{ ChinaEngine::world.GetRegistry().try_get<MeshRendererComponent>(e) };
+		auto* _transform{ SceneManager::GetRegistry().try_get<TransformComponent>(e) };
+		auto* _meshRenderer{ SceneManager::GetRegistry().try_get<MeshRendererComponent>(e) };
 
 		if (_transform == nullptr || _meshRenderer == nullptr)
 			return;
@@ -72,13 +74,13 @@ void cs::editor::EditorCamera::ScrollAdjustmentSpeed()
 
 void cs::editor::EditorCamera::SelectTest()
 {
-	Vector3 _mouseDirection{ World::MouseToWorldSpace() };
+	Vector3 _mouseDirection{ Camera::MouseToWorldSpace() };
 	bool _objectHit{ false };
 
-	auto _transformView{ ChinaEngine::world.GetRegistry().view<TransformComponent>() };
+	auto _transformView{ SceneManager::GetRegistry().view<TransformComponent>() };
 	for (auto e : _transformView)
 	{
-		auto& _transformComponent{ ChinaEngine::world.GetRegistry().get<TransformComponent>(e) };
+		auto& _transformComponent{ SceneManager::GetRegistry().get<TransformComponent>(e) };
 		RaycastHit _hit{ PhysicsServer::Raycast(position, _mouseDirection, farPlane, _transformComponent.gameObject->obb, Transform::GetMatrixTransform(_transformComponent)) };
 
 		if (_hit.valid)

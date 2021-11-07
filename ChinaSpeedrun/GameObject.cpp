@@ -2,7 +2,7 @@
 
 #include "Component.h"
 #include "ChinaEngine.h"
-#include "World.h"
+#include "Mathf.h"
 
 #include "MeshRenderer.h"
 #include "CameraComponent.h"
@@ -15,10 +15,12 @@
 #include "Rigidbody.h"
 #include "Mesh.h"
 
+#include "SceneManager.h"
+
 #include "Debug.h"
 
 cs::GameObject::GameObject() :
-	name { "Object" }, active{ true }
+	name{ "Object" }, active{ true }, entity{ SceneManager::GetRegistry().create() }, parent{ nullptr }
 {}
 
 void cs::GameObject::EditorDrawComponents()
@@ -59,13 +61,13 @@ void cs::GameObject::GenerateOBBExtents()
 		Vector3 _maxExtent{ Vector3(0.0f) }, _minExtent{ Vector3(0.0f) };
 		for (auto& vertex : _mesh->GetVertices())
 		{
-			_maxExtent.x = max(_maxExtent.x, vertex.position.x);
-			_maxExtent.y = max(_maxExtent.y, vertex.position.y);
-			_maxExtent.z = max(_maxExtent.z, vertex.position.z);
+			_maxExtent.x = Mathf::Max(_maxExtent.x, vertex.position.x);
+			_maxExtent.y = Mathf::Max(_maxExtent.y, vertex.position.y);
+			_maxExtent.z = Mathf::Max(_maxExtent.z, vertex.position.z);
 
-			_minExtent.x = min(_minExtent.x, vertex.position.x);
-			_minExtent.y = min(_minExtent.y, vertex.position.y);
-			_minExtent.z = min(_minExtent.z, vertex.position.z);
+			_minExtent.x = Mathf::Min(_minExtent.x, vertex.position.x);
+			_minExtent.y = Mathf::Min(_minExtent.y, vertex.position.y);
+			_minExtent.z = Mathf::Min(_minExtent.z, vertex.position.z);
 		}
 
 		obb = { _minExtent, _maxExtent };
@@ -89,7 +91,7 @@ void cs::GameObject::ExitTree()
 {
 	RemoveAllComponents();
 
-	ChinaEngine::world.registry.destroy(entity);
+	scene->registry.destroy(entity);
 }
 
 void cs::GameObject::QueueFree()
@@ -105,4 +107,9 @@ cs::GameObject::~GameObject()
 void cs::GameObject::RemoveAllComponents()
 {
 	
+}
+
+cs::Scene* cs::GameObject::GetScene() const
+{
+	return scene;
 }

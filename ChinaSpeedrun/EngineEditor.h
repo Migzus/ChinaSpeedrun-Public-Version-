@@ -8,6 +8,8 @@ namespace ImGuizmo
 
 namespace cs
 {
+	class GameObject;
+
 	namespace editor
 	{
 		class EditorCamera;
@@ -30,6 +32,8 @@ namespace cs
 			const ImGuizmo::MODE& GetMode();
 			const Playmode& GetPlaymodeState();
 			void SetPlaymode(const Playmode newPlaymode);
+			GameObject* GetSelectedGameObject() const;
+			void SetSelectedGameObject(GameObject* gameObject);
 
 			void Start();
 			void Update();

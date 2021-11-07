@@ -1,5 +1,5 @@
 #include "World.h"
-
+/*
 #include <iostream>
 
 #include "Editor.h"
@@ -177,3 +177,4 @@ entt::registry& cs::World::GetRegistry()
 {
 	return registry;
 }
+*/

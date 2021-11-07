@@ -14,7 +14,6 @@
 #include "ImGuiLayer.h"
 
 #include "Input.h"
-#include "World.h"
 #include "Transform.h"
 #include "GameObject.h"
 #include "CameraComponent.h"
@@ -25,10 +24,11 @@
 #include "PolygonCollider.h"
 
 #include "Editor.h"
+#include "SceneManager.h"
+//#include "EditorProfiler.h"
 
 #include "Time.h"
 
-cs::World cs::ChinaEngine::world;
 cs::VulkanEngineRenderer cs::ChinaEngine::renderer;
 cs::editor::EngineEditor cs::ChinaEngine::editor;
 
@@ -57,12 +57,18 @@ float cs::ChinaEngine::AspectRatio()
 
 void cs::ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight)
 {
-	if (newWidth * newHeight > 0)
-		Camera::CalculatePerspective(*world.mainCamera);
+	if (newWidth * newHeight > 0) // don't recalculate the perspective if the screen size is 0
+		Camera::CalculatePerspective(*SceneManager::mainCamera);
 }
 
 void cs::ChinaEngine::EngineInit()
 {
+	SceneManager::Load(SceneManager::CreateScene("Scene 1"));
+	SceneManager::Load(SceneManager::CreateScene("Scene 2"));
+	//SceneManager::Load(ResourceManager::Load<Scene>("../Resources/scenes/test_1.json"));
+
+	SceneManager::SetCurrentFocusedScene(0);
+
 	// For future notice... move this entire function somewhere else...
 	// the head ChinaEngine class has nothing to do with instancing objects (maybe in a scene loader or something...)
 
@@ -97,7 +103,7 @@ void cs::ChinaEngine::EngineInit()
 		{
 			for (size_t z{ 0 }; z < length; z++)
 			{
-				GameObject* _object{ world.InstanceObject(std::to_string(x + (y * 4) + (z * 16)).c_str(), Vector3((float)x, (float)y, (float)z) * 2.0f) };
+				GameObject* _object{ SceneManager::InstanceObject(std::to_string(x + (y * 4) + (z * 16)).c_str(), Vector3((float)x, (float)y, (float)z) * 2.0f) };
 
 				MeshRendererComponent& _terrainMesh{ _object->AddComponent<MeshRendererComponent>() };
 				_terrainMesh.mesh = _sphereModel;
@@ -106,10 +112,12 @@ void cs::ChinaEngine::EngineInit()
 		}
 	}
 
-	/*GameObject* _terrain{ world.InstanceObject("Terrain", Vector3(0.0f, -6.0f, 0.0f)) };
-	GameObject* _suzanne{ world.InstanceObject("Suzanne", Vector3(0.0f, 10.0f, 4.0f)) }; // Vector3(-7.0f, 5.0f, -6.2f) // -1.0f, 10.0f, 6.0f
-	GameObject* _physicsBall{ world.InstanceObject("Junko Ball", Vector3(-1.3f, 3.0f, 5.5f)) };
-	GameObject* _camera{ world.InstanceObject("Camera", Vector3(13.0f, 13.0f, 16.0f), Vector3(-33.0f, 35.0f, 0.0f)) };
+	SceneManager::SetCurrentFocusedScene(1);
+
+	GameObject* _terrain{ SceneManager::InstanceObject("Terrain", Vector3(0.0f, -6.0f, 0.0f)) };
+	GameObject* _suzanne{ SceneManager::InstanceObject("Suzanne", Vector3(0.0f, 10.0f, 4.0f)) }; // Vector3(-7.0f, 5.0f, -6.2f) // -1.0f, 10.0f, 6.0f
+	GameObject* _physicsBall{ SceneManager::InstanceObject("Junko Ball", Vector3(-1.3f, 3.0f, 5.5f)) };
+	GameObject* _camera{ SceneManager::InstanceObject("Camera", Vector3(13.0f, 13.0f, 16.0f), Vector3(-33.0f, 35.0f, 0.0f)) };
 
 	MeshRendererComponent& _terrainMesh{ _terrain->AddComponent<MeshRendererComponent>() };
 	_terrainMesh.mesh = ResourceManager::Load<Mesh>("../Resources/models/terrain.obj");
@@ -139,7 +147,7 @@ void cs::ChinaEngine::EngineInit()
 	// move this elsewhere, i dont want to call this for every physics object...
 	PhysicsBody::GetAllColliderComponents(&_rbT);
 	PhysicsBody::GetAllColliderComponents(&_rbZU);
-	PhysicsBody::GetAllColliderComponents(&_rbPB);*/
+	PhysicsBody::GetAllColliderComponents(&_rbPB);
 }
 
 void cs::ChinaEngine::InitInput()
@@ -163,11 +171,12 @@ void cs::ChinaEngine::MainLoop()
 	while (!glfwWindowShouldClose(renderer.GetWindow()))
 	{
 		Time::CycleStart();
+		SceneManager::Resolve();
 
 		glfwPollEvents();
 
 		editor.Update();
-		world.Step();
+		SceneManager::Update();
 
 		renderer.Resolve();
 		renderer.DrawFrame();
@@ -182,6 +191,6 @@ void cs::ChinaEngine::MainLoop()
 void cs::ChinaEngine::EngineExit()
 {
 	editor.Exit();
-	world.DeleteAllObjects();
+	SceneManager::UnloadEverything();
 	ResourceManager::ClearAllResourcePools();
 }

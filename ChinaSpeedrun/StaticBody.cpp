@@ -1,7 +1,8 @@
 #include "StaticBody.h"
 
 #include "ChinaEngine.h"
-#include "World.h"
+#include "SceneManager.h"
+#include "Scene.h"
 #include "PhysicsServer.h"
 
 #include "imgui.h"
@@ -9,7 +10,8 @@
 cs::StaticBodyComponent::StaticBodyComponent()
 {
 	bodyType = BodyType::STATIC;
-	ChinaEngine::world.physicsServer->bodies.push_back(this);
+	//SceneManager::GetCurrentScene()->physicsServer.push_back(this);
+	//ChinaEngine::world.physicsServer->bodies.push_back(this);
 }
 
 void cs::StaticBodyComponent::ImGuiDrawComponent()

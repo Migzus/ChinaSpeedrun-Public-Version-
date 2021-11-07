@@ -4,11 +4,13 @@
 #include "Transform.h"
 #include "Mesh.h"
 #include "ChinaEngine.h"
-#include "World.h"
 #include "CameraComponent.h"
 #include "Camera.h"
 #include "Material.h"
 #include "Shader.h"
+
+#include "SceneManager.h"
+#include "Scene.h"
 
 void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformComponent& transform)
 {
@@ -26,9 +28,7 @@ cs::MeshRendererComponent::MeshRendererComponent() :
 	mesh{ nullptr }
 {
 	ChinaEngine::renderer.SolveRenderer(this, Solve::ADD);
-	ChinaEngine::renderer.AddToRenderQueue(this);
-	// perhaps move this line to the vulkan renderer...
-	uboOffset = ChinaEngine::world.GetUBONextOffset();
+	SceneManager::GetCurrentScene()->AddToRenderQueue(this);
 }
 
 void cs::MeshRendererComponent::ImGuiDrawComponent()
@@ -37,6 +37,8 @@ void cs::MeshRendererComponent::ImGuiDrawComponent()
 	{
 		bool _visible{ visible };
 		ImGui::Checkbox("Visible", &_visible);
+		if (mesh != nullptr)
+			ImGui::Text("Mesh: %s", mesh->resourcePath);
 		SetVisible(_visible);
 
 		ImGui::TreePop();
@@ -50,9 +52,6 @@ bool cs::MeshRendererComponent::IsRendererValid() const
 
 void cs::MeshRendererComponent::VulkanDraw(VkCommandBuffer& commandBuffer, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer)
 {
-	if (!IsRendererValid())
-		return;
-
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materials[0]->pipeline);
 
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &mesh->vertexBufferOffset);
@@ -64,5 +63,5 @@ void cs::MeshRendererComponent::VulkanDraw(VkCommandBuffer& commandBuffer, const
 
 cs::MeshRendererComponent::~MeshRendererComponent()
 {
-	ChinaEngine::renderer.RemoveFromRenderQueue(this);
+	SceneManager::GetCurrentScene()->RemoveFromRenderQueue(this);
 }

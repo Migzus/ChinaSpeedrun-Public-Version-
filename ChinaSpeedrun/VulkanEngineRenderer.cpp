@@ -1,6 +1,5 @@
 #include "VulkanEngineRenderer.h"
 
-//#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include <cstring>
@@ -18,7 +17,10 @@
 #include "CameraComponent.h"
 #include "ChinaEngine.h"
 #include "ResourceManager.h"
-#include "World.h"
+
+#include "Scene.h"
+#include "SceneManager.h"
+
 #include "Debug.h"
 
 cs::VulkanEngineRenderer::VulkanEngineRenderer() :
@@ -209,19 +211,6 @@ void cs::VulkanEngineRenderer::SolveRenderer(MeshRendererComponent* renderer, So
 	}
 
 	solveRenderers[renderer] = solveMode;
-}
-
-void cs::VulkanEngineRenderer::AddToRenderQueue(RenderComponent* renderer)
-{
-	visibleObjects.push_back(renderer);
-}
-
-void cs::VulkanEngineRenderer::RemoveFromRenderQueue(RenderComponent* renderer)
-{
-	auto _it{ std::find(visibleObjects.begin(), visibleObjects.end(), renderer) };
-
-	if (_it != visibleObjects.end())
-		visibleObjects.erase(_it);
 }
 
 void cs::VulkanEngineRenderer::AllocateShader(Shader* shader)
@@ -747,7 +736,7 @@ void cs::VulkanEngineRenderer::UpdateDrawCommands(const uint32_t& imageIndex)
 	_beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	vkBeginCommandBuffer(commandBuffers[imageIndex], &_beginInfo);
 
-	VkClearValue _clearValue[]{ {0.0f, 0.0f, 0.0f, 1.0f}, { 1.0f, 0 } };
+	VkClearValue _clearValue[]{ { 0.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0 } };
 	VkRenderPassBeginInfo _renderPassInfo{};
 	_renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	_renderPassInfo.renderPass = renderPass;
@@ -759,8 +748,9 @@ void cs::VulkanEngineRenderer::UpdateDrawCommands(const uint32_t& imageIndex)
 
 	vkCmdBeginRenderPass(commandBuffers[imageIndex], &_renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	for (auto* renderer : visibleObjects)
-		renderer->VulkanDraw(commandBuffers[imageIndex], imageIndex, vertexBuffer.buffer, indexBuffer.buffer);
+	for (auto* renderer : SceneManager::GetCurrentScene()->renderableObjects)
+		if (renderer->visible)
+			renderer->VulkanDraw(commandBuffers[imageIndex], imageIndex, vertexBuffer.buffer, indexBuffer.buffer);
 
 	vkCmdEndRenderPass(commandBuffers[imageIndex]);
 	if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS)
@@ -1816,10 +1806,10 @@ VkFormat cs::VulkanEngineRenderer::FindSupportedFormat(const std::vector<VkForma
 void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 {
 	VkDeviceSize _index{ 0 };
-	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
+	auto _renderers{  SceneManager::GetRegistry().view<MeshRendererComponent>() };
 	for (auto e : _renderers)
 	{
-		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
+		MeshRendererComponent& _meshRenderer{ SceneManager::GetRegistry().get<MeshRendererComponent>(e) };
 
 		void* _data;
 		vkMapMemory(device, uniformBuffersMemory[currentImage], _meshRenderer.uboOffset, UniformBufferObject::GetByteSize(), 0, &_data);
@@ -2002,10 +1992,10 @@ void cs::VulkanEngineRenderer::RecreateSwapChain()
 	CreateFramebuffers();
 	CreateUniformBuffers();
 	
-	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
+	auto _renderers{ SceneManager::GetRegistry().view<MeshRendererComponent>() };
 	for (auto e : _renderers)
 	{
-		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
+		MeshRendererComponent& _meshRenderer{ SceneManager::GetRegistry().get<MeshRendererComponent>(e) };
 		CreateDescriptorPool(_meshRenderer);
 		CreateDescriptorSets(_meshRenderer);
 	}
@@ -2055,10 +2045,10 @@ void cs::VulkanEngineRenderer::CleanupSwapChain()
 		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
 	}
 
-	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
+	auto _renderers{ SceneManager::GetRegistry().view<MeshRendererComponent>() };
 	for (auto e : _renderers)
 	{
-		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
+		MeshRendererComponent& _meshRenderer{ SceneManager::GetRegistry().get<MeshRendererComponent>(e) };
 
 		if (!_meshRenderer.IsRendererValid())
 			continue;

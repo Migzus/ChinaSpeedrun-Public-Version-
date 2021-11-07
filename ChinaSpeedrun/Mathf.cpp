@@ -22,22 +22,6 @@ float cs::Mathf::RandRange(const float min, const float max)
     return min + (rand() / (float)INT_MAX) * (max - min);
 }
 
-void cs::Mathf::Clamp(float& value, float min, float max)
-{
-    value =
-        max * (value > max) +
-        min * (value < min) +
-        value * (value >= min && value <= max);
-}
-
-void cs::Mathf::LoopClamp(float& value, float min, float max)
-{
-    value =
-        (value - max) * (value > max) +
-        (value - min + max) * (value < min) +
-        value * (value >= min && value <= max);
-}
-
 float cs::Mathf::Project(const Vector3 projVec, const Plane plane)
 {
     return std::abs(projVec.x * plane.normal.x + projVec.y * plane.normal.y + projVec.z * plane.normal.z + plane.length);
@@ -61,6 +45,16 @@ Vector3 cs::Mathf::CrossProduct(const Vector3 vec1, const Vector3 vec2)
 float cs::Mathf::DotProduct(const Vector3 vec1, const Vector3 vec2)
 {
     return glm::dot(vec1, vec2);
+}
+
+float cs::Mathf::Max(const float v1, const float v2)
+{
+    return v1 * (v1 >= v2) + v2 * (v1 < v2);
+}
+
+float cs::Mathf::Min(const float v1, const float v2)
+{
+    return v1 * (v1 <= v2) + v2 * (v1 > v2);
 }
 
 void cs::Mathf::DecomposeMatrix(const Matrix4x4& transform, Vector3& position, Vector3& rotation, Vector3& scale)
