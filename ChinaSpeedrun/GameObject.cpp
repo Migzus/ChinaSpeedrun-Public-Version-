@@ -47,9 +47,6 @@ void cs::GameObject::EditorDrawComponents()
 
 void cs::GameObject::GenerateOBBExtents()
 {
-	obb = { Vector3(-1.0f), Vector3(1.0f) };
-	return;
-
 	// If we have a mesh, then we use that.
 	if (HasComponent<MeshRendererComponent>())
 	{
@@ -77,13 +74,13 @@ void cs::GameObject::GenerateOBBExtents()
 	// if we only have a transform, resort to that
 	if (HasComponent<TransformComponent>())
 	{
-		Debug::LogWarning("Cannot create OBB on ", name, " because it has no mesh. Creating default extents.");
+		//Debug::LogWarning("Cannot create OBB on ", name, " because it has no mesh. Creating default extents.");
 		obb = { Vector3(-0.5f), Vector3(0.5f) };
 		return;
 	}
 	
 	// if we have none of these components, the obb is null (extents == 0.0f)
-	Debug::LogIssue("Cannot generate OBB; ", name, " has no transform or mesh.");
+	//Debug::LogIssue("Cannot generate OBB; ", name, " has no transform or mesh.");
 	obb = { Vector3(0.0f), Vector3(0.0f) };
 }
 

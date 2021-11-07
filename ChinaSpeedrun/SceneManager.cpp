@@ -148,6 +148,7 @@ cs::Scene* cs::SceneManager::GetCurrentScene()
 
 void cs::SceneManager::DrawScenes()
 {
-	for (Scene* scene : activeScenes)
-		scene->ImGuiDrawGameObjects();
+	for (size_t i{ 0 }; i < activeScenes.size(); i++)
+		if (activeScenes[i]->ImGuiDrawGameObjects())
+			currentScene = i;
 }

@@ -29,6 +29,7 @@ cs::MeshRendererComponent::MeshRendererComponent() :
 {
 	ChinaEngine::renderer.SolveRenderer(this, Solve::ADD);
 	SceneManager::GetCurrentScene()->AddToRenderQueue(this);
+	uboOffset = SceneManager::GetCurrentScene()->GetUBOOffset();
 }
 
 void cs::MeshRendererComponent::ImGuiDrawComponent()

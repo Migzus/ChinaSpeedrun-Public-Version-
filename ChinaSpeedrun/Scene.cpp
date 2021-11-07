@@ -99,10 +99,19 @@ void cs::Scene::RemoveFromRenderQueue(RenderComponent* renderer)
 		renderableObjects.erase(_it);
 }
 
-void cs::Scene::ImGuiDrawGameObjects()
+uint32_t cs::Scene::GetUBOOffset()
 {
+	return UniformBufferObject::GetByteSize() * renderableObjects.size();
+}
+
+bool cs::Scene::ImGuiDrawGameObjects()
+{
+	bool _isClicked{ false };
+
     if (ImGui::TreeNode(name.c_str()))
     {
+		_isClicked = ImGui::IsItemClicked();
+
         ImGui::SameLine();
         if (ImGui::Button("X"))
             SceneManager::Unload(this);
@@ -115,6 +124,8 @@ void cs::Scene::ImGuiDrawGameObjects()
         }
         ImGui::TreePop();
     }
+
+	return _isClicked;
 }
 
 void cs::Scene::UpdateEditorComponents()

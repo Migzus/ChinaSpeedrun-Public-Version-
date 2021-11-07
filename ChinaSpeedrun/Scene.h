@@ -45,8 +45,10 @@ namespace cs
 		void AddToRenderQueue(class RenderComponent* renderer);
 		void RemoveFromRenderQueue(RenderComponent* renderer);
 
+		uint32_t GetUBOOffset();
+
 	private:
-		void ImGuiDrawGameObjects();
+		bool ImGuiDrawGameObjects();
 		void UpdateEditorComponents();
 		void UpdateComponents();
 
