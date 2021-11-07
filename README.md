@@ -1,6 +1,6 @@
-# China Speedrun Engine
+# A Public Version of China Speedrun Engine
 
-* This readme file is a work in progress.<br>
+* This readme file is a work in progress. The project is also a mess...<br>
 
 The China Speedrun Engine is a bullethell engine, designed to make games in the shmup genre.<br>
 It's lightweight, fast and have a great bullet capacity.
