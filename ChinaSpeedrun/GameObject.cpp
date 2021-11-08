@@ -35,7 +35,9 @@ void cs::GameObject::EditorDrawComponents()
 		GetComponent<AudioComponent>().ImGuiDrawComponent();
 
 	// Physics
-	if (HasComponent<StaticBodyComponent>())
+	if (HasComponent<PhysicsComponent>())
+		GetComponent<PhysicsComponent>().ImGuiDrawComponent();
+	/*if (HasComponent<StaticBodyComponent>())
 		GetComponent<StaticBodyComponent>().ImGuiDrawComponent();
 	if (HasComponent<RigidbodyComponent>())
 		GetComponent<RigidbodyComponent>().ImGuiDrawComponent();

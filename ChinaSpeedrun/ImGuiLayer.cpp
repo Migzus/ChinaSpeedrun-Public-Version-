@@ -58,7 +58,7 @@ void cs::editor::ImGuiLayer::Step()
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist();
             ImGuizmo::SetRect(0.0f, 0.0f, static_cast<float>(_width), static_cast<float>(_height));
-            
+
             _projectionMatrix[1][1] *= -1.0f;
 
             ImGuizmo::Manipulate(glm::value_ptr(_viewMatrix), glm::value_ptr(_projectionMatrix),
@@ -138,7 +138,7 @@ void cs::editor::ImGuiLayer::Step()
     if (ImGui::Begin("Profiler"))
     {
         ImGui::Text("Delta Time: %f", Time::deltaTime);
-        
+
         const auto& _status{ ChinaEngine::renderer.GetStatus() };
 
         ImGui::Text("Index Buffer");
@@ -196,5 +196,7 @@ void cs::editor::ImGuiLayer::DrawStopSimulationButton()
 
 void cs::editor::ImGuiLayer::IsWindowHovered()
 {
-    isWindowActive |= ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+    isWindowActive |= ImGui::IsWindowHovered(
+        ImGuiHoveredFlags_AllowWhenBlockedByActiveItem |
+		ImGuiHoveredFlags_RootAndChildWindows);
 }

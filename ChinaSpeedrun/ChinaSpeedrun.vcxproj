@@ -124,14 +124,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\include;$(SolutionDir)\Libraries\glm;$(SolutionDir)\Libraries\openal\include;$(SolutionDir)\Libraries\stb-master;$(SolutionDir)\Libraries\imgui\include;$(SolutionDir)\Libraries\tiny-obj-loader;$(SolutionDir)\Libraries\entt;$(SolutionDir)\Libraries\AudioFile;$(SolutionDir)\Libraries\ImGuizmo;$(SolutionDir)\Libraries\gifdec;$(SolutionDir)\Libraries\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\include;$(SolutionDir)\Libraries\glm;$(SolutionDir)\Libraries\openal\include;$(SolutionDir)\Libraries\stb-master;$(SolutionDir)\Libraries\imgui\include;$(SolutionDir)\Libraries\tiny-obj-loader;$(SolutionDir)\Libraries\entt;$(SolutionDir)\Libraries\AudioFile;$(SolutionDir)\Libraries\ImGuizmo;$(SolutionDir)\Libraries\gifdec;$(SolutionDir)\Libraries\box2d\include;$(SolutionDir)\Libraries\lua\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\lib-vc2019;$(SolutionDir)\Libraries\openal\lib;$(SolutionDir)\Libraries\box2d\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;OpenAL32.lib;shaderc.lib;shaderc_combined.lib;box2d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\lib-vc2019;$(SolutionDir)\Libraries\openal\lib;$(SolutionDir)\Libraries\box2d\lib;$(SolutionDir)\Libraries\lua\libs</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;OpenAL32.lib;shaderc.lib;shaderc_combined.lib;box2d.lib;lua5.4.3-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -142,7 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\include;$(SolutionDir)\Libraries\glm;$(SolutionDir)\Libraries\openal\include;$(SolutionDir)\Libraries\stb-master;$(SolutionDir)\Libraries\imgui\include;$(SolutionDir)\Libraries\tiny-obj-loader;$(SolutionDir)\Libraries\entt;$(SolutionDir)\Libraries\AudioFile;$(SolutionDir)\Libraries\ImGuizmo;$(SolutionDir)\Libraries\gifdec;$(SolutionDir)\Libraries\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\include;$(SolutionDir)\Libraries\glm;$(SolutionDir)\Libraries\openal\include;$(SolutionDir)\Libraries\stb-master;$(SolutionDir)\Libraries\imgui\include;$(SolutionDir)\Libraries\tiny-obj-loader;$(SolutionDir)\Libraries\entt;$(SolutionDir)\Libraries\AudioFile;$(SolutionDir)\Libraries\ImGuizmo;$(SolutionDir)\Libraries\gifdec;$(SolutionDir)\Libraries\box2d\include;$(SolutionDir)\Libraries\lua\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -150,8 +150,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\lib-vc2019;$(SolutionDir)\Libraries\openal\lib;$(SolutionDir)\Libraries\box2d\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;OpenAL32.lib;shaderc.lib;shaderc_combined.lib;box2d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(SolutionDir)\Libraries\glfw-3.3.4.bin.WIN64\lib-vc2019;$(SolutionDir)\Libraries\openal\lib;$(SolutionDir)\Libraries\box2d\lib;$(SolutionDir)\Libraries\lua\libs</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;OpenAL32.lib;shaderc.lib;shaderc_combined.lib;box2d.lib;lua5.4.3-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -171,6 +171,7 @@
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="ChinaEngine.cpp" />
     <ClCompile Include="Collider.cpp" />
+    <ClCompile Include="CollisionShape.cpp" />
     <ClCompile Include="Color.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="Debug.cpp" />
@@ -186,6 +187,8 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshRenderer.cpp" />
     <ClCompile Include="PhysicsBody.cpp" />
+    <ClCompile Include="PhysicsComponent.cpp" />
+    <ClCompile Include="PhysicsLocator.cpp" />
     <ClCompile Include="PhysicsSystem.cpp" />
     <ClCompile Include="PolygonCollider.cpp" />
     <ClCompile Include="RenderComponent.cpp" />
@@ -220,6 +223,7 @@
     <ClInclude Include="ChinaCoreHeader.h" />
     <ClInclude Include="ChinaEngine.h" />
     <ClInclude Include="Collider.h" />
+    <ClInclude Include="CollisionShape.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Debug.h" />
@@ -235,6 +239,8 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshRenderer.h" />
     <ClInclude Include="PhysicsBody.h" />
+    <ClInclude Include="PhysicsComponent.h" />
+    <ClInclude Include="PhysicsLocator.h" />
     <ClInclude Include="PhysicsSystem.h" />
     <ClInclude Include="PolygonCollider.h" />
     <ClInclude Include="RenderComponent.h" />

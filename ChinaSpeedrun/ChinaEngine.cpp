@@ -18,10 +18,11 @@
 #include "GameObject.h"
 #include "CameraComponent.h"
 #include "Camera.h"
-#include "Rigidbody.h"
-#include "StaticBody.h"
+#include "PhysicsComponent.h"
+
 #include "SphereCollider.h"
-#include "PolygonCollider.h"
+#include "StaticBody.h"
+#include "Rigidbody.h"
 
 #include "Editor.h"
 #include "SceneManager.h"
@@ -29,11 +30,14 @@
 
 #include "Time.h"
 
+#include "lua.hpp"
+
 cs::VulkanEngineRenderer cs::ChinaEngine::renderer;
 cs::editor::EngineEditor cs::ChinaEngine::editor;
 
 void cs::ChinaEngine::Run()
 {
+	LuaTest();
 	Time::CycleInit();
 	Mathf::InitRand();
 
@@ -54,6 +58,35 @@ void cs::ChinaEngine::Run()
 float cs::ChinaEngine::AspectRatio()
 {
 	return renderer.AspectRatio();
+}
+
+int cs::ChinaEngine::LuaTest()
+{
+	std::string command = "a = 30 + 90";
+	int result = 0;
+
+	lua_State* L = luaL_newstate();
+
+	int r = luaL_dostring(L, command.c_str());
+
+	if (r == LUA_OK)
+	{
+		lua_getglobal(L, "a");
+
+		if (lua_isnumber(L, -1))
+		{
+			float a_in_cpp = static_cast<float>(lua_tonumber(L, -1));
+			std::cout << a_in_cpp << std::endl;
+		}
+	}
+	else
+	{
+		result = 1;
+	}
+
+	system("pause");
+	lua_close(L);
+	return result;
 }
 
 void cs::ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight)
@@ -94,7 +127,7 @@ void cs::ChinaEngine::EngineInit()
 	_material2->shader = _shader;
 	_material2->cullMode = Material::CullMode::NONE;
 	_material2->shaderParams["texSampler"] = _chaikaSmile;
-	
+
 	const uint16_t width{ 4 }, length{ 4 }, height{ 4 };
 	Mesh* _sphereModel{ ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj") };
 

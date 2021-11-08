@@ -49,12 +49,12 @@ namespace cs {
 		
 		void Update(class AudioComponent& ac);
 
-	private:
 		void Init();
 		bool Load(std::string path);
 		unsigned Play(std::string name);
 		void Pause(unsigned sid);
 		void Stop(unsigned sid);
+	private:
 
 		std::map<std::string, unsigned> soundMap;
 		AudioBufferBlob buffer;

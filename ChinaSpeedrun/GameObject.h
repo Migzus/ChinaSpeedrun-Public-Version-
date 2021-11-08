@@ -53,6 +53,9 @@ namespace cs
 		// Gets a component of this type
 		template<class T>
 		T& GetComponent();
+		// Gets a constant component reference of this type
+		template<class T>
+		const T& GetComponentConst() const;
 		// Gets all of the components of this type
 		template<class ...T>
 		auto GetComponents();
@@ -102,8 +105,15 @@ namespace cs
 	inline T& GameObject::GetComponent()
 	{
 		return scene->registry.get<T>(entity);
+		return ChinaEngine::world.registry.get<T>(entity);
 	}
 
+	template<class T>
+	inline const T& GameObject::GetComponentConst() const
+	{
+		return static_cast<const T&>(ChinaEngine::world.registry.get<T>(entity));
+	}
+	
 	template<class ...T>
 	auto GameObject::GetComponents()
 	{

@@ -13,8 +13,9 @@
 #include "CameraComponent.h"
 #include "AudioSystem.h"
 #include "AudioComponent.h"
-#include "PhysicsServer.h"
-#include "Rigidbody.h"
+#include "PhysicsSystem.h"
+#include "PhysicsLocator.h"
+#include "PhysicsComponent.h"
 
 #include "GameObject.h"
 
@@ -35,9 +36,10 @@ cs::GameObject* cs::World::InstanceObject(const char* name, const Vector3 positi
 	return _newObject;
 }
 
-cs::World::World() :
-	physicsServer{ new PhysicsServer }, audioSystem{ new AudioSystem }
-{}
+cs::World::World() : physicsSystem{ new PhysicsSystem }, audioSystem{ new AudioSystem }
+{
+	PhysicsLocator::Provide(physicsSystem);
+}
 
 Vector2 cs::World::MouseToScreenSpace()
 {
@@ -62,7 +64,10 @@ void cs::World::Start()
 	auto _cameras{ registry.view<CameraComponent>() };
 
 	if (_cameras.empty())
+	{
 		Debug::LogError("No camera is active in the current scene.");
+		return;
+	}
 
 	for (auto e : _cameras)
 	{
@@ -70,11 +75,33 @@ void cs::World::Start()
 		Camera::CalculatePerspective(*mainCamera);
 		break;
 	}
+
+	auto _physicsEntities{ registry.view<PhysicsComponent>() };
+	for (auto e : _physicsEntities)
+	{
+		auto& _pc{ registry.get<PhysicsComponent>(e) };
+		physicsSystem->CreateBody(&_pc);
+	}
 }
 
 void cs::World::Stop()
 {
-	
+	auto _physicsEntities{ registry.view<PhysicsComponent>() };
+	for (auto e : _physicsEntities)
+	{
+		auto& _pc{ registry.get<PhysicsComponent>(e) };
+		physicsSystem->DestroyBody(&_pc);
+	}
+
+	auto _audioEntities{ registry.view<AudioComponent>() };
+	for (auto e : _audioEntities)
+	{
+		auto& _ac{ registry.get<AudioComponent>(e) };
+		if (_ac.isPlaying)
+		{
+			audioSystem->Stop(_ac.soundId);
+		}
+	}
 }
 
 void cs::World::Step()
@@ -117,24 +144,24 @@ void cs::World::StepEngine()
 		Camera::UpdateCameraTransform(_camera, _transform);
 	}
 
+	physicsSystem->UpdateComponents();
+
+	physicsSystem->UpdateWorld();
+
+	auto _physicsEntities{ registry.view<PhysicsComponent, TransformComponent>() };
+	for (auto e : _physicsEntities)
+	{
+		auto& _pc(registry.get<PhysicsComponent>(e));
+		auto& _tc(registry.get<TransformComponent>(e));
+		physicsSystem->UpdatePositions(_pc, _tc);
+	}
+
 	auto _renderableObjects{ registry.view<MeshRendererComponent, TransformComponent>() };
 	for (auto e : _renderableObjects)
 	{
 		auto& _transform{ registry.get<TransformComponent>(e) };
 		auto& _meshRenderer{ registry.get<MeshRendererComponent>(e) };
-
 		MeshRenderer::UpdateUBO(_meshRenderer, _transform, *World::mainCamera);
-	}
-
-	physicsServer->Step();
-
-	auto _physicsSimulations{ registry.view<RigidbodyComponent, TransformComponent>() };
-	for (auto e : _physicsSimulations)
-	{
-		auto& _transform{ registry.get<TransformComponent>(e) };
-		auto& _rigidbody{ registry.get<RigidbodyComponent>(e) };
-
-		Rigidbody::CalculatePhysics(_rigidbody, _transform);
 	}
 }
 
@@ -146,7 +173,7 @@ void cs::World::StepEditor()
 		auto& _transformComponent{ registry.get<TransformComponent>(e) };
 		Transform::CalculateMatrix(_transformComponent);
 	}
-	
+
 	auto _renderableObjects{ registry.view<MeshRendererComponent, TransformComponent>() };
 	for (auto e : _renderableObjects)
 	{

@@ -16,12 +16,6 @@
       <Filter>ecs</Filter>
     </ClCompile>
     <ClCompile Include="Resource.cpp" />
-    <ClCompile Include="AudioSystem.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioComponent.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
     <ClCompile Include="BulletManagerComponent.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
@@ -41,12 +35,6 @@
       <Filter>imgui</Filter>
     </ClCompile>
     <ClCompile Include="ImGuiLayer.cpp" />
-    <ClCompile Include="Camera.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="CameraComponent.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="Signal.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -54,12 +42,7 @@
     <ClCompile Include="Component.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
-    <ClCompile Include="Collider.cpp" />
-    <ClCompile Include="PolygonCollider.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
     <ClCompile Include="EditorCamera.cpp" />
-    <ClCompile Include="AudioData.cpp" />
     <ClCompile Include="..\Libraries\imgui\scr\imgui.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
@@ -102,6 +85,38 @@
     <ClCompile Include="PhysicsSystem.cpp" />
     <ClCompile Include="SpriteRenderer.cpp">
       <Filter>ecs</Filter>
+    <ClCompile Include="PolygonCollider.cpp">
+      <Filter>ecs\old physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Collider.cpp">
+      <Filter>ecs\old physics</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioComponent.cpp">
+      <Filter>ecs\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioSystem.cpp">
+      <Filter>ecs\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioData.cpp">
+      <Filter>ecs\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsComponent.cpp">
+      <Filter>ecs\physics</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsSystem.cpp">
+      <Filter>ecs\physics</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsLocator.cpp">
+      <Filter>ecs\physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>ecs\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraComponent.cpp">
+      <Filter>ecs\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionShape.cpp">
+      <Filter>ecs\physics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -120,12 +135,6 @@
       <Filter>ecs</Filter>
     </ClInclude>
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="AudioSystem.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioComponent.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
     <ClInclude Include="BulletManagerComponent.h">
       <Filter>ecs</Filter>
     </ClInclude>
@@ -145,12 +154,6 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="ImGuiLayer.h" />
-    <ClInclude Include="CameraComponent.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Signal.h" />
     <ClInclude Include="Scene.h" />
@@ -158,13 +161,8 @@
     <ClInclude Include="Component.h">
       <Filter>ecs</Filter>
     </ClInclude>
-    <ClInclude Include="Collider.h" />
-    <ClInclude Include="PolygonCollider.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
     <ClInclude Include="EditorCamera.h" />
     <ClInclude Include="Editor.h" />
-    <ClInclude Include="AudioData.h" />
     <ClInclude Include="StaticBody.h">
       <Filter>ecs\old physics</Filter>
     </ClInclude>
@@ -187,12 +185,40 @@
     <ClInclude Include="PhysicsServer.h">
       <Filter>ecs\old physics</Filter>
     </ClInclude>
-    <ClInclude Include="PhysicsSystem.h" />
-    <ClInclude Include="PhysicsServer.h">
+    <ClInclude Include="PolygonCollider.h">
+      <Filter>ecs\old physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Collider.h">
       <Filter>ecs\old physics</Filter>
     </ClInclude>
     <ClInclude Include="SpriteRenderer.h">
       <Filter>ecs</Filter>
+    <ClInclude Include="AudioComponent.h">
+      <Filter>ecs\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioSystem.h">
+      <Filter>ecs\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioData.h">
+      <Filter>ecs\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsComponent.h">
+      <Filter>ecs\physics</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsSystem.h">
+      <Filter>ecs\physics</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsLocator.h">
+      <Filter>ecs\physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>ecs\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraComponent.h">
+      <Filter>ecs\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="CollisionShape.h">
+      <Filter>ecs\physics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -205,8 +231,17 @@
     <Filter Include="ecs\old physics">
       <UniqueIdentifier>{3e80436e-5be5-49f9-bd84-63f2c951ad81}</UniqueIdentifier>
     </Filter>
-    <Filter Include="b2">
-      <UniqueIdentifier>{88d53e36-9201-46e1-93ca-103a60cbee52}</UniqueIdentifier>
+    <Filter Include="service">
+      <UniqueIdentifier>{173bc623-7614-4698-82e7-c9996e7ac028}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ecs\physics">
+      <UniqueIdentifier>{00310071-13cb-4c04-9478-db2c21ef213b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ecs\audio">
+      <UniqueIdentifier>{364048aa-df1a-41ef-a4e6-43f0d4067ae8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ecs\camera">
+      <UniqueIdentifier>{73328276-5de6-4477-8a44-1e5101c35e6e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

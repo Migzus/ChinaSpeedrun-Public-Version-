@@ -86,9 +86,9 @@ void cs::AudioSystem::Init()
 	alec(alGenBuffers(buffer.max, buffer.buffer));
 	alec(alGenSources(source.max, source.source));
 	
-	Load("../resources/sounds/koto.wav");
-	Load("../resources/sounds/kazeoto.wav");
-	Load("../resources/sounds/pon1.wav");
+	Load("../Resources/sounds/koto.wav");
+	Load("../Resources/sounds/kazeoto.wav");
+	Load("../Resources/sounds/pon1.wav");
 }
 
 bool cs::AudioSystem::Load(std::string path) {

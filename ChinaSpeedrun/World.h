@@ -16,18 +16,18 @@ namespace cs
 		friend class VulkanEngineRenderer;
 
 		static CameraBase* mainCamera;
-		class PhysicsServer* physicsServer;
+		class PhysicsSystem* physicsSystem;
 		class AudioSystem* audioSystem;
 		//class Rednerer* rendererSystem;
 		//class MeshRenderer* meshRendererSystem;
-		
+
 		World();
-		
+
 		static Vector2 MouseToScreenSpace();
 		static Vector3 MouseToWorldSpace();
 
 		class GameObject* InstanceObject(const char* name, const Vector3 position = Vector3(0.0f), const Vector3 rotation = Vector3(0.0f), const Vector3 scale = Vector3(1.0f));
-		
+
 		// Start all the components
 		void Start();
 		void Stop();
