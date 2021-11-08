@@ -105,13 +105,12 @@ namespace cs
 	inline T& GameObject::GetComponent()
 	{
 		return scene->registry.get<T>(entity);
-		return ChinaEngine::world.registry.get<T>(entity);
 	}
 
 	template<class T>
 	inline const T& GameObject::GetComponentConst() const
 	{
-		return static_cast<const T&>(ChinaEngine::world.registry.get<T>(entity));
+		return static_cast<const T&>(scene->registry.get<T>(entity));
 	}
 	
 	template<class ...T>

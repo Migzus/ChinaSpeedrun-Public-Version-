@@ -76,7 +76,7 @@ int cs::ChinaEngine::LuaTest()
 		if (lua_isnumber(L, -1))
 		{
 			float a_in_cpp = static_cast<float>(lua_tonumber(L, -1));
-			std::cout << a_in_cpp << std::endl;
+			Debug::Log(a_in_cpp);
 		}
 	}
 	else
@@ -84,7 +84,6 @@ int cs::ChinaEngine::LuaTest()
 		result = 1;
 	}
 
-	system("pause");
 	lua_close(L);
 	return result;
 }
