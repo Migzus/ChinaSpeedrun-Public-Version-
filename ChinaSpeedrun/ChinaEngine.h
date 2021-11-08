@@ -18,7 +18,7 @@ namespace cs
 
 		static void Run();
 		static float AspectRatio();
-
+		static int LuaTest();
 		static void FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight);
 
 	private:
