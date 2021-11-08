@@ -1,5 +1,10 @@
 #include "SpriteRenderer.h"
 
+void cs::SpriteRendererComponent::Init()
+{
+
+}
+
 void cs::SpriteRendererComponent::ImGuiDrawComponent()
 {
 

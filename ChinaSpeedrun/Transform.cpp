@@ -21,6 +21,12 @@ cs::TransformComponent::operator Matrix4x4& ()
 	return matrix;
 }
 
+void cs::TransformComponent::Init()
+{
+	if (!gameObject->HasComponent<MeshRendererComponent>())
+		GenerateOBBExtents(gameObject->obb);
+}
+
 void cs::TransformComponent::ImGuiDrawComponent()
 {
 	if (ImGui::TreeNodeEx("Transform", ImGuiTreeNodeFlags_DefaultOpen))
@@ -31,4 +37,9 @@ void cs::TransformComponent::ImGuiDrawComponent()
 
 		ImGui::TreePop();
 	}
+}
+
+void cs::TransformComponent::GenerateOBBExtents(OBB& obb)
+{
+	obb = { Vector3(1.0f), Vector3(1.0f) };
 }

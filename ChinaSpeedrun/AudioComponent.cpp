@@ -5,6 +5,11 @@
 cs::AudioComponent::AudioComponent() : soundId{ 0 }, play{ false }, stop{ false }, isPlaying{ false }, onListener{ false }, time{ 0 }, duration{ 0 }
 {}
 
+void cs::AudioComponent::Init()
+{
+
+}
+
 void cs::AudioComponent::ImGuiDrawComponent()
 {
 	if (ImGui::TreeNodeEx("Audio", ImGuiTreeNodeFlags_DefaultOpen))

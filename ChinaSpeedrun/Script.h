@@ -7,11 +7,6 @@ namespace cs
 	class ScriptComponent : public Component
 	{
 	public:
-	};
-
-	class Script
-	{
-	public:
-
+		virtual void Init() override;
 	};
 }

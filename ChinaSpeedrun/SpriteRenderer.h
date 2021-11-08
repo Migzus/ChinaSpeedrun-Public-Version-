@@ -11,8 +11,8 @@ namespace cs
 		friend class SpriteRenderer;
 
 		class Texture* texture;
-		class Material* material;
 
+		virtual void Init() override;
 		virtual void ImGuiDrawComponent() override;
 		virtual bool IsRendererValid() const override;
 	};

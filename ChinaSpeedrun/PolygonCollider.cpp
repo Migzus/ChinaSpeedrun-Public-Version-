@@ -24,7 +24,7 @@ void cs::PolygonColliderComponent::ImGuiDrawComponent()
 
 cs::PolygonColliderComponent::PolygonColliderComponent()
 {
-	planes.push_back({ glm::normalize(Vector3(-0.4f, -1.0f, 0.0f)), 2.0f });
+	planes.push_back({ glm::normalize(Vector3(0.0f, -1.0f, 0.0f)), 0.0f });
 	//planes.push_back({ glm::normalize(Vector3(0.0f, -1.0f, 0.0f)), 1.0f });
 }
 

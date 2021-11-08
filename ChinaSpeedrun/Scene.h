@@ -32,6 +32,7 @@ namespace cs
 		// Exits the scene and destroys it's contents.
 		// Usually you don't call this yourself, for safety reasons.
 		void Exit();
+		void Free();
 
 		// Adds a game object
 		void AddGameObject(GameObject* newObject = nullptr);
@@ -42,18 +43,24 @@ namespace cs
 		// Queues this scene for deletion
 		void QueueExit();
 
+		class PhysicsServer* GetPhysicsServer() const;
+		class AudioSystem* GetAudioSystem() const;
+
 		void AddToRenderQueue(class RenderComponent* renderer);
 		void RemoveFromRenderQueue(RenderComponent* renderer);
 
 		uint32_t GetUBOOffset();
 
 	private:
+		void DestroyDescriptorPools();
+		void CreateDescriptorPools();
+
 		bool ImGuiDrawGameObjects();
 		void UpdateEditorComponents();
 		void UpdateComponents();
 
-		class PhysicsServer* physicsServer;
-		class AudioSystem* audioSystem;
+		PhysicsServer* physicsServer;
+		AudioSystem* audioSystem;
 
 		entt::registry registry;
 		std::string name;

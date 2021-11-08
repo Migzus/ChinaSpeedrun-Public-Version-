@@ -42,6 +42,7 @@ void cs::ChinaEngine::Run()
 	editor.Start();
 
 	EngineInit();
+
 	renderer.Resolve();
 
 	InitInput();
@@ -63,8 +64,8 @@ void cs::ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int newWidth
 
 void cs::ChinaEngine::EngineInit()
 {
-	SceneManager::Load(SceneManager::CreateScene("Scene 1"));
-	SceneManager::Load(SceneManager::CreateScene("Scene 2"));
+	SceneManager::Load(SceneManager::CreateScene("Performance Test"));
+	SceneManager::Load(SceneManager::CreateScene("Physics Test"));
 	//SceneManager::Load(ResourceManager::Load<Scene>("../Resources/scenes/test_1.json"));
 
 	SceneManager::SetCurrentFocusedScene(0);
@@ -106,12 +107,13 @@ void cs::ChinaEngine::EngineInit()
 				GameObject* _object{ SceneManager::InstanceObject(std::to_string(x + (y * 4) + (z * 16)).c_str(), Vector3((float)x, (float)y, (float)z) * 2.0f) };
 
 				MeshRendererComponent& _terrainMesh{ _object->AddComponent<MeshRendererComponent>() };
-				_terrainMesh.mesh = _sphereModel;
-				_terrainMesh.materials.push_back(_material1);
+				_terrainMesh.SetMesh(_sphereModel);
+				_terrainMesh.material = _material1;
 			}
 		}
 	}
 
+	// PHYSICS TEST
 	SceneManager::SetCurrentFocusedScene(1);
 
 	GameObject* _terrain{ SceneManager::InstanceObject("Terrain", Vector3(0.0f, -6.0f, 0.0f)) };
@@ -120,34 +122,29 @@ void cs::ChinaEngine::EngineInit()
 	GameObject* _camera{ SceneManager::InstanceObject("Camera", Vector3(13.0f, 13.0f, 16.0f), Vector3(-33.0f, 35.0f, 0.0f)) };
 
 	MeshRendererComponent& _terrainMesh{ _terrain->AddComponent<MeshRendererComponent>() };
-	_terrainMesh.mesh = ResourceManager::Load<Mesh>("../Resources/models/terrain.obj");
-	_terrainMesh.materials.push_back(_material2);
+	_terrainMesh.SetMesh(ResourceManager::Load<Mesh>("../Resources/models/terrain.obj"));
+	_terrainMesh.material = _material2;
 
+	SphereColliderComponent& _sphereColTerrain{ _terrain->AddComponent<SphereColliderComponent>() };
+	_sphereColTerrain.radius = 10.0f;
 	StaticBodyComponent& _rbT{ _terrain->AddComponent<StaticBodyComponent>() };
-	_terrain->AddComponent<PolygonColliderComponent>();
 
 	MeshRendererComponent& _meshRendererMonke{ _suzanne->AddComponent<MeshRendererComponent>() };
-	_meshRendererMonke.mesh = ResourceManager::Load<Mesh>("../Resources/models/suzanne.obj");
-	_meshRendererMonke.materials.push_back(_material1);
+	_meshRendererMonke.SetMesh(ResourceManager::Load<Mesh>("../Resources/models/suzanne.obj"));
+	_meshRendererMonke.material = _material1;
 	
-	RigidbodyComponent& _rbZU{ _suzanne->AddComponent<RigidbodyComponent>() };
 	_suzanne->AddComponent<SphereColliderComponent>();
+	RigidbodyComponent& _rbZU{ _suzanne->AddComponent<RigidbodyComponent>() };
 	_rbZU.mass = 1.0f;
 
 	MeshRendererComponent& _junkoBall{ _physicsBall->AddComponent<MeshRendererComponent>() };
-	_junkoBall.mesh = ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj");
-	_junkoBall.materials.push_back(_material1);
+	_junkoBall.SetMesh(ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj"));
+	_junkoBall.material = _material1;
 	
-	RigidbodyComponent& _rbPB{ _physicsBall->AddComponent<RigidbodyComponent>() };
 	_physicsBall->AddComponent<SphereColliderComponent>();
+	RigidbodyComponent& _rbPB{ _physicsBall->AddComponent<RigidbodyComponent>() };
 
 	CameraComponent& _cameraComponent{ _camera->AddComponent<CameraComponent>() };
-	//CameraComponent::currentActiveCamera = &_cameraComponent;
-
-	// move this elsewhere, i dont want to call this for every physics object...
-	PhysicsBody::GetAllColliderComponents(&_rbT);
-	PhysicsBody::GetAllColliderComponents(&_rbZU);
-	PhysicsBody::GetAllColliderComponents(&_rbPB);
 }
 
 void cs::ChinaEngine::InitInput()

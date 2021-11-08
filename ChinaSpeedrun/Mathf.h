@@ -28,7 +28,7 @@ namespace cs
 {
 	struct OBB
 	{
-		Vector3 minExtent{ Vector3(-0.8f) }, maxExtent{ Vector3(0.8f) };
+		Vector3 minExtent{ Vector3(0.0f) }, maxExtent{ Vector3(0.0f) };
 	};
 
 	class Mathf

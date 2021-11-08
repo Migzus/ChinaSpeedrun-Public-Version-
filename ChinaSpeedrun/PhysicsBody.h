@@ -38,6 +38,7 @@ namespace cs
 
 		PhysicsBodyComponent();
 
+		virtual void Init() override;
 		virtual void ImGuiDrawComponent() override;
 
 	private:

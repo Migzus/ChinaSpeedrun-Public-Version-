@@ -1,7 +1,7 @@
 #include "PhysicsBody.h"
 
 #include "ChinaEngine.h"
-#include "World.h"
+#include "SceneManager.h"
 #include "imgui.h"
 #include "PhysicsServer.h"
 #include "GameObject.h"
@@ -63,4 +63,10 @@ void cs::PhysicsBodyComponent::ImGuiDrawComponent()
 
 		ImGui::TreePop();
 	}
+}
+
+void cs::PhysicsBodyComponent::Init()
+{
+	PhysicsBody::GetAllColliderComponents(this);
+	gameObject->GetScene()->GetPhysicsServer()->bodies.push_back(this);
 }

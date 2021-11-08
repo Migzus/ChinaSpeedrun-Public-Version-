@@ -4,6 +4,7 @@
 
 namespace cs
 {
+	class Scene;
 	class CameraBase;
 	class MeshRenderer;
 	class VulkanEngineRenderer;
@@ -11,18 +12,22 @@ namespace cs
 	class MeshRendererComponent : public RenderComponent
 	{
 	public:
+		friend Scene;
 		friend MeshRenderer;
 		friend VulkanEngineRenderer;
 
 		class Mesh* mesh;
-		std::vector<class Material*> materials;
 
 		MeshRendererComponent();
 
+		void SetMesh(Mesh* mesh);
+		virtual void Init() override;
 		virtual void ImGuiDrawComponent() override;
 		virtual bool IsRendererValid() const override;
 		virtual void VulkanDraw(VkCommandBuffer& commandBuffer, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer) override;
-	
+		
+		void GenerateOBBExtents(OBB& obb);
+
 		~MeshRendererComponent();
 	};
 

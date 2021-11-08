@@ -56,6 +56,8 @@ namespace cs
 		// Gets all of the components of this type
 		template<class ...T>
 		auto GetComponents();
+		// Gets all of the components
+		std::vector<Component*> GetAllComponents();
 		// Removes the selected
 		template<class T>
 		void RemoveComponent();
@@ -64,16 +66,15 @@ namespace cs
 
 		Scene* GetScene() const;
 
-		void GenerateOBBExtents();
-
 		~GameObject();
 
 	private:
-		const entt::entity entity;
+		entt::entity entity;
 		Scene* scene;
 
 		GameObject* parent;
 		std::vector<GameObject*> children;
+		std::vector<Component*> components;
 
 		// Draw all the game object's components
 		void EditorDrawComponents();
@@ -90,8 +91,9 @@ namespace cs
 	{
 		auto& _comp{ scene->registry.emplace<T>(entity) };
 
+		components.push_back(&_comp);
 		_comp.gameObject = this;
-		GenerateOBBExtents();
+		_comp.Init();
 
 		return _comp;
 	}

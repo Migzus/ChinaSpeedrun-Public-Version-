@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include "GameObject.h"
 #include "ChinaEngine.h"
+#include "VulkanEngineRenderer.h"
 
 #include "Debug.h"
 
@@ -24,12 +25,12 @@ cs::Scene::Scene() :
 
 void cs::Scene::Initialize()
 {
-
+	Debug::LogWarning("Init ", name);
 }
 
 void cs::Scene::Start()
 {
-
+	Debug::LogSuccess("Start ", name);
 }
 
 void cs::Scene::Update()
@@ -48,6 +49,11 @@ void cs::Scene::Update()
 }
 
 void cs::Scene::Exit()
+{
+	Debug::LogIssue("Exiting ", name);
+}
+
+void cs::Scene::Free()
 {
 	ClearScene();
 
@@ -74,16 +80,29 @@ void cs::Scene::RemoveGameObject()
 
 void cs::Scene::ClearScene()
 {
+	DestroyDescriptorPools();
+
 	// currently the resources will just not be deleted (they are stored in ResourceManager)
     for (GameObject* object : gameObjects)
         delete object;
 
     gameObjects.clear();
+	renderableObjects.clear();
 }
 
 void cs::Scene::QueueExit()
 {
 	SceneManager::Unload(this);
+}
+
+cs::PhysicsServer* cs::Scene::GetPhysicsServer() const
+{
+	return physicsServer;
+}
+
+cs::AudioSystem* cs::Scene::GetAudioSystem() const
+{
+	return audioSystem;
 }
 
 void cs::Scene::AddToRenderQueue(RenderComponent* renderer)
@@ -102,6 +121,18 @@ void cs::Scene::RemoveFromRenderQueue(RenderComponent* renderer)
 uint32_t cs::Scene::GetUBOOffset()
 {
 	return UniformBufferObject::GetByteSize() * renderableObjects.size();
+}
+
+void cs::Scene::DestroyDescriptorPools()
+{
+	for (auto* object : renderableObjects)
+		ChinaEngine::renderer.DestroyDescriptorPool(object->descriptorPool);
+}
+
+void cs::Scene::CreateDescriptorPools()
+{
+	for (auto* object : renderableObjects)
+		ChinaEngine::renderer.MakeDescriptorPool(*object);
 }
 
 bool cs::Scene::ImGuiDrawGameObjects()

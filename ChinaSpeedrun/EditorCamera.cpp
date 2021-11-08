@@ -31,18 +31,21 @@ void cs::editor::EditorCamera::Update()
 		SelectTest();
 
 	// frustum testing
-	auto _entities{ SceneManager::GetRegistry().view<TransformComponent, MeshRendererComponent>() };
-	Matrix4x4 _pv{ proj * view };
-
-	for (auto& e : _entities)
+	if (SceneManager::HasScenes())
 	{
-		auto* _transform{ SceneManager::GetRegistry().try_get<TransformComponent>(e) };
-		auto* _meshRenderer{ SceneManager::GetRegistry().try_get<MeshRendererComponent>(e) };
+		auto _entities{ SceneManager::GetRegistry().view<TransformComponent, MeshRendererComponent>() };
+		Matrix4x4 _pv{ proj * view };
 
-		if (_transform == nullptr || _meshRenderer == nullptr)
-			return;
+		for (auto& e : _entities)
+		{
+			auto* _transform{ SceneManager::GetRegistry().try_get<TransformComponent>(e) };
+			auto* _meshRenderer{ SceneManager::GetRegistry().try_get<MeshRendererComponent>(e) };
 
-		_meshRenderer->visible = Camera::FrustumTest(_transform->gameObject->obb, _pv * Transform::GetMatrixTransform(*_transform));
+			if (_transform == nullptr || _meshRenderer == nullptr)
+				return;
+
+			_meshRenderer->visible = Camera::FrustumTest(_transform->gameObject->obb, _pv * Transform::GetMatrixTransform(*_transform));
+		}
 	}
 }
 

@@ -27,6 +27,7 @@ namespace cs
 			void Step();
 			void End();
 			void SetStyle();
+
 			const bool& IsManipulating() const;
 			const bool& IsInteractingWithWindow() const;
 
@@ -40,6 +41,7 @@ namespace cs
 			std::vector<VkCommandBuffer> commandBuffers;
 			std::vector<VkFramebuffer> framebuffers;
 
+			void DrawStopSimulationButton();
 			void IsWindowHovered();
 		};
 	}

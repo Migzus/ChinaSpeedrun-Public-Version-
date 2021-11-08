@@ -110,24 +110,26 @@ void cs::editor::ImGuiLayer::Step()
         case EngineEditor::Playmode::EDITOR:
             ImGui::Button("Play");
             if (ImGui::IsItemClicked())
+            {
                 editorRoot->SetPlaymode(EngineEditor::Playmode::PLAY);
+                SceneManager::GetCurrentScene()->Start();
+            }
             break;
         case editor::EngineEditor::Playmode::PLAY:
             ImGui::Button("Pause");
             if (ImGui::IsItemClicked())
                 editorRoot->SetPlaymode(EngineEditor::Playmode::PAUSE);
+
+            DrawStopSimulationButton();
             break;
         case EngineEditor::Playmode::PAUSE:
             ImGui::Button("Continue");
             if (ImGui::IsItemClicked())
                 editorRoot->SetPlaymode(EngineEditor::Playmode::PLAY);
+            
+            DrawStopSimulationButton();
             break;
         }
-
-        ImGui::SameLine();
-        ImGui::Button("Stop");
-        if (ImGui::IsItemClicked())
-            editorRoot->SetPlaymode(EngineEditor::Playmode::EDITOR);
 
         IsWindowHovered();
     }
@@ -179,6 +181,17 @@ const bool& cs::editor::ImGuiLayer::IsManipulating() const
 const bool& cs::editor::ImGuiLayer::IsInteractingWithWindow() const
 {
     return isWindowActive;
+}
+
+void cs::editor::ImGuiLayer::DrawStopSimulationButton()
+{
+    ImGui::SameLine();
+    ImGui::Button("Stop");
+    if (ImGui::IsItemClicked())
+    {
+        editorRoot->SetPlaymode(EngineEditor::Playmode::EDITOR);
+        SceneManager::GetCurrentScene()->Exit();
+    }
 }
 
 void cs::editor::ImGuiLayer::IsWindowHovered()

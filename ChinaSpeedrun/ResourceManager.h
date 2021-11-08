@@ -10,6 +10,13 @@ typedef std::vector<char> RawData;
 
 namespace cs
 {
+	class Material;
+	class Shader;
+	class Texture;
+	class AudioData;
+	class Mesh;
+	class Scene;
+
 	class ResourceManager
 	{
 	public:
@@ -24,12 +31,12 @@ namespace cs
 		template<class T>
 		static void ForcePush(T* resource);
 
-		static class Mesh* LoadModel(const std::string filename);
-		static class AudioData* LoadAudio(const std::string filename);
-		static class Texture* LoadTexture(const std::string filename);
-		static class Shader* LoadShader(std::vector<std::string> filenames);
-		static class Material* LoadMaterial(const std::string filename);
-		static class Scene* LoadScene(const std::string filename); // scene would also be a prefab
+		static Mesh* LoadModel(const std::string filename);
+		static AudioData* LoadAudio(const std::string filename);
+		static Texture* LoadTexture(const std::string filename);
+		static Shader* LoadShader(std::vector<std::string> filenames);
+		static Material* LoadMaterial(const std::string filename);
+		static Scene* LoadScene(const std::string filename);
 		static RawData LoadRaw(const std::string filename);
 
 		static void ForcePushMesh(Mesh* mesh);
@@ -107,6 +114,23 @@ namespace cs
 
 			return _shaderOut;
 		}
+
+		template<>
+		static Scene* IsDuplicateResource(std::string filename)
+		{
+			
+		}
+		template<>
+		static Scene* Load(const std::string filename)
+		{
+			return nullptr;
+		}
+
+		/*template<>
+		inline Scene* Save(const std::string filename, Scene* resource)
+		{
+			return nullptr;
+		}*/
 
 		// It is EXTREMELY dangerous to call this function from a normal script in-game. NEVER do this.
 		static void ClearAllResourcePools();

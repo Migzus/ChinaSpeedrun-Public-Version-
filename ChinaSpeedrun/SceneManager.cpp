@@ -5,6 +5,7 @@
 #include "Transform.h"
 #include "Debug.h"
 #include "CameraBase.h"
+#include "ResourceManager.h"
 
 #include "ChinaEngine.h"
 #include "Editor.h"
@@ -47,8 +48,19 @@ cs::GameObject* cs::SceneManager::InstanceObject(const char* name, const Vector3
 	return _newObject;
 }
 
+void cs::SceneManager::DestroyDescriptorPools()
+{
+	GetCurrentScene()->DestroyDescriptorPools();
+}
+
+void cs::SceneManager::CreateDescriptorPools()
+{
+	GetCurrentScene()->CreateDescriptorPools();
+}
+
 void cs::SceneManager::SetCurrentFocusedScene(const uint32_t newCurrentScene)
 {
+	// let's wait until the end of the frame before setting this
 	currentScene = newCurrentScene;
 }
 
@@ -65,11 +77,17 @@ void cs::SceneManager::Resolve()
 		{
 		case SceneAction::NONE: // Basically the defualt case
 			break;
+		case SceneAction::INIT:
+			sceneAction.sceneRef->Initialize();
+			break;
 		case SceneAction::START:
 			sceneAction.sceneRef->Start();
 			break;
 		case SceneAction::EXIT:
 			sceneAction.sceneRef->Exit();
+			break;
+		case SceneAction::FREE:
+			FreeScene(sceneAction.sceneRef);
 			break;
 		}
 	}
@@ -79,7 +97,13 @@ void cs::SceneManager::Resolve()
 
 void cs::SceneManager::Update()
 {
-	GetCurrentScene()->Update();
+	if (HasScenes())
+		GetCurrentScene()->Update();
+}
+
+bool cs::SceneManager::HasScenes()
+{
+	return !activeScenes.empty();
 }
 
 entt::registry& cs::SceneManager::GetRegistry()
@@ -106,34 +130,21 @@ void cs::SceneManager::Save()
 		// ask to save with a new resource path
 	}
 
-	// save the current scene
+	//ResourceManager::Save<Scene>(_currentScene->resourcePath, _currentScene);
 }
 
 void cs::SceneManager::Load(Scene* scene)
 {
-	scene->Initialize();
-	SolveScene(scene, SceneAction::START);
+	SolveScene(scene, SceneAction::INIT);
 
 	activeScenes.push_back(scene);
 }
 
 void cs::SceneManager::Unload(Scene* scene)
 {
-	auto _it{ std::find(activeScenes.begin(), activeScenes.end(), scene) };
-
-	if (_it == activeScenes.end())
-	{
-		Debug::LogWarning("Cannot unload this scene. It is not initialized.");
-		return;
-	}
-	
-	ChinaEngine::editor.SetSelectedGameObject(nullptr);
-
 	// unload stuff here
 
-	SolveScene(scene, SceneAction::EXIT);
-	activeScenes.erase(_it);
-	Mathf::Clamp(currentScene, (uint32_t)0, (uint32_t)activeScenes.size());
+	SolveScene(scene, SceneAction::FREE);
 }
 
 void cs::SceneManager::UnloadEverything()
@@ -146,9 +157,26 @@ cs::Scene* cs::SceneManager::GetCurrentScene()
 	return activeScenes.empty() ? nullptr : activeScenes[currentScene];
 }
 
+void cs::SceneManager::FreeScene(Scene* scene)
+{
+	auto _it{ std::find(activeScenes.begin(), activeScenes.end(), scene) };
+
+	if (_it == activeScenes.end())
+	{
+		Debug::LogWarning("Cannot unload this scene. It is not initialized.");
+		return;
+	}
+
+	activeScenes.erase(_it);
+	ChinaEngine::editor.SetSelectedGameObject(nullptr);
+
+	Mathf::Clamp(currentScene, (uint32_t)0, (uint32_t)activeScenes.size() - 1);
+	scene->Free();
+}
+
 void cs::SceneManager::DrawScenes()
 {
 	for (size_t i{ 0 }; i < activeScenes.size(); i++)
 		if (activeScenes[i]->ImGuiDrawGameObjects())
-			currentScene = i;
+			SetCurrentFocusedScene(i);
 }

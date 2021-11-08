@@ -5,6 +5,11 @@
 #include "SphereCollider.h"
 #include "PolygonCollider.h"
 
+void cs::ColliderComponent::Init()
+{
+
+}
+
 cs::CollisionInfo cs::ColliderComponent::Intersect(const TransformComponent* transform, const ColliderComponent* otherCollider, const TransformComponent* otherTransform) const
 {
     return {};

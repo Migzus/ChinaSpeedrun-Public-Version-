@@ -1,5 +1,10 @@
 #include "BulletManagerComponent.h"
 
+void cs::BulletManagerComponent::Init()
+{
+
+}
+
 void cs::BulletManagerComponent::CreateSystem()
 {
 	for (size_t i{ 0 }; i < bulletCapacity; i++)

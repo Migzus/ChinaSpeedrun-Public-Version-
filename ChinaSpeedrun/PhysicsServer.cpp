@@ -115,12 +115,6 @@ bool cs::PhysicsServer::TestRayAgainstAxis(const Vector3 axis, const Vector3& de
 		_t2 = _w;
 	}
 
-	//if (_t2 < maxDistance)
-	//	maxDistance = _t2;
-
-	//if (_t1 > minDistance)
-	//	minDistance = _t1;
-
 	minDistance = _t1 * (_t1 > minDistance) + minDistance * (_t1 <= minDistance);
 	maxDistance = _t2 * (_t2 < maxDistance) + maxDistance * (_t2 >= maxDistance);
 

@@ -86,6 +86,8 @@ namespace cs
 		uint64_t bulletCapacity;
 		Extent mainBorder, absoluteBorder;
 
+		virtual void Init() override;
+
 		void CreateSystem();
 
 		void SpawnCircle(BulletInfo& info, const uint16_t bulletCount, const float radius = 0.0f, const float overrideSpacing = -1.0f);

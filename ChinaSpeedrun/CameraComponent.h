@@ -18,6 +18,7 @@ namespace cs
 			PERSPECTIVE
 		} projection;
 
+		virtual void Init() override;
 		virtual void ImGuiDrawComponent() override;
 	};
 }

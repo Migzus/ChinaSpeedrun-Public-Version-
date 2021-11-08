@@ -4,6 +4,7 @@
 
 #include "entt/entt.hpp"
 
+#include <vulkan/vulkan.h>
 #include <vector>
 #include <string>
 
@@ -23,8 +24,10 @@ namespace cs
 		enum class SceneAction
 		{
 			NONE,
+			INIT,
 			START,
-			EXIT
+			EXIT,
+			FREE
 		};
 
 		struct SceneActionCombo
@@ -41,11 +44,14 @@ namespace cs
 		static class GameObject* InstanceEmptyObject(const char* name);
 		static GameObject* InstanceObject(const char* name, const Vector3 position = Vector3(0.0f), const Vector3 rotation = Vector3(0.0f), const Vector3 scale = Vector3(1.0f));
 
+		static void DestroyDescriptorPools();
+		static void CreateDescriptorPools();
 		static void SetCurrentFocusedScene(const uint32_t newCurrentScene);
 
 		static void SolveScene(Scene* scene, const SceneAction action);
 		static void Resolve();
 		static void Update();
+		static bool HasScenes();
 
 		static entt::registry& GetRegistry();
 
@@ -61,6 +67,7 @@ namespace cs
 		static std::vector<Scene*> activeScenes;
 		static uint32_t currentScene;
 
+		static void FreeScene(Scene* scene);
 		static void DrawScenes();
 	};
 }

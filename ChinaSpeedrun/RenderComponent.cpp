@@ -17,6 +17,9 @@ cs::RenderComponent::RenderComponent() :
 	uboOffset{ 0 }
 {}
 
+void cs::RenderComponent::Init()
+{}
+
 void cs::RenderComponent::ImGuiDrawComponent()
 {
 	if (ImGui::TreeNodeEx("Renderer", ImGuiTreeNodeFlags_DefaultOpen))

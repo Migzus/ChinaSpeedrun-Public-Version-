@@ -7,6 +7,8 @@
 
 namespace cs
 {
+	struct CollisionInfo;
+
 	struct Plane
 	{
 		Vector3 normal;
@@ -24,7 +26,7 @@ namespace cs
 		void CreateBasedOnMesh();
 		const std::vector<Plane>& GetPlanes() const;
 
-		struct CollisionInfo Intersect(const class TransformComponent* transform, const ColliderComponent* otherCollider, const TransformComponent* otherTransform) const override;
+		CollisionInfo Intersect(const class TransformComponent* transform, const ColliderComponent* otherCollider, const TransformComponent* otherTransform) const override;
 		CollisionInfo Intersect(const TransformComponent* transform, const class SphereColliderComponent* otherCollider, const TransformComponent* otherTransform) const override;
 		CollisionInfo Intersect(const TransformComponent* transform, const class PolygonColliderComponent* otherCollider, const TransformComponent* otherTransform) const override;
 
