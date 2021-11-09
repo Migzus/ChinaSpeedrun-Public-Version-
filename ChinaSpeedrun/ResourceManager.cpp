@@ -10,6 +10,7 @@
 #include "Texture.h"
 #include "Shader.h"
 #include "AudioData.h"
+#include "Script.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -28,9 +29,7 @@ std::unordered_map<std::string, cs::Texture*> cs::ResourceManager::textures;
 std::unordered_map<std::string, cs::Mesh*> cs::ResourceManager::meshes;
 std::unordered_map<std::string, cs::Shader*> cs::ResourceManager::shaders;
 std::unordered_map<std::string, cs::AudioData*> cs::ResourceManager::audio;
-
-// One thing that the resource manager will do automatically is allocation to the vulkan buffers
-// In other words, we have direct contact with the VulkanRenderer, and we can tell it to allocate and free resources at will
+std::unordered_map<std::string, cs::Script*> cs::ResourceManager::scripts;
 
 cs::Mesh* cs::ResourceManager::LoadModel(const std::string filename)
 {
@@ -42,7 +41,7 @@ cs::Mesh* cs::ResourceManager::LoadModel(const std::string filename)
 
 		tinyobj::attrib_t _attributes;
 		std::vector<tinyobj::shape_t> _shapes;
-		std::vector<tinyobj::material_t> _materials; // currently we don't do anything with the materials, but in the future we will automatically make the materials
+		std::vector<tinyobj::material_t> _materials; // currently we don't do anything with the materials, but in the future we will automatically make the materials (maybe)
 		std::string _warning, _error;
 
 		if (!tinyobj::LoadObj(&_attributes, &_shapes, &_materials, &_warning, &_error, filename.c_str()))
@@ -242,6 +241,23 @@ RawData cs::ResourceManager::LoadRaw(const std::string filename)
 	return _buffer;
 }
 
+cs::Script* cs::ResourceManager::LoadScript(const std::string filename)
+{
+	std::ifstream _readFile{ filename };
+
+	if (_readFile.bad())
+	{
+		_readFile.close();
+		return nullptr;
+	}
+
+	_readFile.close();
+
+	Script* _newScript{ new Script };
+	_newScript->resourcePath = filename;
+	return _newScript;
+}
+
 void cs::ResourceManager::ForcePushMesh(Mesh* mesh)
 {
 	meshes[mesh->resourcePath] = mesh;
@@ -268,4 +284,8 @@ void cs::ResourceManager::ClearAllResourcePools()
 	/*for (const std::pair<std::string, AudioData*> audio : audioTracks)
 		delete audio.second;
 	audioTracks.clear();*/
+
+	for (const std::pair<std::string, Script*> script : scripts)
+		delete script.second;
+	scripts.clear();
 }

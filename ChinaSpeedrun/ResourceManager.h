@@ -16,6 +16,7 @@ namespace cs
 	class AudioData;
 	class Mesh;
 	class Scene;
+	class Script;
 
 	class ResourceManager
 	{
@@ -38,8 +39,20 @@ namespace cs
 		static Material* LoadMaterial(const std::string filename);
 		static Scene* LoadScene(const std::string filename);
 		static RawData LoadRaw(const std::string filename);
+		static Script* LoadScript(const std::string filename);
 
 		static void ForcePushMesh(Mesh* mesh);
+
+		template<>
+		static Script* IsDuplicateResource(std::string filename)
+		{
+			return scripts[filename];
+		}
+		template<>
+		static Script* Load(const std::string filename)
+		{
+			return LoadScript(filename);
+		}
 
 		template<>
 		static Mesh* IsDuplicateResource(std::string filename)
@@ -141,5 +154,6 @@ namespace cs
 		static std::unordered_map<std::string, cs::Texture*> textures;
 		static std::unordered_map<std::string, cs::Shader*> shaders;
 		static std::unordered_map<std::string, cs::Material*> materials;
+		static std::unordered_map<std::string, cs::Script*> scripts;
 	};
 }

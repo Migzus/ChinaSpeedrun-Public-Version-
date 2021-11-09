@@ -7,6 +7,8 @@
 
 #include "Color.h"
 
+#define STRING_BOOL(v) v ? "True" : "False"
+
 namespace cs
 {
 	namespace iocolors

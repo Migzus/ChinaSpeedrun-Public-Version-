@@ -19,7 +19,7 @@
 #include "CameraComponent.h"
 #include "Camera.h"
 #include "PhysicsComponent.h"
-
+#include "Script.h"
 #include "SphereCollider.h"
 #include "StaticBody.h"
 #include "Rigidbody.h"
@@ -30,14 +30,11 @@
 
 #include "Time.h"
 
-#include "lua.hpp"
-
 cs::VulkanEngineRenderer cs::ChinaEngine::renderer;
 cs::editor::EngineEditor cs::ChinaEngine::editor;
 
 void cs::ChinaEngine::Run()
 {
-	LuaTest();
 	Time::CycleInit();
 	Mathf::InitRand();
 
@@ -58,34 +55,6 @@ void cs::ChinaEngine::Run()
 float cs::ChinaEngine::AspectRatio()
 {
 	return renderer.AspectRatio();
-}
-
-int cs::ChinaEngine::LuaTest()
-{
-	std::string command = "a = 30 + 90";
-	int result = 0;
-
-	lua_State* L = luaL_newstate();
-
-	int r = luaL_dostring(L, command.c_str());
-
-	if (r == LUA_OK)
-	{
-		lua_getglobal(L, "a");
-
-		if (lua_isnumber(L, -1))
-		{
-			float a_in_cpp = static_cast<float>(lua_tonumber(L, -1));
-			Debug::Log(a_in_cpp);
-		}
-	}
-	else
-	{
-		result = 1;
-	}
-
-	lua_close(L);
-	return result;
 }
 
 void cs::ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight)
@@ -156,6 +125,9 @@ void cs::ChinaEngine::EngineInit()
 	MeshRendererComponent& _terrainMesh{ _terrain->AddComponent<MeshRendererComponent>() };
 	_terrainMesh.SetMesh(ResourceManager::Load<Mesh>("../Resources/models/terrain.obj"));
 	_terrainMesh.material = _material2;
+
+	ScriptComponent& _terrainScript{ _terrain->AddComponent<ScriptComponent>() };
+	_terrainScript.SetScript(ResourceManager::Load<Script>("../Resources/scripts/lua_test.lua"));
 
 	SphereColliderComponent& _sphereColTerrain{ _terrain->AddComponent<SphereColliderComponent>() };
 	_sphereColTerrain.radius = 10.0f;

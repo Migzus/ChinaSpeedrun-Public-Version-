@@ -1,247 +1,122 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="..\Libraries\ImGuizmo\ImGuizmo.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui_demo.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui_draw.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui_tables.cpp" />
+    <ClCompile Include="..\Libraries\imgui\scr\imgui_widgets.cpp" />
+    <ClCompile Include="AudioComponent.cpp" />
+    <ClCompile Include="AudioData.cpp" />
+    <ClCompile Include="AudioSystem.cpp" />
+    <ClCompile Include="BulletManagerComponent.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="ChinaEngine.cpp" />
+    <ClCompile Include="Collider.cpp" />
+    <ClCompile Include="CollisionShape.cpp" />
+    <ClCompile Include="Color.cpp" />
+    <ClCompile Include="Component.cpp" />
+    <ClCompile Include="Debug.cpp" />
+    <ClCompile Include="EditorCamera.cpp" />
+    <ClCompile Include="EngineEditor.cpp" />
+    <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="Gizmos.cpp" />
+    <ClCompile Include="ImGuiLayer.cpp" />
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />
-    <ClCompile Include="Mesh.cpp" />
-    <ClCompile Include="Shader.cpp" />
-    <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="Vertex.cpp" />
-    <ClCompile Include="VulkanEngineRenderer.cpp" />
-    <ClCompile Include="Input.cpp" />
     <ClCompile Include="Mathf.cpp" />
-    <ClCompile Include="Color.cpp" />
-    <ClCompile Include="Transform.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshRenderer.cpp" />
+    <ClCompile Include="PhysicsBody.cpp" />
+    <ClCompile Include="PhysicsComponent.cpp" />
+    <ClCompile Include="PhysicsLocator.cpp" />
+    <ClCompile Include="PhysicsSystem.cpp" />
+    <ClCompile Include="PolygonCollider.cpp" />
+    <ClCompile Include="RenderComponent.cpp" />
     <ClCompile Include="Resource.cpp" />
-    <ClCompile Include="BulletManagerComponent.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="Time.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
-    <ClCompile Include="GameObject.cpp" />
-    <ClCompile Include="World.cpp" />
-    <ClCompile Include="MeshRenderer.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderComponent.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="Gizmos.cpp" />
-    <ClCompile Include="EngineEditor.cpp" />
-    <ClCompile Include="..\Libraries\ImGuizmo\ImGuizmo.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="ImGuiLayer.cpp" />
-    <ClCompile Include="Debug.cpp" />
-    <ClCompile Include="Signal.cpp" />
+    <ClCompile Include="PhysicsServer.cpp" />
+    <ClCompile Include="Rigidbody.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneManager.cpp" />
-    <ClCompile Include="Component.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="EditorCamera.cpp" />
-    <ClCompile Include="..\Libraries\imgui\scr\imgui.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\imgui\scr\imgui_demo.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\imgui\scr\imgui_draw.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\imgui\scr\imgui_impl_glfw.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\imgui\scr\imgui_impl_vulkan.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\imgui\scr\imgui_tables.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\imgui\scr\imgui_widgets.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="Script.cpp">
-      <Filter>ecs</Filter>
-    </ClCompile>
-    <ClCompile Include="Rigidbody.cpp">
-      <Filter>ecs\old physics</Filter>
-    </ClCompile>
-    <ClCompile Include="SphereCollider.cpp">
-      <Filter>ecs\old physics</Filter>
-    </ClCompile>
-    <ClCompile Include="StaticBody.cpp">
-      <Filter>ecs\old physics</Filter>
-    </ClCompile>
-    <ClCompile Include="PhysicsBody.cpp">
-      <Filter>ecs\old physics</Filter>
-    </ClCompile>
-    <ClCompile Include="PhysicsServer.cpp">
-      <Filter>ecs\old physics</Filter>
-    </ClCompile>
-    <ClCompile Include="PhysicsSystem.cpp" />
-    <ClCompile Include="SpriteRenderer.cpp">
-      <Filter>ecs</Filter>
-    <ClCompile Include="PolygonCollider.cpp">
-      <Filter>ecs\old physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Collider.cpp">
-      <Filter>ecs\old physics</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioComponent.cpp">
-      <Filter>ecs\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioSystem.cpp">
-      <Filter>ecs\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioData.cpp">
-      <Filter>ecs\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="PhysicsComponent.cpp">
-      <Filter>ecs\physics</Filter>
-    </ClCompile>
-    <ClCompile Include="PhysicsSystem.cpp">
-      <Filter>ecs\physics</Filter>
-    </ClCompile>
-    <ClCompile Include="PhysicsLocator.cpp">
-      <Filter>ecs\physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>ecs\camera</Filter>
-    </ClCompile>
-    <ClCompile Include="CameraComponent.cpp">
-      <Filter>ecs\camera</Filter>
-    </ClCompile>
-    <ClCompile Include="CollisionShape.cpp">
-      <Filter>ecs\physics</Filter>
-    </ClCompile>
+    <ClCompile Include="Script.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Signal.cpp" />
+    <ClCompile Include="SphereCollider.cpp" />
+    <ClCompile Include="SpriteRenderer.cpp" />
+    <ClCompile Include="StaticBody.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Time.cpp" />
+    <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="Vertex.cpp" />
+    <ClCompile Include="VulkanEngineRenderer.cpp" />
+    <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ChinaEngine.h" />
-    <ClInclude Include="Material.h" />
-    <ClInclude Include="Mesh.h" />
-    <ClInclude Include="Shader.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="Vertex.h" />
-    <ClInclude Include="VulkanEngineRenderer.h" />
-    <ClInclude Include="Input.h" />
-    <ClInclude Include="Mathf.h" />
+    <ClInclude Include="..\Libraries\ImGuizmo\ImGuizmo.h" />
+    <ClInclude Include="AudioComponent.h" />
+    <ClInclude Include="AudioData.h" />
+    <ClInclude Include="AudioSystem.h" />
+    <ClInclude Include="BulletManagerComponent.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="CameraBase.h" />
+    <ClInclude Include="CameraComponent.h" />
     <ClInclude Include="ChinaCoreHeader.h" />
+    <ClInclude Include="ChinaEngine.h" />
+    <ClInclude Include="Collider.h" />
+    <ClInclude Include="CollisionShape.h" />
     <ClInclude Include="Color.h" />
-    <ClInclude Include="Transform.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="BulletManagerComponent.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="Time.h" />
-    <ClInclude Include="ResourceManager.h" />
-    <ClInclude Include="GameObject.h" />
-    <ClInclude Include="World.h" />
-    <ClInclude Include="RenderComponent.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshRenderer.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="Gizmos.h" />
-    <ClInclude Include="EngineEditor.h" />
-    <ClInclude Include="..\Libraries\ImGuizmo\ImGuizmo.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="ImGuiLayer.h" />
+    <ClInclude Include="Component.h" />
     <ClInclude Include="Debug.h" />
-    <ClInclude Include="Signal.h" />
+    <ClInclude Include="EditorCamera.h" />
+    <ClInclude Include="EngineEditor.h" />
+    <ClInclude Include="GameObject.h" />
+    <ClInclude Include="Gizmos.h" />
+    <ClInclude Include="Editor.h" />
+    <ClInclude Include="ImGuiLayer.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Mathf.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshRenderer.h" />
+    <ClInclude Include="PhysicsBody.h" />
+    <ClInclude Include="PhysicsComponent.h" />
+    <ClInclude Include="PhysicsLocator.h" />
+    <ClInclude Include="PhysicsSystem.h" />
+    <ClInclude Include="PolygonCollider.h" />
+    <ClInclude Include="RenderComponent.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="PhysicsServer.h" />
+    <ClInclude Include="Rigidbody.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
-    <ClInclude Include="Component.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="EditorCamera.h" />
-    <ClInclude Include="Editor.h" />
-    <ClInclude Include="StaticBody.h">
-      <Filter>ecs\old physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Rigidbody.h">
-      <Filter>ecs\old physics</Filter>
-    </ClInclude>
-    <ClInclude Include="SphereCollider.h">
-      <Filter>ecs\old physics</Filter>
-    </ClInclude>
-    <ClInclude Include="PhysicsBody.h">
-      <Filter>ecs\old physics</Filter>
-    </ClInclude>
-    <ClInclude Include="EditorCamera.h" />
-    <ClInclude Include="Editor.h" />
-    <ClInclude Include="AudioData.h" />
-    <ClInclude Include="CameraBase.h" />
-    <ClInclude Include="Script.h">
-      <Filter>ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="PhysicsServer.h">
-      <Filter>ecs\old physics</Filter>
-    </ClInclude>
-    <ClInclude Include="PolygonCollider.h">
-      <Filter>ecs\old physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Collider.h">
-      <Filter>ecs\old physics</Filter>
-    </ClInclude>
-    <ClInclude Include="SpriteRenderer.h">
-      <Filter>ecs</Filter>
-    <ClInclude Include="AudioComponent.h">
-      <Filter>ecs\audio</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioSystem.h">
-      <Filter>ecs\audio</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioData.h">
-      <Filter>ecs\audio</Filter>
-    </ClInclude>
-    <ClInclude Include="PhysicsComponent.h">
-      <Filter>ecs\physics</Filter>
-    </ClInclude>
-    <ClInclude Include="PhysicsSystem.h">
-      <Filter>ecs\physics</Filter>
-    </ClInclude>
-    <ClInclude Include="PhysicsLocator.h">
-      <Filter>ecs\physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>ecs\camera</Filter>
-    </ClInclude>
-    <ClInclude Include="CameraComponent.h">
-      <Filter>ecs\camera</Filter>
-    </ClInclude>
-    <ClInclude Include="CollisionShape.h">
-      <Filter>ecs\physics</Filter>
-    </ClInclude>
+    <ClInclude Include="Script.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="Signal.h" />
+    <ClInclude Include="SphereCollider.h" />
+    <ClInclude Include="SpriteRenderer.h" />
+    <ClInclude Include="StaticBody.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="Time.h" />
+    <ClInclude Include="Transform.h" />
+    <ClInclude Include="Vertex.h" />
+    <ClInclude Include="VulkanEngineRenderer.h" />
+    <ClInclude Include="World.h" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="ecs">
-      <UniqueIdentifier>{ca14854a-dea5-4214-b066-f3777331480f}</UniqueIdentifier>
+    <Filter Include="scripts">
+      <UniqueIdentifier>{908c5e00-4bb5-4702-a91c-3152741a0328}</UniqueIdentifier>
     </Filter>
-    <Filter Include="imgui">
-      <UniqueIdentifier>{d860dc33-4a84-436d-b4b6-192856f904b8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ecs\old physics">
-      <UniqueIdentifier>{3e80436e-5be5-49f9-bd84-63f2c951ad81}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="service">
-      <UniqueIdentifier>{173bc623-7614-4698-82e7-c9996e7ac028}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ecs\physics">
-      <UniqueIdentifier>{00310071-13cb-4c04-9478-db2c21ef213b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ecs\audio">
-      <UniqueIdentifier>{364048aa-df1a-41ef-a4e6-43f0d4067ae8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ecs\camera">
-      <UniqueIdentifier>{73328276-5de6-4477-8a44-1e5101c35e6e}</UniqueIdentifier>
-    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Resources\scripts\lua_test.lua">
+      <Filter>scripts</Filter>
+    </None>
   </ItemGroup>
 </Project>
