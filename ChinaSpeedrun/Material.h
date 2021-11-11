@@ -19,6 +19,7 @@ namespace cs
 		friend class VulkanEngineRenderer;
 		friend class ResourceManager;
 		friend class MeshRendererComponent;
+		friend class BulletManagerComponent;
 
 		enum class RenderMode
 		{

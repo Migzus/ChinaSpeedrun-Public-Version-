@@ -48,7 +48,7 @@ namespace cs
 
 		void Start();
 		void Update();
-		void Input();
+		void Input(char eventKey);
 		void Exit();
 
 		void SetScript(Script* newScript);

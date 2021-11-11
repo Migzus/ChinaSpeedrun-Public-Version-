@@ -4,17 +4,29 @@
 #include "Mathf.h"
 
 #include "RenderComponent.h"
+#include "b2/box2d.h"
 
+#include <queue>
 #include <vector>
 #include <unordered_map>
 
 namespace cs
 {
+	struct UniformBufferSpriteObject
+	{
+		Matrix4x4 model, view, proj;
+		Vector2 spriteScale;
+
+		UniformBufferSpriteObject();
+	};
+
 	// A helper for the borders
 	struct Extent
 	{
 		float width, height;
 		Vector2 offset;
+
+		Extent();
 	};
 
 	// The event system in the bullet system 
@@ -40,9 +52,10 @@ namespace cs
 		static std::unordered_map<std::string, BulletType*> bulletTypes;
 
 		int damage;
-		class Texture* main;
-		class Texture* sub;
+		Vector2 texOffset, texExtents;
 		class ColliderType* collider;
+
+		BulletType();
 	};
 
 	// The information we give to each bullet instance when we ask for one to spawn
@@ -56,40 +69,57 @@ namespace cs
 		float turnRotation;
 		bool rotateWithVelocity;
 		bool glow;
-		Color main;
-		Color sub;
+		Color mainColor;
+		Color subColor;
 
-		BulletType* type;
-		BulletEvent event;
+		const BulletType* type;
+		BulletEvent bulletEvent;
 
 		BulletInfo* nextInfo; // once the bullet triggers an event we go to the next info, if this pointer is 0x0 then we despawn the bullet
+
+		BulletInfo(BulletType* type);
 	};
 
 	// Here is where the actual bullet logic happens, by using the bullet info
 	class Bullet
 	{
 	public:
+		float rotation, turnRate, acceleration, speed, spin;
+		Vector2 gravity, position;
+		
+		Bullet();
+
+		void Update();
 		void SetActive(const bool status);
-		void SetInfo(BulletInfo* info);
+		void SetInfo(const BulletInfo& info);
 
 	protected:
+		float currentSpin;
 		Vector2 velocity;
 
 	private:
-		BulletInfo info;
+		UniformBufferSpriteObject ubso;
 	};
 
 	// The manager, does what the name says
 	class BulletManagerComponent : public RenderComponent
 	{
 	public:
-		uint64_t bulletCapacity;
+		int bulletCapacity;
 		Extent mainBorder, absoluteBorder;
+		std::unordered_map<std::string, BulletType*> types;
+		class Texture* main;
+		Texture* sub;
+
+		BulletManagerComponent();
 
 		virtual void Init() override;
+		virtual void ImGuiDrawComponent() override;
+		virtual void VulkanDraw(VkCommandBuffer& commandBuffer, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer);
 
 		void CreateSystem();
 
+		void Update();
 		void SpawnCircle(BulletInfo& info, const uint16_t bulletCount, const float radius = 0.0f, const float overrideSpacing = -1.0f);
 		Bullet* SpawnBullet(const BulletInfo& info);
 		void DespawnBullet(const uint64_t index);
@@ -100,6 +130,11 @@ namespace cs
 		~BulletManagerComponent();
 
 	private:
-		std::vector<Bullet*> readyBullets, activeBullets;
+		b2BodyDef definition;
+		b2Body* body;
+		const class Mesh* quadSprite;
+
+		std::vector<Bullet*> activeBullets;
+		std::queue<Bullet*> readyBullets;
 	};
 }

@@ -13,6 +13,7 @@ namespace cs
 	public:
 		Vector3 position, color;
 		Vector2 texCoord;
+		//Vector3 normal;
 
 		static VkVertexInputBindingDescription GetBindingDescription();
 		static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions();

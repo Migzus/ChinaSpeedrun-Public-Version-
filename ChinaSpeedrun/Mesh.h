@@ -12,6 +12,7 @@ namespace cs
 	class VulkanEngineRenderer;
 	class ResourceManager;
 	class MeshRendererComponent;
+	class BulletManagerComponent;
 
 	class Mesh : public Resource
 	{
@@ -19,6 +20,7 @@ namespace cs
 		friend VulkanEngineRenderer;
 		friend ResourceManager;
 		friend MeshRendererComponent;
+		friend BulletManagerComponent;
 
 		Mesh();
 		Mesh(std::vector<class cs::Vertex> vertexArray, std::vector<uint32_t> indexArray);

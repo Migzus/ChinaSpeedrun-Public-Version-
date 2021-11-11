@@ -62,6 +62,8 @@ void Input::GlfwKeyfunCallback(GLFWwindow* window, int keycode, int scancode, in
 	access.at(keycode)->held |= (action == 1);
 	access.at(keycode)->pressed |= (action == 1);
 	access.at(keycode)->released |= (action == 0);
+
+	// send input to lua
 }
 
 void Input::GlfwCursorPosCallback(GLFWwindow* window, double x, double y)
@@ -69,6 +71,8 @@ void Input::GlfwCursorPosCallback(GLFWwindow* window, double x, double y)
 	Vector2 _prevMousePosition{ mousePosition };
 	mousePosition = { x, y };
 	mouseMovement = mousePosition - _prevMousePosition;
+
+	// send input to lua
 }
 
 void Input::GlfwScrollCallback(GLFWwindow* window, double offsetX, double offsetY)

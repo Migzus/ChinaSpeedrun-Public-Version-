@@ -1072,36 +1072,20 @@ void cs::VulkanEngineRenderer::CreateGraphicsPipeline(Material* material)
 		_shaderStages.push_back(_shaderStageInfo);
 	}
 
-	/*auto _vertShaderCode{ ResourceManager::LoadRaw("../Resources/shaders/default_shader_vert.spv") };
-	auto _fragShaderCode{ ResourceManager::LoadRaw("../Resources/shaders/default_shader_frag.spv") };
-
-	VkShaderModule _vertShaderModule{ CreateShaderModule(_vertShaderCode) };
-	VkShaderModule _fragShaderModule{ CreateShaderModule(_fragShaderCode) };
-
-	VkPipelineShaderStageCreateInfo _vertShaderStageInfo{};
-	_vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	_vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	_vertShaderStageInfo.module = _vertShaderModule;
-	_vertShaderStageInfo.pName = "main";
-
-	VkPipelineShaderStageCreateInfo _fragShaderStageInfo{};
-	_fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	_fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	_fragShaderStageInfo.module = _fragShaderModule;
-	_fragShaderStageInfo.pName = "main";
-
-	VkPipelineShaderStageCreateInfo _shaderStages[]{ _vertShaderStageInfo, _fragShaderStageInfo };*/
-
 	VkPipelineVertexInputStateCreateInfo _vertexInputInfo{};
 	_vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 	// we get these from the shader instead
-	auto _bindingDescription{ Vertex::GetBindingDescription() };
+	std::vector<VkVertexInputBindingDescription> _bindingDescription{ Vertex::GetBindingDescription() };
 	auto _attributeDescriptions{ Vertex::GetAttributeDescriptions() };
 
-	_vertexInputInfo.vertexBindingDescriptionCount = 1;
+	// Add the extra vertex bindings
+	if (!material->shader->vertexInputDescription.empty())
+		_bindingDescription.insert(_bindingDescription.end(), material->shader->vertexInputDescription.size(), material->shader->vertexInputDescription.front());
+
+	_vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(_bindingDescription.size());
 	_vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(_attributeDescriptions.size());
-	_vertexInputInfo.pVertexBindingDescriptions = &_bindingDescription;
+	_vertexInputInfo.pVertexBindingDescriptions = _bindingDescription.data();
 	_vertexInputInfo.pVertexAttributeDescriptions = _attributeDescriptions.data();
 
 	VkPipelineInputAssemblyStateCreateInfo _inputAssembly{};
@@ -1213,25 +1197,6 @@ void cs::VulkanEngineRenderer::CreateGraphicsPipeline(Material* material)
 	_colorBlending.blendConstants[2] = 0.0f;
 	_colorBlending.blendConstants[3] = 0.0f;
 
-	// DescriptorSetLayouts can be shader spesific and not object dependent
-	/*std::vector<VkDescriptorSetLayout> _allDescriptorSetLayouts;
-	auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
-	for (auto e : _renderers)
-	{
-		MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
-		_allDescriptorSetLayouts.push_back(_meshRenderer.descriptorSetLayout);
-	}
-
-	VkPipelineLayoutCreateInfo _pipelineLayoutInfo{};
-	_pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	_pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(_allDescriptorSetLayouts.size());
-	_pipelineLayoutInfo.pSetLayouts = _allDescriptorSetLayouts.data();
-	_pipelineLayoutInfo.pushConstantRangeCount = 0;
-	_pipelineLayoutInfo.pPushConstantRanges = nullptr;
-
-	if (vkCreatePipelineLayout(device, &_pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
-		Debug::LogFail("Failed to create pipeline layout.");*/
-
 	VkGraphicsPipelineCreateInfo _pipelineInfo{};
 	_pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	_pipelineInfo.stageCount = static_cast<uint32_t>(_shaderStages.size());
@@ -1255,9 +1220,6 @@ void cs::VulkanEngineRenderer::CreateGraphicsPipeline(Material* material)
 
 	for (VkShaderModule shaderModule : _shaderModules)
 		vkDestroyShaderModule(device, shaderModule, nullptr);
-
-	//vkDestroyShaderModule(device, _fragShaderModule, nullptr);
-	//vkDestroyShaderModule(device, _vertShaderModule, nullptr);
 }
 
 void cs::VulkanEngineRenderer::CreateRenderPass()
@@ -1467,9 +1429,6 @@ void cs::VulkanEngineRenderer::CreateUniformBuffers()
 
 void cs::VulkanEngineRenderer::CreateDescriptorPool(RenderComponent& renderer)
 {
-	if (renderer.material == nullptr)
-		return;
-
 	uint32_t _swapChainSize{ static_cast<uint32_t>(swapChainImages.size()) };
 	VkDescriptorPoolSize _poolSizes[]
 	{
@@ -1819,7 +1778,6 @@ void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 {
 	if (SceneManager::HasScenes())
 	{
-		VkDeviceSize _index{ 0 };
 		auto _renderers{ SceneManager::GetRegistry().view<MeshRendererComponent>() };
 		for (auto e : _renderers)
 		{
@@ -1829,14 +1787,7 @@ void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 			vkMapMemory(device, uniformBuffersMemory[currentImage], _meshRenderer.uboOffset, UniformBufferObject::GetByteSize(), 0, &_data);
 			memcpy(_data, &_meshRenderer.ubo, UniformBufferObject::GetByteSize());
 			vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
-
-			_index++;
 		}
-
-		/*void* _data;
-		vkMapMemory(device, uniformBuffersMemory[currentImage], 0, (VkDeviceSize)UniformBufferObject::GetByteSize() * 2, 0, &_data);
-		memcpy(_data, ubos, (size_t)UniformBufferObject::GetByteSize() * 2);
-		vkUnmapMemory(device, uniformBuffersMemory[currentImage]);*/
 	}
 }
 
@@ -2035,10 +1986,6 @@ void cs::VulkanEngineRenderer::CleanupSwapChain()
 
 	vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-	/*for (Material* material : registeredMaterials)
-		vkDestroyPipeline(device, material->pipeline, nullptr);
-	for (Shader* shader : registeredShaders)
-		vkDestroyPipelineLayout(device, shader->layout, nullptr);*/
 	vkDestroyRenderPass(device, renderPass, nullptr);
 
 	for (auto imageView : swapChainImageViews)
@@ -2054,17 +2001,6 @@ void cs::VulkanEngineRenderer::CleanupSwapChain()
 
 	if (SceneManager::GetCurrentScene() != nullptr)
 		SceneManager::DestroyDescriptorPools();
-
-	/*auto _renderers{ SceneManager::GetRegistry().view<MeshRendererComponent>() };
-	for (auto e : _renderers)
-	{
-		MeshRendererComponent& _meshRenderer{ SceneManager::GetRegistry().get<MeshRendererComponent>(e) };
-
-		if (!_meshRenderer.IsRendererValid())
-			continue;
-
-		vkDestroyDescriptorPool(device, _meshRenderer.descriptorPool, nullptr);
-	}*/
 
 	// ----------------------------------------------------------------------
 	//    Destroy ImGui Stuff

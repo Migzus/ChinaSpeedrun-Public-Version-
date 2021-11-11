@@ -16,6 +16,10 @@ Matrix4x4& cs::Transform::GetMatrixTransform(TransformComponent& transform)
 	return transform.matrix;
 }
 
+cs::TransformComponent::TransformComponent() :
+	isQueued{ false }
+{}
+
 cs::TransformComponent::operator Matrix4x4& ()
 {
 	return matrix;

@@ -23,6 +23,7 @@
 #include "SphereCollider.h"
 #include "StaticBody.h"
 #include "Rigidbody.h"
+#include "BulletManagerComponent.h"
 
 #include "Editor.h"
 #include "SceneManager.h"
@@ -67,12 +68,10 @@ void cs::ChinaEngine::EngineInit()
 {
 	SceneManager::Load(SceneManager::CreateScene("Performance Test"));
 	SceneManager::Load(SceneManager::CreateScene("Physics Test"));
+	SceneManager::Load(SceneManager::CreateScene("Bullet Hell Test"));
 	//SceneManager::Load(ResourceManager::Load<Scene>("../Resources/scenes/test_1.json"));
 
 	SceneManager::SetCurrentFocusedScene(0);
-
-	// For future notice... move this entire function somewhere else...
-	// the head ChinaEngine class has nothing to do with instancing objects (maybe in a scene loader or something...)
 
 	Shader* _shader{ ResourceManager::Load<Shader>("../Resources/shaders/default_shader") };
 	_shader->AssignShaderVertexInputAttrib("position", 0, Shader::Data::VEC3, offsetof(Vertex, position));
@@ -96,7 +95,7 @@ void cs::ChinaEngine::EngineInit()
 	_material2->cullMode = Material::CullMode::NONE;
 	_material2->shaderParams["texSampler"] = _chaikaSmile;
 
-	const uint16_t width{ 4 }, length{ 4 }, height{ 4 };
+	const uint16_t width{ 8 }, length{ 8 }, height{ 8 };
 	Mesh* _sphereModel{ ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj") };
 
 	for (size_t x{ 0 }; x < width; x++)
@@ -148,7 +147,43 @@ void cs::ChinaEngine::EngineInit()
 	_physicsBall->AddComponent<SphereColliderComponent>();
 	RigidbodyComponent& _rbPB{ _physicsBall->AddComponent<RigidbodyComponent>() };
 
-	CameraComponent& _cameraComponent{ _camera->AddComponent<CameraComponent>() };
+	_camera->AddComponent<CameraComponent>();
+
+	// BULLET HELL TEST
+	SceneManager::SetCurrentFocusedScene(2);
+
+	GameObject* _bulletManager{ SceneManager::InstanceObject("Bullet Manager") };
+	GameObject* _cameraBullet{ SceneManager::InstanceObject("Main Camera") };
+	GameObject* _object{ SceneManager::InstanceObject("Relative Object", Vector3(1.0f, -2.0f, 6.0f)) };
+
+	Shader* _bulletShader{ ResourceManager::Load<Shader>("../Resources/shaders/bullet_shader") };
+	_bulletShader->AssignShaderVertexInputAttrib("position", 0, Shader::Data::VEC3, offsetof(Vertex, position));
+	_bulletShader->AssignShaderVertexInputAttrib("color", 1, Shader::Data::VEC3, offsetof(Vertex, color));
+	_bulletShader->AssignShaderVertexInputAttrib("texCoord", 2, Shader::Data::VEC2, offsetof(Vertex, texCoord));
+
+	_bulletShader->AssignShaderDescriptor("ubo", 0, Shader::Type::VERTEX, Shader::Data::UNIFORM);
+	_bulletShader->AssignShaderVertexInstance("ubso", 1, sizeof(UniformBufferSpriteObject));
+	_bulletShader->AssignShaderDescriptor("texMainSampler", 2, Shader::Type::FRAGMENT, Shader::Data::SAMPLER2D);
+	_bulletShader->AssignShaderDescriptor("texSubSampler", 3, Shader::Type::FRAGMENT, Shader::Data::SAMPLER2D);
+
+	Material* _bulletMaterial{ ResourceManager::Load<Material>("../Resources/materials/bullet.mat") };
+	_bulletMaterial->shader = _bulletShader;
+	_bulletMaterial->renderMode = Material::RenderMode::TRANSPARENT_;
+
+	_bulletMaterial->shaderParams["texMainSampler"] = ResourceManager::Load<Texture>("../Resources/textures/bullet_circle_main.png");
+	_bulletMaterial->shaderParams["texSubSampler"] = ResourceManager::Load<Texture>("../Resources/textures/bullet_circle_sub.png");
+
+	BulletManagerComponent& _manager{ _bulletManager->AddComponent<BulletManagerComponent>() };
+	_manager.material = _bulletMaterial;
+	_manager.bulletCapacity = 10;
+	_manager.CreateSystem();
+
+	CameraComponent& _bulletCam{ _cameraBullet->AddComponent<CameraComponent>() };
+	_bulletCam.projection = CameraComponent::Projection::ORTHOGRAPHIC;
+
+	MeshRendererComponent& _objectMeshRenderer{ _object->AddComponent<MeshRendererComponent>() };
+	_objectMeshRenderer.SetMesh(Mesh::CreateDefaultPlane(Vector2(0.5f)));
+	_objectMeshRenderer.material = _material2;
 }
 
 void cs::ChinaEngine::InitInput()

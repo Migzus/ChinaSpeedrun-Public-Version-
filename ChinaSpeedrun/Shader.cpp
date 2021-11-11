@@ -13,6 +13,16 @@ void cs::Shader::Initialize()
 	ChinaEngine::renderer.SolveShader(this, Solve::ADD);
 }
 
+void cs::Shader::AssignShaderVertexInstance(std::string descriptorName, uint32_t binding, uint32_t stride)
+{
+	VkVertexInputBindingDescription _vertexInstanceBinding{};
+	_vertexInstanceBinding.binding = binding;
+	_vertexInstanceBinding.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+	_vertexInstanceBinding.stride = stride; // offset between data
+
+	vertexInputDescription.push_back(_vertexInstanceBinding);
+}
+
 void cs::Shader::AssignShaderDescriptor(std::string descriptorName, uint32_t binding, Type shaderType, Data dataType)
 {
 	VkDescriptorType _descriptorType{};

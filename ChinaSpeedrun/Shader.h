@@ -11,6 +11,7 @@ namespace cs
 	class VulkanEngineRenderer;
 	class ResourceManager;
 	class MeshRendererComponent;
+	class BulletManagerComponent;
 
 	class Shader : public Resource
 	{
@@ -18,6 +19,7 @@ namespace cs
 		friend VulkanEngineRenderer;
 		friend ResourceManager;
 		friend MeshRendererComponent;
+		friend BulletManagerComponent;
 
 		enum class Type
 		{
@@ -43,6 +45,7 @@ namespace cs
 			UNIFORM
 		};
 
+		std::vector<VkVertexInputBindingDescription> vertexInputDescription;
 		std::unordered_map<std::string, VkDescriptorSetLayoutBinding> descriptorBindings;
 		std::unordered_map<std::string, VkVertexInputAttributeDescription> vertexAttributes;
 
@@ -50,6 +53,7 @@ namespace cs
 
 		void Initialize() override;
 
+		void AssignShaderVertexInstance(std::string descriptorName, uint32_t binding, uint32_t stride);
 		void AssignShaderDescriptor(std::string descriptorName, uint32_t binding, Type shaderType, Data dataType);
 		void AssignShaderVertexInputAttrib(std::string attrbuteName, uint32_t location, Data dataType, uint32_t offset);
 

@@ -3,6 +3,7 @@
 #include "imgui.h"
 #include "lua.hpp"
 #include "Debug.h"
+#include "Input.h"
 
 #include "Time.h"
 
@@ -98,16 +99,17 @@ void cs::ScriptComponent::Update()
 	}
 }
 
-void cs::ScriptComponent::Input()
+void cs::ScriptComponent::Input(char eventKey)
 {
 	if (!luaOK)
 		return;
 
 	if (lua_getglobal(luaState, "input") == LUA_TFUNCTION)
 	{
-
+		lua_pushinteger(luaState, eventKey);
+		//lua_pushlightuserdata(luaState, &eventKey);
+		lua_pcall(luaState, 1, 0, 0);
 	}
-	//lua_pushlightuserdata(luaState, void*);
 }
 
 void cs::ScriptComponent::Exit()
@@ -117,7 +119,7 @@ void cs::ScriptComponent::Exit()
 
 	if (lua_getglobal(luaState, "exit") == LUA_TFUNCTION)
 	{
-
+		lua_pcall(luaState, 0, 0, 0);
 	}
 }
 
