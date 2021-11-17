@@ -3,6 +3,7 @@
 #include "Color.h"
 #include "Mathf.h"
 
+#include "VulkanEngineRenderer.h"
 #include "RenderComponent.h"
 #include "b2/box2d.h"
 
@@ -12,14 +13,6 @@
 
 namespace cs
 {
-	struct UniformBufferSpriteObject
-	{
-		Matrix4x4 model, view, proj;
-		Vector2 spriteScale;
-
-		UniformBufferSpriteObject();
-	};
-
 	// A helper for the borders
 	struct Extent
 	{
@@ -48,9 +41,6 @@ namespace cs
 	// Types of bullets, we might want different textures, collision types and sizes ect.
 	struct BulletType
 	{
-		// these will be preloaded when the first bullet manager spawns
-		static std::unordered_map<std::string, BulletType*> bulletTypes;
-
 		int damage;
 		Vector2 texOffset, texExtents;
 		class ColliderType* collider;
@@ -62,6 +52,7 @@ namespace cs
 	struct BulletInfo
 	{
 		Vector2 position;
+		Vector2 gravity;
 		float rotation;
 		float rotationOffset;
 		float speed;
@@ -80,17 +71,32 @@ namespace cs
 		BulletInfo(BulletType* type);
 	};
 
+	class BulletManagerComponent;
+
+	struct BulletShaderParams
+	{
+		Vector2 position;
+		float rotation;
+		Color mainColor, subColor;
+		//Vector2 texPixelOffset, texPixelSize;
+
+		BulletShaderParams();
+	};
+
 	// Here is where the actual bullet logic happens, by using the bullet info
 	class Bullet
 	{
 	public:
-		float rotation, turnRate, acceleration, speed, spin;
-		Vector2 gravity, position;
-		
-		Bullet();
+		friend BulletManagerComponent;
 
-		void Update();
-		void SetActive(const bool status);
+		BulletManagerComponent* manager;
+		float turnRate, acceleration, speed, spin, rotationOffset, rotateWithVelocity, deltaRotation;
+		Vector2 gravity;
+
+		Bullet(BulletManagerComponent* manager);
+
+		void BorderCheck();
+		void Update(const uint32_t& index);
 		void SetInfo(const BulletInfo& info);
 
 	protected:
@@ -98,18 +104,26 @@ namespace cs
 		Vector2 velocity;
 
 	private:
-		UniformBufferSpriteObject ubso;
+		BulletShaderParams params;
+		UniformBufferObject ubo;
 	};
+
+	class Texture;
 
 	// The manager, does what the name says
 	class BulletManagerComponent : public RenderComponent
 	{
 	public:
+		friend Bullet;
+		friend VulkanEngineRenderer;
+
 		int bulletCapacity;
 		Extent mainBorder, absoluteBorder;
 		std::unordered_map<std::string, BulletType*> types;
-		class Texture* main;
-		Texture* sub;
+		Texture* mainTex;
+		Texture* subTex;
+		UniformBufferObject* ubos;
+		BulletShaderParams* bulletShaderParams;
 
 		BulletManagerComponent();
 
@@ -119,12 +133,15 @@ namespace cs
 
 		void CreateSystem();
 
+		void CreateBorders(const float& width, const float& height, const float& margin, const Vector2& offset = Vector2(0.0f));
+		void UpdateUBO(class CameraBase& camera);
 		void Update();
-		void SpawnCircle(BulletInfo& info, const uint16_t bulletCount, const float radius = 0.0f, const float overrideSpacing = -1.0f);
+		void SpawnCircle(BulletInfo& info, const uint16_t bulletCount, const float radius = 0.0f, const float spacing = 0.0f);
 		Bullet* SpawnBullet(const BulletInfo& info);
-		void DespawnBullet(const uint64_t index);
+		void DespawnBullet(const uint64_t& index);
 		void DespawnBullet(Bullet* bullet);
 
+		void DestroyBuffer();
 		void DestroySystem();
 
 		~BulletManagerComponent();
@@ -133,8 +150,11 @@ namespace cs
 		b2BodyDef definition;
 		b2Body* body;
 		const class Mesh* quadSprite;
+		VulkanBufferInfo bufferInfo;
 
 		std::vector<Bullet*> activeBullets;
 		std::queue<Bullet*> readyBullets;
+
+		void CreateBulletBuffer();
 	};
 }

@@ -20,6 +20,15 @@ namespace cs
 			CLAMP = 2
 		} tilingX, tilingY;
 
+		enum class Filter
+		{
+			NEAREST = 0,
+			LINEAR = 1,
+			CUBIC = 1000015000
+		} filter;
+
+		bool generateMipmaps;
+
 		Texture();
 
 		void Initialize() override;

@@ -99,5 +99,5 @@ void cs::MeshRendererComponent::GenerateOBBExtents(OBB& obb)
 
 cs::MeshRendererComponent::~MeshRendererComponent()
 {
-	ChinaEngine::renderer.SolveRenderer(this, Solve::REMOVE);
+	ChinaEngine::renderer.SolveRenderer(this, Solve::REMOVE, true);
 }

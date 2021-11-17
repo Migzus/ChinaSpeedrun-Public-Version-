@@ -3,7 +3,8 @@
 #include "ChinaEngine.h"
 #include "VulkanEngineRenderer.h"
 
-cs::Shader::Shader(std::unordered_map<std::string, std::vector<char>> spv) : spvCode{ spv }
+cs::Shader::Shader(std::unordered_map<std::string, std::vector<char>> spv) :
+	descriptorSetLayout{ nullptr }, layout{ nullptr }, spvCode{ spv }, currentVertexInputBindingDataSize{ 0 }, currentBinding{ 0 }
 {
 	Initialize();
 }
@@ -13,17 +14,32 @@ void cs::Shader::Initialize()
 	ChinaEngine::renderer.SolveShader(this, Solve::ADD);
 }
 
-void cs::Shader::AssignShaderVertexInstance(std::string descriptorName, uint32_t binding, uint32_t stride)
+void cs::Shader::AssignShaderVertexBinding(const InputRate& inputRate)
 {
+	VkVertexInputRate _inputRate{ VK_VERTEX_INPUT_RATE_VERTEX };
+
+	switch (inputRate)
+	{
+	case InputRate::VERTEX:
+		_inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+		break;
+	case InputRate::INSTANCE:
+		_inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+		break;
+	}
+
 	VkVertexInputBindingDescription _vertexInstanceBinding{};
-	_vertexInstanceBinding.binding = binding;
-	_vertexInstanceBinding.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
-	_vertexInstanceBinding.stride = stride; // offset between data
+	_vertexInstanceBinding.binding = currentBinding;
+	_vertexInstanceBinding.inputRate = _inputRate;
+	_vertexInstanceBinding.stride = currentVertexInputBindingDataSize;
+
+	currentBinding++;
+	currentVertexInputBindingDataSize = 0;
 
 	vertexInputDescription.push_back(_vertexInstanceBinding);
 }
 
-void cs::Shader::AssignShaderDescriptor(std::string descriptorName, uint32_t binding, Type shaderType, Data dataType)
+void cs::Shader::AssignShaderDescriptor(const std::string& descriptorName, const uint32_t& binding, const Type& shaderType, const Data& dataType)
 {
 	VkDescriptorType _descriptorType{};
 
@@ -47,27 +63,33 @@ void cs::Shader::AssignShaderDescriptor(std::string descriptorName, uint32_t bin
 	descriptorBindings[descriptorName] = _layoutBinding;
 }
 
-void cs::Shader::AssignShaderVertexInputAttrib(std::string attrbuteName, uint32_t location, Data dataType, uint32_t offset)
+void cs::Shader::AssignShaderVertexInputAttrib(const std::string& attrbuteName, const uint32_t& location, const Data& dataType)
 {
 	VkFormat _format{ VK_FORMAT_UNDEFINED };
+	uint32_t _offset{ 0 };
 
 	switch (dataType)
 	{
 	case Data::BOOL:
 	case Data::INT:
 		_format = VK_FORMAT_R32_SINT;
+		_offset = sizeof(signed int);
 		break;
 	case Data::FLOAT:
 		_format = VK_FORMAT_R32_SFLOAT;
+		_offset = sizeof(float);
 		break;
 	case Data::VEC2:
 		_format = VK_FORMAT_R32G32_SFLOAT;
+		_offset = sizeof(float) * 2;
 		break;
 	case Data::VEC3:
 		_format = VK_FORMAT_R32G32B32_SFLOAT;
+		_offset = sizeof(float) * 3;
 		break;
 	case Data::VEC4:
 		_format = VK_FORMAT_R32G32B32A32_SFLOAT;
+		_offset = sizeof(float) * 4;
 		break;
 	case Data::MAT2:
 		break;
@@ -81,10 +103,12 @@ void cs::Shader::AssignShaderVertexInputAttrib(std::string attrbuteName, uint32_
 	}
 
 	VkVertexInputAttributeDescription _attributeDescription{};
-	_attributeDescription.binding = 0;
+	_attributeDescription.binding = currentBinding;
 	_attributeDescription.location = location;
 	_attributeDescription.format = _format;
-	_attributeDescription.offset = offset;
+	_attributeDescription.offset = currentVertexInputBindingDataSize;
+
+	currentVertexInputBindingDataSize += _offset;
 
 	vertexAttributes[attrbuteName] = _attributeDescription;
 }
@@ -127,4 +151,9 @@ VkShaderStageFlagBits cs::Shader::GetShaderStageFlag(std::string typeName)
 		return VK_SHADER_STAGE_ALL_GRAPHICS;
 
 	return VK_SHADER_STAGE_ALL;
+}
+
+cs::Shader::~Shader()
+{
+	ChinaEngine::renderer.SolveShader(this, Solve::REMOVE, true);
 }

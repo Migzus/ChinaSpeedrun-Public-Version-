@@ -10,14 +10,6 @@ namespace cs
 	public:
 		friend class Camera;
 
-		//static CameraComponent* currentActiveCamera;
-
-		enum class Projection
-		{
-			ORTHOGRAPHIC,
-			PERSPECTIVE
-		} projection;
-
 		virtual void Init() override;
 		virtual void ImGuiDrawComponent() override;
 	};

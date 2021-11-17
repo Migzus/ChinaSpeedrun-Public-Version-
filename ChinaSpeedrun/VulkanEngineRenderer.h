@@ -38,6 +38,7 @@ namespace cs
 		VkDeviceMemory bufferMemory;
 		VkDeviceSize bufferSize, dataSize;
 
+		VulkanBufferInfo();
 		VulkanBufferInfo(VkDeviceSize newBufferSize);
 
 		const float UsedSpace() const;
@@ -54,6 +55,8 @@ namespace cs
 	class VulkanEngineRenderer
 	{
 	public:
+		friend class BulletManagerComponent;
+
 		VulkanEngineRenderer();
 
 		constexpr static unsigned int MAX_BUFFER_SIZE{ UINT32_MAX / 512 };
@@ -64,11 +67,11 @@ namespace cs
 		// materials, shaders and gameobjects to prepare them for rendering.
 		void Resolve();
 
-		void SolveMesh(class Mesh* mesh, Solve solveMode);
-		void SolveShader(class Shader* shader, Solve solveMode);
-		void SolveTexture(class Texture* texture, Solve solveMode);
-		void SolveMaterial(class Material* material, Solve solveMode);
-		void SolveRenderer(class RenderComponent* renderer, Solve solveMode);
+		void SolveMesh(class Mesh* mesh, Solve solveMode, const bool& immediate = false);
+		void SolveShader(class Shader* shader, Solve solveMode, const bool& immediate = false);
+		void SolveTexture(class Texture* texture, Solve solveMode, const bool& immediate = false);
+		void SolveMaterial(class Material* material, Solve solveMode, const bool& immediate = false);
+		void SolveRenderer(class RenderComponent* renderer, Solve solveMode, const bool& immediate = false);
 
 		void DestroyDescriptorPool(VkDescriptorPool& descriptorPool);
 		void MakeDescriptorPool(RenderComponent& renderer);
@@ -79,6 +82,8 @@ namespace cs
 		VkDevice const& GetDevice();
 		const VulkanStatus& GetStatus() const;
 		
+		void DestroyBuffer(VulkanBufferInfo& bufferInfo);
+
 		float AspectRatio() const;
 
 		GLFWwindow* GetWindow();
@@ -182,6 +187,8 @@ namespace cs
 		void ImGuiCommandBuffers();
 		void ImGuiUpdateDrawCommands(const uint32_t& imageIndex);
 		void UpdateDrawCommands(const uint32_t& imageIndex);
+
+		void CopyDataToBuffer(VkDeviceMemory& bufferMemory, const void* data, const VkDeviceSize& mappedOffset, const size_t& dataSize);
 
 		void CreateInstance();
 		void SetupDebugMessenger();

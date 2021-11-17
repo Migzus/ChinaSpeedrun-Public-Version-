@@ -61,12 +61,12 @@ float cs::ChinaEngine::AspectRatio()
 void cs::ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight)
 {
 	if (newWidth * newHeight > 0) // don't recalculate the perspective if the screen size is 0
-		Camera::CalculatePerspective(*SceneManager::mainCamera);
+		Camera::CalculateProjection(*SceneManager::mainCamera);
 }
 
 void cs::ChinaEngine::EngineInit()
 {
-	SceneManager::Load(SceneManager::CreateScene("Performance Test"));
+	/*SceneManager::Load(SceneManager::CreateScene("Performance Test"));
 	SceneManager::Load(SceneManager::CreateScene("Physics Test"));
 	SceneManager::Load(SceneManager::CreateScene("Bullet Hell Test"));
 	//SceneManager::Load(ResourceManager::Load<Scene>("../Resources/scenes/test_1.json"));
@@ -147,43 +147,63 @@ void cs::ChinaEngine::EngineInit()
 	_physicsBall->AddComponent<SphereColliderComponent>();
 	RigidbodyComponent& _rbPB{ _physicsBall->AddComponent<RigidbodyComponent>() };
 
-	_camera->AddComponent<CameraComponent>();
+	_camera->AddComponent<CameraComponent>();*/
+
+	SceneManager::Load(SceneManager::CreateScene("Bullet Hell Test"));
 
 	// BULLET HELL TEST
-	SceneManager::SetCurrentFocusedScene(2);
+	SceneManager::SetCurrentFocusedScene(0);
 
 	GameObject* _bulletManager{ SceneManager::InstanceObject("Bullet Manager") };
-	GameObject* _cameraBullet{ SceneManager::InstanceObject("Main Camera") };
-	GameObject* _object{ SceneManager::InstanceObject("Relative Object", Vector3(1.0f, -2.0f, 6.0f)) };
+	GameObject* _cameraBullet{ SceneManager::InstanceObject("Main Camera", Vector3(0.0f, 0.0f, -10.0f)) };
+	//GameObject* _object{ SceneManager::InstanceObject("Relative Object", Vector3(1.0f, -2.0f, 6.0f)) };
 
 	Shader* _bulletShader{ ResourceManager::Load<Shader>("../Resources/shaders/bullet_shader") };
-	_bulletShader->AssignShaderVertexInputAttrib("position", 0, Shader::Data::VEC3, offsetof(Vertex, position));
-	_bulletShader->AssignShaderVertexInputAttrib("color", 1, Shader::Data::VEC3, offsetof(Vertex, color));
-	_bulletShader->AssignShaderVertexInputAttrib("texCoord", 2, Shader::Data::VEC2, offsetof(Vertex, texCoord));
+	_bulletShader->AssignShaderVertexInputAttrib("position", 0, Shader::Data::VEC3);
+	_bulletShader->AssignShaderVertexInputAttrib("color", 1, Shader::Data::VEC3);
+	_bulletShader->AssignShaderVertexInputAttrib("texCoord", 2, Shader::Data::VEC2);
+	_bulletShader->AssignShaderVertexBinding(Shader::InputRate::VERTEX);
+
+	_bulletShader->AssignShaderVertexInputAttrib("positionOffset", 3, Shader::Data::VEC2);
+	_bulletShader->AssignShaderVertexInputAttrib("rotation", 4, Shader::Data::FLOAT);
+	_bulletShader->AssignShaderVertexInputAttrib("mainColor", 5, Shader::Data::VEC4);
+	_bulletShader->AssignShaderVertexInputAttrib("subColor", 6, Shader::Data::VEC4);
+	_bulletShader->AssignShaderVertexBinding(Shader::InputRate::INSTANCE);
 
 	_bulletShader->AssignShaderDescriptor("ubo", 0, Shader::Type::VERTEX, Shader::Data::UNIFORM);
-	_bulletShader->AssignShaderVertexInstance("ubso", 1, sizeof(UniformBufferSpriteObject));
-	_bulletShader->AssignShaderDescriptor("texMainSampler", 2, Shader::Type::FRAGMENT, Shader::Data::SAMPLER2D);
-	_bulletShader->AssignShaderDescriptor("texSubSampler", 3, Shader::Type::FRAGMENT, Shader::Data::SAMPLER2D);
-
+	_bulletShader->AssignShaderDescriptor("texMainSampler", 1, Shader::Type::FRAGMENT, Shader::Data::SAMPLER2D);
+	_bulletShader->AssignShaderDescriptor("texSubSampler", 2, Shader::Type::FRAGMENT, Shader::Data::SAMPLER2D);
+	
 	Material* _bulletMaterial{ ResourceManager::Load<Material>("../Resources/materials/bullet.mat") };
 	_bulletMaterial->shader = _bulletShader;
 	_bulletMaterial->renderMode = Material::RenderMode::TRANSPARENT_;
+	_bulletMaterial->cullMode = Material::CullMode::NONE;
 
-	_bulletMaterial->shaderParams["texMainSampler"] = ResourceManager::Load<Texture>("../Resources/textures/bullet_circle_main.png");
-	_bulletMaterial->shaderParams["texSubSampler"] = ResourceManager::Load<Texture>("../Resources/textures/bullet_circle_sub.png");
+	Texture* _mainTexture{ ResourceManager::Load<Texture>("../Resources/textures/bullet_circle_main.png") };
+	Texture* _subTexture{ ResourceManager::Load<Texture>("../Resources/textures/bullet_circle_sub.png") };
+
+	_mainTexture->filter = Texture::Filter::NEAREST;
+	_subTexture->filter = Texture::Filter::NEAREST;
+	_mainTexture->generateMipmaps = true;
+	_subTexture->generateMipmaps = false;
+
+	_bulletMaterial->shaderParams["texMainSampler"] = _mainTexture;
+	_bulletMaterial->shaderParams["texSubSampler"] = _subTexture;
 
 	BulletManagerComponent& _manager{ _bulletManager->AddComponent<BulletManagerComponent>() };
 	_manager.material = _bulletMaterial;
-	_manager.bulletCapacity = 10;
+	_manager.bulletCapacity = 10000;
+	_manager.CreateBorders(1.6f, 1.8f, 0.0f);
 	_manager.CreateSystem();
 
 	CameraComponent& _bulletCam{ _cameraBullet->AddComponent<CameraComponent>() };
 	_bulletCam.projection = CameraComponent::Projection::ORTHOGRAPHIC;
+	_bulletCam.SetExtents(1920.0f, 1080.0f);
+	Camera::CalculateProjection(_bulletCam);
 
-	MeshRendererComponent& _objectMeshRenderer{ _object->AddComponent<MeshRendererComponent>() };
-	_objectMeshRenderer.SetMesh(Mesh::CreateDefaultPlane(Vector2(0.5f)));
-	_objectMeshRenderer.material = _material2;
+	//MeshRendererComponent& _objectMeshRenderer{ _object->AddComponent<MeshRendererComponent>() };
+	//_objectMeshRenderer.SetMesh(Mesh::CreateDefaultPlane(Vector2(0.5f)));
+	//_objectMeshRenderer.material = _material2;
 }
 
 void cs::ChinaEngine::InitInput()
@@ -227,6 +247,6 @@ void cs::ChinaEngine::MainLoop()
 void cs::ChinaEngine::EngineExit()
 {
 	editor.Exit();
-	SceneManager::UnloadEverything();
 	ResourceManager::ClearAllResourcePools();
+	SceneManager::DestroyEverything();
 }

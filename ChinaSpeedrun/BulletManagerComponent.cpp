@@ -1,18 +1,37 @@
 #include "BulletManagerComponent.h"
 
+#include "ChinaEngine.h"
+#include "SceneManager.h"
+#include "Scene.h"
+
 #include "imgui.h"
 #include "Material.h"
 #include "Mesh.h"
 #include "Shader.h"
 #include "Time.h"
 #include "Input.h"
+#include "CameraBase.h"
+#include "Camera.h"
 
 #include "Debug.h"
 
 cs::BulletManagerComponent::BulletManagerComponent() :
-	body{ nullptr }, quadSprite{ Mesh::CreateDefaultPlane(Vector2(0.5f)) }
+	body{ nullptr }, quadSprite{ Mesh::CreateDefaultPlane(Vector2(0.5f)) }, ubos{ nullptr }, bulletShaderParams{ nullptr },
+	bufferInfo{ VulkanBufferInfo() }, bulletCapacity{ 0 }, mainTex{ nullptr }, subTex{ nullptr }
 {
 	definition.type = b2_staticBody;
+
+	ChinaEngine::renderer.SolveRenderer(this, Solve::ADD);
+	SceneManager::GetCurrentScene()->AddToRenderQueue(this);
+	uboOffset = SceneManager::GetCurrentScene()->GetUBOOffset();
+
+	BulletType* _newType{ new BulletType };
+
+	_newType->damage = 10;
+	_newType->texExtents = Vector2(1.0f);
+	_newType->texOffset = Vector2(0.0f);
+
+	types["circle"] = _newType;
 }
 
 void cs::BulletManagerComponent::Init()
@@ -36,7 +55,9 @@ void cs::BulletManagerComponent::ImGuiDrawComponent()
 		ImGui::DragFloat("Height", &absoluteBorder.height, 0.1f);
 		ImGui::DragFloat2("Offset", &absoluteBorder.offset[0], 0.1f);
 
-		Mathf::Clamp(bulletCapacity, 0, 10000);
+		//Mathf::Clamp(bulletCapacity, 0, 10000);
+
+		ImGui::Text("Current Bullet Count: %i", activeBullets.size());
 
 		ImGui::TreePop();
 	}
@@ -44,18 +65,11 @@ void cs::BulletManagerComponent::ImGuiDrawComponent()
 
 void cs::BulletManagerComponent::VulkanDraw(VkCommandBuffer& commandBuffer, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer)
 {
-	VkDeviceSize _size{ (VkDeviceSize)sizeof(UniformBufferSpriteObject) };
-
-	/*
-	void* _data;
-	vkMapMemory(device, uniformBuffersMemory[index], 0, (VkDeviceSize)sizeof(UniformBufferSpriteObject), 0, &_data);
-	memcpy(_data, ubos, (size_t)UniformBufferObject::GetByteSize());
-	vkUnmapMemory(device, uniformBuffersMemory[index]);
-	*/
+	VkBuffer _vertexBuffers[]{ vertexBuffer, bufferInfo.buffer };
+	VkDeviceSize _offsets[]{ quadSprite->vertexBufferOffset, 0 };
 
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipeline);
-
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &quadSprite->vertexBufferOffset);
+	vkCmdBindVertexBuffers(commandBuffer, 0, 2, _vertexBuffers, _offsets);
 	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, quadSprite->indexBufferOffset, VK_INDEX_TYPE_UINT32);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->shader->layout, 0, 1, &descriptorSets[index], 0, nullptr);
 
@@ -65,7 +79,41 @@ void cs::BulletManagerComponent::VulkanDraw(VkCommandBuffer& commandBuffer, cons
 void cs::BulletManagerComponent::CreateSystem()
 {
 	for (size_t i{ 0 }; i < bulletCapacity; i++)
-		readyBullets.push(new Bullet);
+	{
+		Bullet* _newBullet{ new Bullet(this) };
+		readyBullets.push(_newBullet);
+	}
+
+	ubos = new UniformBufferObject[bulletCapacity];
+	bulletShaderParams = new BulletShaderParams[bulletCapacity];
+
+	CreateBulletBuffer();
+}
+
+void cs::BulletManagerComponent::CreateBorders(const float& width, const float& height, const float& margin, const Vector2& offset)
+{
+	mainBorder.width = width;
+	mainBorder.height = height;
+	mainBorder.offset = offset;
+
+	absoluteBorder.width = width + margin * 2.0f;
+	absoluteBorder.height = height + margin * 2.0f;
+	absoluteBorder.offset = offset;
+}
+
+void cs::BulletManagerComponent::UpdateUBO(CameraBase& camera)
+{
+	ubo.proj = Camera::GetProjectionMatrix(camera);
+	ubo.view = Camera::GetViewMatrix(camera);
+}
+
+void cs::Bullet::BorderCheck()
+{
+	const Vector2 _border{ manager->absoluteBorder.width * 0.5f, manager->absoluteBorder.height * 0.5f };
+	const Vector2 _offset{ manager->absoluteBorder.offset };
+
+	if (!(Mathf::Within(-_border.x + _offset.x, params.position.x, _border.x + _offset.x) && Mathf::Within(-_border.y + _offset.y, params.position.y, _border.y + _offset.y)))
+		manager->DespawnBullet(this);
 }
 
 void cs::BulletManagerComponent::Update()
@@ -74,28 +122,39 @@ void cs::BulletManagerComponent::Update()
 	{
 		BulletInfo _info{ BulletInfo(types["circle"]) };
 
-		Debug::LogSuccess("Spawned BULLETS!!");
+		_info.subColor = Color(Mathf::RandRange(0.0f, 1.0f), Mathf::RandRange(0.0f, 1.0f), Mathf::RandRange(0.0f, 1.0f));
+		_info.speed = 0.1f;
+		//_info.position = Vector2(0.0f);
+		_info.rotation = Mathf::RandRange(0.0f, Mathf::TAU);
 
-		_info.mainColor = Color::lime;
-		_info.subColor = Color::red;
-		_info.speed = 2.0f;
-
-		SpawnCircle(_info, 2);
+		//SpawnBullet(_info);
+		
+		SpawnCircle(_info, 1000);
 	}
 
+	uint32_t _index{ 0 };
 	for (auto* bullet : activeBullets)
-		bullet->Update();
+	{
+		bullet->Update(_index);
+		bullet->BorderCheck();
+		_index++;
+	}
+
+	UpdateUBO(*SceneManager::mainCamera);
+
+	if (!activeBullets.empty())
+		ChinaEngine::renderer.CopyDataToBuffer(bufferInfo.bufferMemory, bulletShaderParams, 0, bufferInfo.bufferSize);
 }
 
-void cs::BulletManagerComponent::SpawnCircle(BulletInfo& info, const uint16_t bulletCount, const float radius, const float overrideSpacing)
+void cs::BulletManagerComponent::SpawnCircle(BulletInfo& info, const uint16_t bulletCount, const float radius, const float spacing)
 {
 	const Vector2 _origin{ info.position };
 	const float _rotationOffset{ Mathf::TAU / float(bulletCount) };
-	const float _spacing{ overrideSpacing < 0.0f ? 1.0f : overrideSpacing };
+	const float _startRotation{ info.rotation };
 
 	for (uint16_t i{ 0 }; i < bulletCount; i++)
 	{
-		const float _currentRotation{ _rotationOffset * i * _spacing };
+		const float _currentRotation{ _rotationOffset * i + _startRotation + spacing };
 
 		info.position = _origin + Vector2(cos(_currentRotation), sin(_currentRotation)) * radius;
 		info.rotation = _currentRotation;
@@ -107,7 +166,10 @@ void cs::BulletManagerComponent::SpawnCircle(BulletInfo& info, const uint16_t bu
 cs::Bullet* cs::BulletManagerComponent::SpawnBullet(const BulletInfo& info)
 {
 	if (readyBullets.empty())
+	{
+		//Debug::LogWarning("Reached max capacity for bullet manager. Capacity = ", bulletCapacity);
 		return nullptr;
+	}
 
 	Bullet* _newBullet{ readyBullets.front() };
 
@@ -118,13 +180,10 @@ cs::Bullet* cs::BulletManagerComponent::SpawnBullet(const BulletInfo& info)
 	return _newBullet;
 }
 
-void cs::BulletManagerComponent::DespawnBullet(const uint64_t index)
+void cs::BulletManagerComponent::DespawnBullet(const uint64_t& index)
 {
 	Bullet* _deactivatedBullet{ activeBullets[index] };
 	activeBullets.erase(activeBullets.begin() + index);
-
-	_deactivatedBullet->SetActive(false);
-
 	readyBullets.push(_deactivatedBullet);
 }
 
@@ -136,8 +195,16 @@ void cs::BulletManagerComponent::DespawnBullet(Bullet* bullet)
 		DespawnBullet(std::distance(activeBullets.begin(), _it));
 }
 
+void cs::BulletManagerComponent::DestroyBuffer()
+{
+	ChinaEngine::renderer.DestroyBuffer(bufferInfo);
+}
+
 void cs::BulletManagerComponent::DestroySystem()
 {
+	delete ubos;
+	delete bulletShaderParams;
+
 	for (auto bullet : activeBullets)
 		delete bullet;
 
@@ -148,60 +215,63 @@ void cs::BulletManagerComponent::DestroySystem()
 		delete readyBullets.front();
 		readyBullets.pop();
 	}
+
+	DestroyBuffer();
 }
 
 cs::BulletManagerComponent::~BulletManagerComponent()
 {
 	DestroySystem();
+
+	ChinaEngine::renderer.SolveRenderer(this, Solve::REMOVE, true);
 }
 
-cs::Bullet::Bullet() :
-	rotation{ 0.0f }, turnRate{ 0.0f }, acceleration{ 0.0f }, speed{ 0.0f },
+void cs::BulletManagerComponent::CreateBulletBuffer()
+{
+	bufferInfo.bufferSize = static_cast<VkDeviceSize>(sizeof(BulletShaderParams) * bulletCapacity);
+	ChinaEngine::renderer.CreateBuffer(bufferInfo.bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, bufferInfo.buffer, bufferInfo.bufferMemory);
+}
+
+cs::Bullet::Bullet(BulletManagerComponent* manager) :
+	manager{ manager }, turnRate{ 0.0f }, acceleration{ 0.0f }, speed{ 0.0f },
 	spin{ 0.0f }, gravity{ Vector2(0.0f) }, currentSpin{ 0.0f }, velocity{ Vector2(0.0f) },
-	ubso{ UniformBufferSpriteObject() }, position{ Vector3(0.0f) }
+	ubo{ UniformBufferObject() }, deltaRotation{ 0.0f },
+	rotateWithVelocity{ 0.0f }, rotationOffset{ 0.0f }, params{ BulletShaderParams() }
 {}
 
-void cs::Bullet::Update()
+void cs::Bullet::Update(const uint32_t& index)
 {
 	velocity += gravity * Time::deltaTime;
 	speed += acceleration * Time::deltaTime;
 	currentSpin += spin * Time::deltaTime;
-	rotation += turnRate * Time::deltaTime;
+	deltaRotation += turnRate * Time::deltaTime;
 
-	Vector2 _finalVelocity{ velocity + Vector2(cos(rotation), sin(rotation)) };
+	Vector2 _finalVelocity{ velocity + Vector2(cos(deltaRotation), sin(deltaRotation)) };
+	params.rotation = deltaRotation * rotateWithVelocity + rotationOffset;
+	params.position += _finalVelocity * speed * Time::deltaTime;
 	
-	position += _finalVelocity * speed * Time::deltaTime;
-	
-	Matrix4x4 _rotation{ Matrix4x4(1.0f) };
-
-	_rotation[0][0] = cos(rotation);
-	_rotation[0][1] = -sin(rotation);
-	_rotation[1][0] = sin(rotation);
-	_rotation[1][1] = cos(rotation);
-
-	ubso.model = glm::translate(_rotation, Vector3(position, 0.0f));
-}
-
-void cs::Bullet::SetActive(const bool status)
-{
-
+	manager->bulletShaderParams[index] = params;
 }
 
 void cs::Bullet::SetInfo(const BulletInfo& info)
 {
-	rotation = info.rotation;
-	position = info.position;
-}
+	deltaRotation = info.rotation;
+	speed = info.speed;
+	acceleration = info.acceleration;
+	turnRate = info.turnRotation;
+	gravity = info.gravity;
+	rotateWithVelocity = static_cast<float>(info.rotateWithVelocity);
 
-cs::UniformBufferSpriteObject::UniformBufferSpriteObject() :
-	model{ Matrix4x4(1.0f) }, view{ Matrix4x4(1.0f) }, proj{ Matrix4x4(1.0f) }, spriteScale{ Vector2(0.0f) }
-{}
+	params.position = info.position;
+	params.mainColor = info.mainColor;
+	params.subColor = info.subColor;
+}
 
 cs::BulletInfo::BulletInfo(BulletType* type) :
 	type{ type }, rotation{ 0.0f }, speed{ 0.0f }, position{ Vector2(0.0f) },
 	rotationOffset{ 0.0f }, acceleration{ 0.0f }, turnRotation{ 0.0f },
-	rotateWithVelocity{ false }, glow{ false }, mainColor{ Color() }, subColor{ Color() },
-	nextInfo{ nullptr }, bulletEvent{ BulletEvent() }
+	rotateWithVelocity{ false }, glow{ false }, mainColor{ Color::white }, subColor{ Color::white },
+	nextInfo{ nullptr }, bulletEvent{ BulletEvent() }, gravity{ Vector2(0.0f) }
 {}
 
 cs::Extent::Extent() :
@@ -210,4 +280,8 @@ cs::Extent::Extent() :
 
 cs::BulletType::BulletType() :
 	damage{ 0 }, texOffset{ Vector2(0.0f) }, texExtents{ Vector2(0.0f) }, collider{ nullptr }
+{}
+
+cs::BulletShaderParams::BulletShaderParams() :
+	position{ Vector2(0.0f) }, rotation{ 0.0f }, mainColor{ Color::white }, subColor{ Color::white }
 {}

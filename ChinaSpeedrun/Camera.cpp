@@ -23,9 +23,19 @@ void cs::Camera::UpdateCameraTransform(CameraBase& camera, TransformComponent& t
 	camera.view = glm::inverse(Transform::GetMatrixTransform(transform));
 }
 
-void cs::Camera::CalculatePerspective(CameraBase& camera)
+void cs::Camera::CalculateProjection(CameraBase& camera)
 {
-	camera.proj = glm::perspective(glm::radians(camera.fov), ChinaEngine::AspectRatio(), camera.nearPlane, camera.farPlane);
+	switch (camera.projection)
+	{
+	case CameraComponent::Projection::ORTHOGRAPHIC:
+		// we might want to multiply aspect ratio into this somewhere, or just pass window size directly
+		camera.proj = glm::ortho(camera.leftPlane, camera.rightPlane, camera.bottomPlane, camera.topPlane, camera.nearPlane, camera.farPlane);
+		break;
+	case CameraComponent::Projection::PERSPECTIVE:
+		camera.proj = glm::perspective(glm::radians(camera.fov), ChinaEngine::AspectRatio(), camera.nearPlane, camera.farPlane);
+		break;
+	}
+	
 	camera.proj[1][1] *= -1.0f;
 }
 
@@ -47,8 +57,8 @@ bool cs::Camera::FrustumTest(const OBB& obb, const Matrix4x4& matrix)
 
 	for (size_t i{ 0 }; i < 8; i++)
 	{
-		Vector4 _corner{ matrix * _corners[i] }; // this operation becomes more expensive when adding more objects
-		_isInside |= Within(-_corner.w, _corner.x, _corner.w) && Within(-_corner.w, _corner.y, _corner.w) && Within(0.0f, _corner.z, _corner.w);
+		Vector4 _corner{ matrix * _corners[i] };
+		_isInside |= Mathf::Within(-_corner.w, _corner.x, _corner.w) && Mathf::Within(-_corner.w, _corner.y, _corner.w) && Mathf::Within(0.0f, _corner.z, _corner.w);
 	}
 
 	return _isInside;
@@ -70,9 +80,4 @@ Vector3 cs::Camera::MouseToWorldSpace()
 	_eyeCoords.w = 0.0f;
 
 	return glm::normalize(Vector3(glm::inverse(Camera::GetViewMatrix(*SceneManager::mainCamera)) * _eyeCoords));
-}
-
-bool cs::Camera::Within(const float& a, const float& b, const float& c)
-{
-	return a <= b && b <= c;
 }

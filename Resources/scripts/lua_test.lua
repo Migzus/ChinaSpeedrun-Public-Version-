@@ -3,8 +3,6 @@ a = "Kill me plz"
 b = 1.4
 nice = false
 kill = -5
-newVariable = 4
-myName = "Mads"
 
 local c = true
 

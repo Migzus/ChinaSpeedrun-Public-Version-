@@ -9,9 +9,19 @@ namespace cs
 	public:
 		friend class Camera;
 
-		float fov{ 45.0f }, nearPlane{ 0.01f }, farPlane{ 1000.0f };
+		float fov, nearPlane, farPlane, leftPlane, rightPlane, topPlane, bottomPlane;
+
+		enum class Projection
+		{
+			ORTHOGRAPHIC,
+			PERSPECTIVE
+		} projection;
+
+		CameraBase();
+
+		void SetExtents(const float& height, const float& width);
 
 	protected:
-		Matrix4x4 view{ Matrix4x4(1.0f) }, proj{ Matrix4x4(1.0f) };
+		Matrix4x4 view, proj;
 	};
 }

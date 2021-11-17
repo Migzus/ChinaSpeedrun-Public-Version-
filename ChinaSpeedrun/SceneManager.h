@@ -59,7 +59,7 @@ namespace cs
 		static void Save(); // saves the current scene (it should already have a resource path, otherwise we ask to save somewhere)
 		static void Load(Scene* scene); // load the scene in from memory
 		static void Unload(Scene* scene); // unload it from the scene
-		static void UnloadEverything();
+		static void DestroyEverything();
 		static Scene* GetCurrentScene();
 
 	private:

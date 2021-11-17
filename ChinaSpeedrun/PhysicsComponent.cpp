@@ -63,7 +63,7 @@ void cs::PhysicsComponent::ImGuiDrawComponent()
 
 		const char* _options[]{ "None", "Circle", "Rectangle" };
 		int _type(static_cast<int>(shape.GetType()));
-		if (ImGui::Combo("Shape", &_type, _options, IM_ARRAYSIZE(_options)));
+		if (ImGui::Combo("Shape", &_type, _options, IM_ARRAYSIZE(_options)))
 		{
 			CollisionShape::Type _newType(static_cast<CollisionShape::Type>(_type));
 			shape.SetType(_newType);

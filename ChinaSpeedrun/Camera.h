@@ -14,12 +14,9 @@ namespace cs
 		static const Matrix4x4& GetProjectionMatrix(CameraBase& camera);
 		static const Matrix4x4& GetViewMatrix(CameraBase& camera);
 		static void UpdateCameraTransform(CameraBase& camera, class TransformComponent& transform);
-		static void CalculatePerspective(CameraBase& camera);
+		static void CalculateProjection(CameraBase& camera);
 		static bool FrustumTest(const OBB& obb, const Matrix4x4& matrix);
 		static Vector2 MouseToScreenSpace();
 		static Vector3 MouseToWorldSpace();
-
-	private:
-		static bool Within(const float& a, const float& b, const float& c);
 	};
 }

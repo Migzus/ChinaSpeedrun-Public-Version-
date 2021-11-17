@@ -37,6 +37,7 @@ namespace cs
 		std::set<std::string> tags;
 
 		GameObject();
+		GameObject(Scene* newScene);
 
 		// Called when the object is destroyed
 		virtual void ExitTree();

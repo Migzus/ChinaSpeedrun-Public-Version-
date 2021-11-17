@@ -17,7 +17,7 @@ namespace cs
 			Vector3 position, rotation;
 			float movementsSpeed, rotationSpeed;
 
-			EditorCamera(EngineEditor*);
+			EditorCamera(EngineEditor* root);
 
 			void Update();
 

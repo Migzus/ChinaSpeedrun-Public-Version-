@@ -168,6 +168,7 @@
     <ClCompile Include="AudioSystem.cpp" />
     <ClCompile Include="BulletManagerComponent.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CameraBase.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="ChinaEngine.cpp" />
     <ClCompile Include="Collider.cpp" />

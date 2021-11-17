@@ -51,10 +51,9 @@ namespace cs
 
 		void Initialize() override;
 
+		~Material();
+
 	private:
 		VkPipeline pipeline;
-
-		// Based on what the shader has; we update shaderParams accordingly
-		void UpdateShaderParams();
 	};
 }

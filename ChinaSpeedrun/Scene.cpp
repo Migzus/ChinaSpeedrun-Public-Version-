@@ -74,6 +74,7 @@ void cs::Scene::Exit()
 void cs::Scene::Free()
 {
 	ClearScene();
+	QueueExit();
 
 	delete this;
 }
@@ -82,7 +83,7 @@ void cs::Scene::AddGameObject(GameObject* newObject)
 {
     if (newObject == nullptr)
     {
-        newObject = new GameObject;
+        newObject = new GameObject(this);
         newObject->name = "Game Object (" + std::to_string(gameObjects.size()) + ")";
     }
     
@@ -98,7 +99,7 @@ void cs::Scene::RemoveGameObject()
 
 void cs::Scene::ClearScene()
 {
-	DestroyDescriptorPools();
+	//DestroyDescriptorPools();
 
 	// currently the resources will just not be deleted (they are stored in ResourceManager)
     for (GameObject* object : gameObjects)

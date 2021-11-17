@@ -21,6 +21,12 @@ namespace cs
 		friend MeshRendererComponent;
 		friend BulletManagerComponent;
 
+		enum class InputRate
+		{
+			VERTEX,
+			INSTANCE
+		};
+
 		enum class Type
 		{
 			VERTEX,
@@ -53,19 +59,23 @@ namespace cs
 
 		void Initialize() override;
 
-		void AssignShaderVertexInstance(std::string descriptorName, uint32_t binding, uint32_t stride);
-		void AssignShaderDescriptor(std::string descriptorName, uint32_t binding, Type shaderType, Data dataType);
-		void AssignShaderVertexInputAttrib(std::string attrbuteName, uint32_t location, Data dataType, uint32_t offset);
+		void AssignShaderVertexBinding(const InputRate& inputRate);
+		void AssignShaderDescriptor(const std::string& descriptorName, const uint32_t& binding, const Type& shaderType, const Data& dataType);
+		void AssignShaderVertexInputAttrib(const std::string& attrbuteName, const uint32_t& location, const Data& dataType);
 
 		const std::unordered_map<std::string, std::vector<char>>& GetSPVCode() const;
 
 		static VkShaderStageFlagBits GetShaderStageFlag(Type typeName);
 		static VkShaderStageFlagBits GetShaderStageFlag(std::string typeName);
 
+		~Shader();
+
 	private:
 		VkDescriptorSetLayout descriptorSetLayout;
 		VkPipelineLayout layout;
 
 		std::unordered_map<std::string, std::vector<char>> spvCode;
+
+		uint32_t currentVertexInputBindingDataSize, currentBinding;
 	};
 }

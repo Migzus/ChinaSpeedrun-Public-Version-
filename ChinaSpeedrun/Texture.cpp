@@ -5,7 +5,7 @@
 #include "VulkanEngineRenderer.h"
 
 cs::Texture::Texture() :
-	tilingX{ Tiling::REPEAT }, tilingY{ Tiling::REPEAT }, pixels{ nullptr }
+	tilingX{ Tiling::REPEAT }, tilingY{ Tiling::REPEAT }, generateMipmaps{ true }, filter{ Filter::LINEAR }, pixels{ nullptr }
 {
 	Initialize();
 }

@@ -15,7 +15,7 @@ void cs::Material::Initialize()
 	ChinaEngine::renderer.SolveMaterial(this, Solve::ADD);
 }
 
-void cs::Material::UpdateShaderParams()
+cs::Material::~Material()
 {
-
+	ChinaEngine::renderer.SolveMaterial(this, Solve::REMOVE, true);
 }

@@ -7,6 +7,8 @@
 #include "Input.h"
 #include "Camera.h"
 
+#include "Debug.h"
+
 const ImGuizmo::OPERATION& cs::editor::EngineEditor::GetOperationState()
 {
 	return operation;
@@ -67,7 +69,9 @@ void cs::editor::EngineEditor::Start()
 	Input::AddMapping("editor_snap", GLFW_KEY_LEFT_SHIFT);
 
 	editorCamera = new EditorCamera(this);
-	Camera::CalculatePerspective(*editorCamera);
+	editorCamera->projection = CameraBase::Projection::ORTHOGRAPHIC;
+	editorCamera->SetExtents(42.0f, 80.0f);
+	Camera::CalculateProjection(*editorCamera);
 
 	uiLayer = new ImGuiLayer(this);
 

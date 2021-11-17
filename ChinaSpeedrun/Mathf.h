@@ -44,20 +44,21 @@ namespace cs
 
 		static void InitRand();
 		static int Rand();
-		static float RandRange(const float min, const float max);
+		static float RandRange(const float& min, const float& max);
 		// Clamps the value within the specified range
 		template<class T>
 		static void Clamp(T& value, T min, T max);
 		// Clamps the value back to the other end of the specified range, pluss excess value is returned
 		template<class T>
 		static void LoopClamp(T& value, T min, T max);
-		static float Project(const Vector3 projVec, const struct Plane plane);
-		static Vector3 Project(const Vector3 projVec, const Vector3 alignVec);
-		static float Magnitude(const Vector3 vec);
-		static Vector3 CrossProduct(const Vector3 vec1, const Vector3 vec2);
-		static float DotProduct(const Vector3 vec1, const Vector3 vec2);
-		static float Max(const float v1, const float v2);
-		static float Min(const float v1, const float v2);
+		static float Project(const Vector3& projVec, const struct Plane& plane);
+		static Vector3 Project(const Vector3& projVec, const Vector3& alignVec);
+		static float Magnitude(const Vector3& vec);
+		static Vector3 CrossProduct(const Vector3& vec1, const Vector3& vec2);
+		static float DotProduct(const Vector3& vec1, const Vector3& vec2);
+		static float Max(const float& v1, const float& v2);
+		static float Min(const float& v1, const float& v2);
+		static bool Within(const float& a, const float& b, const float& c);
 
 		static void DecomposeMatrix(const Matrix4x4& transform, Vector3& position, Vector3& rotation, Vector3& scale);
 	};
