@@ -3,7 +3,9 @@
 #include "imgui.h"
 #include "ImGuizmo.h"
 #include "ChinaEngine.h"
+#include "PhysicsServer.h"
 #include "SceneManager.h"
+#include "Scene.h"
 #include "Input.h"
 #include "Camera.h"
 
@@ -33,6 +35,8 @@ void cs::editor::EngineEditor::SetPlaymode(const Playmode newPlaymode)
 	case cs::editor::EngineEditor::Playmode::EDITOR:
 		SceneManager::mainCamera = editorCamera;
 		
+		if (SceneManager::HasScenes() && SceneManager::GetCurrentScene()->GetPhysicsServer() != nullptr)
+			SceneManager::GetCurrentScene()->GetPhysicsServer()->Reset();
 		break;
 	case cs::editor::EngineEditor::Playmode::PLAY:
 		
@@ -69,8 +73,8 @@ void cs::editor::EngineEditor::Start()
 	Input::AddMapping("editor_snap", GLFW_KEY_LEFT_SHIFT);
 
 	editorCamera = new EditorCamera(this);
-	editorCamera->projection = CameraBase::Projection::ORTHOGRAPHIC;
-	editorCamera->SetExtents(42.0f, 80.0f);
+	//editorCamera->projection = CameraBase::Projection::ORTHOGRAPHIC;
+	//editorCamera->SetExtents(42.0f, 80.0f);
 	Camera::CalculateProjection(*editorCamera);
 
 	uiLayer = new ImGuiLayer(this);

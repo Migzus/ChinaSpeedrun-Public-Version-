@@ -19,13 +19,15 @@
 #include "CameraComponent.h"
 #include "Camera.h"
 #include "PhysicsComponent.h"
-#include "Script.h"
+#include "PolygonCollider.h"
 #include "SphereCollider.h"
 #include "StaticBody.h"
 #include "Rigidbody.h"
+#include "Script.h"
 #include "BulletManagerComponent.h"
 
 #include "Editor.h"
+#include "Draw.h"
 #include "SceneManager.h"
 //#include "EditorProfiler.h"
 
@@ -42,10 +44,13 @@ void cs::ChinaEngine::Run()
 	renderer.Create(800, 600, "China Speedrun");
 
 	editor.Start();
+	Draw::Setup();
 
 	EngineInit();
 
 	renderer.Resolve();
+	Draw::CreateDescriptorSets();
+	Draw::DebugGrid();
 
 	InitInput();
 
@@ -66,18 +71,18 @@ void cs::ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int newWidth
 
 void cs::ChinaEngine::EngineInit()
 {
-	/*SceneManager::Load(SceneManager::CreateScene("Performance Test"));
+	SceneManager::Load(SceneManager::CreateScene("Performance Test"));
 	SceneManager::Load(SceneManager::CreateScene("Physics Test"));
-	SceneManager::Load(SceneManager::CreateScene("Bullet Hell Test"));
 	//SceneManager::Load(ResourceManager::Load<Scene>("../Resources/scenes/test_1.json"));
 
 	SceneManager::SetCurrentFocusedScene(0);
 
 	Shader* _shader{ ResourceManager::Load<Shader>("../Resources/shaders/default_shader") };
-	_shader->AssignShaderVertexInputAttrib("position", 0, Shader::Data::VEC3, offsetof(Vertex, position));
-	_shader->AssignShaderVertexInputAttrib("color", 1, Shader::Data::VEC3, offsetof(Vertex, color));
-	_shader->AssignShaderVertexInputAttrib("texCoord", 2, Shader::Data::VEC2, offsetof(Vertex, texCoord));
-	//_shader->AssignShaderVertexInputAttrib("normal", 3, Shader::Data::VEC3, offsetof(Vertex, normal));
+	_shader->AssignShaderVertexInputAttrib("position", 0, Shader::Data::VEC3);
+	_shader->AssignShaderVertexInputAttrib("color", 1, Shader::Data::VEC3);
+	_shader->AssignShaderVertexInputAttrib("texCoord", 2, Shader::Data::VEC2);
+	//_shader->AssignShaderVertexInputAttrib("normal", 3, Shader::Data::VEC3);
+	_shader->AssignShaderVertexBinding(Shader::InputRate::VERTEX);
 
 	_shader->AssignShaderDescriptor("ubo", 0, Shader::Type::VERTEX, Shader::Data::UNIFORM);
 	_shader->AssignShaderDescriptor("texSampler", 1, Shader::Type::FRAGMENT, Shader::Data::SAMPLER2D);
@@ -95,7 +100,7 @@ void cs::ChinaEngine::EngineInit()
 	_material2->cullMode = Material::CullMode::NONE;
 	_material2->shaderParams["texSampler"] = _chaikaSmile;
 
-	const uint16_t width{ 8 }, length{ 8 }, height{ 8 };
+	const uint16_t width{ 2 }, length{ 2 }, height{ 2 };
 	Mesh* _sphereModel{ ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj") };
 
 	for (size_t x{ 0 }; x < width; x++)
@@ -118,7 +123,7 @@ void cs::ChinaEngine::EngineInit()
 
 	GameObject* _terrain{ SceneManager::InstanceObject("Terrain", Vector3(0.0f, -6.0f, 0.0f)) };
 	GameObject* _suzanne{ SceneManager::InstanceObject("Suzanne", Vector3(0.0f, 10.0f, 4.0f)) }; // Vector3(-7.0f, 5.0f, -6.2f) // -1.0f, 10.0f, 6.0f
-	GameObject* _physicsBall{ SceneManager::InstanceObject("Junko Ball", Vector3(-1.3f, 3.0f, 5.5f)) };
+	GameObject* _physicsBall{ SceneManager::InstanceObject("Junko Ball", Vector3(-1.3f, 2.0f, 5.5f)) };
 	GameObject* _camera{ SceneManager::InstanceObject("Camera", Vector3(13.0f, 13.0f, 16.0f), Vector3(-33.0f, 35.0f, 0.0f)) };
 
 	MeshRendererComponent& _terrainMesh{ _terrain->AddComponent<MeshRendererComponent>() };
@@ -128,8 +133,7 @@ void cs::ChinaEngine::EngineInit()
 	ScriptComponent& _terrainScript{ _terrain->AddComponent<ScriptComponent>() };
 	_terrainScript.SetScript(ResourceManager::Load<Script>("../Resources/scripts/lua_test.lua"));
 
-	SphereColliderComponent& _sphereColTerrain{ _terrain->AddComponent<SphereColliderComponent>() };
-	_sphereColTerrain.radius = 10.0f;
+	PolygonColliderComponent& _sphereColTerrain{ _terrain->AddComponent<PolygonColliderComponent>() };
 	StaticBodyComponent& _rbT{ _terrain->AddComponent<StaticBodyComponent>() };
 
 	MeshRendererComponent& _meshRendererMonke{ _suzanne->AddComponent<MeshRendererComponent>() };
@@ -137,8 +141,7 @@ void cs::ChinaEngine::EngineInit()
 	_meshRendererMonke.material = _material1;
 	
 	_suzanne->AddComponent<SphereColliderComponent>();
-	RigidbodyComponent& _rbZU{ _suzanne->AddComponent<RigidbodyComponent>() };
-	_rbZU.mass = 1.0f;
+	StaticBodyComponent& _rbZU{ _suzanne->AddComponent<StaticBodyComponent>() };
 
 	MeshRendererComponent& _junkoBall{ _physicsBall->AddComponent<MeshRendererComponent>() };
 	_junkoBall.SetMesh(ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj"));
@@ -147,9 +150,9 @@ void cs::ChinaEngine::EngineInit()
 	_physicsBall->AddComponent<SphereColliderComponent>();
 	RigidbodyComponent& _rbPB{ _physicsBall->AddComponent<RigidbodyComponent>() };
 
-	_camera->AddComponent<CameraComponent>();*/
+	_camera->AddComponent<CameraComponent>();
 
-	SceneManager::Load(SceneManager::CreateScene("Bullet Hell Test"));
+	/*SceneManager::Load(SceneManager::CreateScene("Bullet Hell Test"));
 
 	// BULLET HELL TEST
 	SceneManager::SetCurrentFocusedScene(0);
@@ -192,14 +195,14 @@ void cs::ChinaEngine::EngineInit()
 
 	BulletManagerComponent& _manager{ _bulletManager->AddComponent<BulletManagerComponent>() };
 	_manager.material = _bulletMaterial;
-	_manager.bulletCapacity = 10000;
+	_manager.bulletCapacity = 20000;
 	_manager.CreateBorders(1.6f, 1.8f, 0.0f);
 	_manager.CreateSystem();
 
 	CameraComponent& _bulletCam{ _cameraBullet->AddComponent<CameraComponent>() };
 	_bulletCam.projection = CameraComponent::Projection::ORTHOGRAPHIC;
 	_bulletCam.SetExtents(1920.0f, 1080.0f);
-	Camera::CalculateProjection(_bulletCam);
+	Camera::CalculateProjection(_bulletCam);*/
 
 	//MeshRendererComponent& _objectMeshRenderer{ _object->AddComponent<MeshRendererComponent>() };
 	//_objectMeshRenderer.SetMesh(Mesh::CreateDefaultPlane(Vector2(0.5f)));
@@ -232,6 +235,7 @@ void cs::ChinaEngine::MainLoop()
 		glfwPollEvents();
 
 		editor.Update();
+		Draw::Update();
 		SceneManager::Update();
 
 		renderer.Resolve();

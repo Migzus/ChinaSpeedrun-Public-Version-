@@ -10,6 +10,7 @@
 #include "Shader.h"
 #include "GameObject.h"
 
+#include "Draw.h"
 #include "SceneManager.h"
 #include "Scene.h"
 
@@ -26,7 +27,7 @@ void cs::MeshRenderer::UpdateUBO(MeshRendererComponent& meshRenderer, TransformC
 }
 
 cs::MeshRendererComponent::MeshRendererComponent() :
-	mesh{ nullptr }
+	mesh{ nullptr }, disableFrustum{ false }
 {
 	ChinaEngine::renderer.SolveRenderer(this, Solve::ADD);
 	SceneManager::GetCurrentScene()->AddToRenderQueue(this);

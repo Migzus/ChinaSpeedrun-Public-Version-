@@ -41,7 +41,7 @@ void cs::editor::EditorCamera::Update()
 			auto* _transform{ SceneManager::GetRegistry().try_get<TransformComponent>(e) };
 			auto* _meshRenderer{ SceneManager::GetRegistry().try_get<MeshRendererComponent>(e) };
 
-			if (_transform == nullptr || _meshRenderer == nullptr)
+			if (_transform == nullptr || _meshRenderer == nullptr || _meshRenderer->disableFrustum)
 				return;
 
 			_meshRenderer->visible = Camera::FrustumTest(_transform->gameObject->obb, _pv * Transform::GetMatrixTransform(*_transform));

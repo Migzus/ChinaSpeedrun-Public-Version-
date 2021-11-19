@@ -17,6 +17,7 @@ namespace cs
 		friend VulkanEngineRenderer;
 
 		class Mesh* mesh;
+		bool disableFrustum;
 
 		MeshRendererComponent();
 

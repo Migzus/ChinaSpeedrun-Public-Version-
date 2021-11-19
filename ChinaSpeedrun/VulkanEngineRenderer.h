@@ -55,6 +55,7 @@ namespace cs
 	class VulkanEngineRenderer
 	{
 	public:
+		friend class Draw;
 		friend class BulletManagerComponent;
 
 		VulkanEngineRenderer();
@@ -214,6 +215,9 @@ namespace cs
 		void CreateDescriptorSets(RenderComponent& renderer);
 		void CreateCommandBuffers();
 		void CreateSyncObjects();
+
+		void CreateDebugDrawDescriptorPool();
+		void CreateDebugDrawDescriptorSets();
 
 		void CreateImage(uint32_t width, uint32_t height, uint32_t mipmapLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipmapLevels);

@@ -52,6 +52,8 @@ namespace cs
 
 		static RaycastHit Raycast(const Vector3 origin, const Vector3 direction, const float distance, const OBB& obb, const Matrix4x4& matrix);
 
+		void Reset();
+
 		void Step();
 		void Test();
 		// The solver, solves the queued collisions

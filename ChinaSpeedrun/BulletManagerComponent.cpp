@@ -43,7 +43,11 @@ void cs::BulletManagerComponent::ImGuiDrawComponent()
 {
 	if (ImGui::TreeNodeEx("Bullet Manager", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		ImGui::DragInt("Capacity", &bulletCapacity, 0.25f, 0, 10000);
+		if (ImGui::DragInt("Capacity", &bulletCapacity, 0.25f, 0, 10000))
+		{
+			DestroySystem();
+			CreateSystem();
+		}
 
 		ImGui::Text("Main Border");
 		ImGui::DragFloat("Width", &mainBorder.width, 0.1f);

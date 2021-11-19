@@ -16,6 +16,7 @@ namespace cs
 	class Material : public Resource
 	{
 	public:
+		friend class Draw;
 		friend class VulkanEngineRenderer;
 		friend class ResourceManager;
 		friend class MeshRendererComponent;

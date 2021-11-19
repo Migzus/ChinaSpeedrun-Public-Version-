@@ -56,6 +56,7 @@
     <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="VulkanEngineRenderer.cpp" />
     <ClCompile Include="CameraBase.cpp" />
+    <ClCompile Include="Draw.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\ImGuizmo\ImGuizmo.h" />
@@ -107,6 +108,7 @@
     <ClInclude Include="Transform.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="VulkanEngineRenderer.h" />
+    <ClInclude Include="Draw.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="scripts">

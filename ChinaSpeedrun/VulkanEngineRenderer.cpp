@@ -19,6 +19,7 @@
 #include "ResourceManager.h"
 #include "BulletManagerComponent.h"
 
+#include "Draw.h"
 #include "Scene.h"
 #include "SceneManager.h"
 
@@ -859,9 +860,11 @@ void cs::VulkanEngineRenderer::UpdateDrawCommands(const uint32_t& imageIndex)
 
 	vkCmdBeginRenderPass(commandBuffers[imageIndex], &_renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+	Draw::VulkanDraw(commandBuffers[imageIndex], imageIndex, vertexBuffer.buffer, indexBuffer.buffer);
+
 	if (SceneManager::GetCurrentScene() != nullptr)
 		for (auto* renderer : SceneManager::GetCurrentScene()->renderableObjects)
-			if (renderer->visible)
+			if (renderer->IsRendererValid())
 				renderer->VulkanDraw(commandBuffers[imageIndex], imageIndex, vertexBuffer.buffer, indexBuffer.buffer);
 
 	vkCmdEndRenderPass(commandBuffers[imageIndex]);
@@ -1033,6 +1036,7 @@ void cs::VulkanEngineRenderer::CreateLogicalDevice()
 	}
 
 	VkPhysicalDeviceFeatures _deviceFeatures{};
+	_deviceFeatures.fillModeNonSolid = VK_TRUE;
 
 	VkDeviceCreateInfo _createInfo{};
 	_createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -1685,6 +1689,58 @@ void cs::VulkanEngineRenderer::CreateSyncObjects()
 			Debug::LogFail("Failed to create semaphores.");
 }
 
+void cs::VulkanEngineRenderer::CreateDebugDrawDescriptorPool()
+{
+	uint32_t _swapChainSize{ static_cast<uint32_t>(swapChainImages.size()) };
+	VkDescriptorPoolSize _poolSizes[]
+	{
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, _swapChainSize }
+	};
+
+	VkDescriptorPoolCreateInfo _poolInfo{};
+	_poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	_poolInfo.poolSizeCount = IM_ARRAYSIZE(_poolSizes);
+	_poolInfo.pPoolSizes = _poolSizes;
+	_poolInfo.maxSets = _swapChainSize;
+
+	if (vkCreateDescriptorPool(device, &_poolInfo, nullptr, &Draw::descriptorPool) != VK_SUCCESS)
+		Debug::LogFail("Failed to create descriptor pool.");
+}
+
+void cs::VulkanEngineRenderer::CreateDebugDrawDescriptorSets()
+{
+	std::vector<VkDescriptorSetLayout> _layouts(swapChainImages.size(), Draw::material->shader->descriptorSetLayout);
+	VkDescriptorSetAllocateInfo _allocInfo{};
+	_allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	_allocInfo.descriptorPool = Draw::descriptorPool;
+	_allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size());
+	_allocInfo.pSetLayouts = _layouts.data();
+
+	Draw::descriptorSets.resize(swapChainImages.size());
+	if (vkAllocateDescriptorSets(device, &_allocInfo, Draw::descriptorSets.data()) != VK_SUCCESS)
+		Debug::LogFail("Failed to allocate descriptor sets.");
+
+	for (size_t i{ 0 }; i < swapChainImages.size(); i++)
+	{
+		VkWriteDescriptorSet _descriptorWrites{};
+		_descriptorWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		_descriptorWrites.dstSet = Draw::descriptorSets[i];
+		_descriptorWrites.dstBinding = 0;
+		_descriptorWrites.dstArrayElement = 0;
+		_descriptorWrites.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		_descriptorWrites.descriptorCount = 1;
+
+		VkDescriptorBufferInfo _bufferInfo{};
+		_bufferInfo.buffer = uniformBuffers[i];
+		_bufferInfo.offset = 0;
+		_bufferInfo.range = static_cast<VkDeviceSize>(UniformBufferObject::GetByteSize());
+
+		_descriptorWrites.pBufferInfo = &_bufferInfo;
+
+		vkUpdateDescriptorSets(device, 1, &_descriptorWrites, 0, nullptr);
+	}
+}
+
 void cs::VulkanEngineRenderer::CreateImage(uint32_t width, uint32_t height, uint32_t mipmapLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
 {
 	VkImageCreateInfo _imageInfo{};
@@ -1869,6 +1925,8 @@ void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 {
 	if (SceneManager::HasScenes())
 	{
+		CopyDataToBuffer(uniformBuffersMemory[currentImage], &Draw::ubo, 0, UniformBufferObject::GetByteSize());
+
 		for (auto _renderer : SceneManager::GetCurrentScene()->renderableObjects)
 		{
 			void* _data;
@@ -2045,6 +2103,8 @@ void cs::VulkanEngineRenderer::RecreateSwapChain()
 	CreateDepthResources();
 	CreateFramebuffers();
 	CreateUniformBuffers();
+	CreateDebugDrawDescriptorPool();
+	CreateDebugDrawDescriptorSets();
 	SceneManager::CreateDescriptorPools();
 	CreateCommandBuffers();
 
@@ -2086,6 +2146,8 @@ void cs::VulkanEngineRenderer::CleanupSwapChain()
 		vkDestroyBuffer(device, uniformBuffers[i], nullptr);
 		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
 	}
+
+	vkDestroyDescriptorPool(device, Draw::descriptorPool, nullptr);
 
 	if (SceneManager::GetCurrentScene() != nullptr)
 		SceneManager::DestroyDescriptorPools();

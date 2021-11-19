@@ -59,6 +59,8 @@ namespace cs
 		static float Max(const float& v1, const float& v2);
 		static float Min(const float& v1, const float& v2);
 		static bool Within(const float& a, const float& b, const float& c);
+		static bool IsVectorZero(const Vector2& vec);
+		static bool IsVectorZero(const Vector3& vec);
 
 		static void DecomposeMatrix(const Matrix4x4& transform, Vector3& position, Vector3& rotation, Vector3& scale);
 	};

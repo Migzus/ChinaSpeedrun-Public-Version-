@@ -12,10 +12,12 @@ namespace cs
 	class ResourceManager;
 	class MeshRendererComponent;
 	class BulletManagerComponent;
+	class Draw;
 
 	class Shader : public Resource
 	{
 	public:
+		friend Draw;
 		friend VulkanEngineRenderer;
 		friend ResourceManager;
 		friend MeshRendererComponent;

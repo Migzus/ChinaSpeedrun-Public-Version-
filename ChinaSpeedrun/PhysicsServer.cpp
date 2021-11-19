@@ -27,6 +27,33 @@ cs::RaycastHit cs::PhysicsServer::Raycast(const Vector3 origin, const Vector3 di
 	return _hit;
 }
 
+void cs::PhysicsServer::Reset()
+{
+	for (auto* body : bodies)
+	{
+		switch (body->bodyType)
+		{
+		case PhysicsBodyComponent::BodyType::RIGID:
+		{
+			RigidbodyComponent* _rb{ static_cast<RigidbodyComponent*>(body) };
+			_rb->velocity = Vector3(0.0f);
+			break;
+		}
+		case PhysicsBodyComponent::BodyType::STATIC:
+		{
+			StaticBodyComponent* _sb{ static_cast<StaticBodyComponent*>(body) };
+			break;
+		}
+		case PhysicsBodyComponent::BodyType::AREA:
+			break;
+		case PhysicsBodyComponent::BodyType::KINEMATIC:
+			break;
+		case PhysicsBodyComponent::BodyType::UNDEFINED:
+			break;
+		}
+	}
+}
+
 void cs::PhysicsServer::Step()
 {
 	Test();
@@ -39,7 +66,7 @@ void cs::PhysicsServer::Test()
 	{
 		for (auto* b : bodies)
 		{
-			if (a == b)
+			if (a == b || (a->bodyType == PhysicsBodyComponent::BodyType::STATIC && b->bodyType == PhysicsBodyComponent::BodyType::STATIC))
 				break;
 
 			CollisionInfo _info{ PhysicsBody::CompareBodies(a, b) };
@@ -68,9 +95,9 @@ void cs::PhysicsServer::Solve()
 
 			//Vector3 _bouncyForce{ glm::reflect(_rbA->velocity, collision.info.normal) * 10.0f };
 			TransformComponent& _tr{ _rbA->gameObject->GetComponent<TransformComponent>() };
-			_tr.position += collision.info.normal * collision.info.errorLength;
+			_tr.position -= collision.info.normal * collision.info.errorLength;
 			Vector3 _proj{ Mathf::Project(collision.info.normal, _rbA->velocity) };
-			_rbA->velocity = -_proj;
+			_rbA->velocity -= _proj;
 
 			//_rbA->AddForce(collision.info.normal * collision.info.errorLength * 100.0f);
 		}
@@ -80,8 +107,11 @@ void cs::PhysicsServer::Solve()
 			RigidbodyComponent* _rbB{ reinterpret_cast<RigidbodyComponent*>(collision.bodyB) };
 
 			TransformComponent& _tr{ _rbB->gameObject->GetComponent<TransformComponent>() };
-			_tr.position += collision.info.normal * collision.info.errorLength;
-			_rbB->velocity += 1.2f * collision.info.normal * _rbB->velocity;
+			_tr.position -= collision.info.normal * collision.info.errorLength;
+			//_rbB->velocity += 1.2f * collision.info.normal * _rbB->velocity;
+
+			Vector3 _proj{ Mathf::Project(collision.info.normal, _rbB->velocity) };
+			_rbB->velocity -= _proj;
 
 			//_rbB->velocity = glm::reflect(_rbB->velocity, collision.info.normal);
 			//_rbB->velocity = Vector3(0.0f, 0.0f, 0.0f);
@@ -143,10 +173,10 @@ cs::CollisionInfo cs::collision_tests::SpherePolygonIntersection(const Transform
 	// currently only supports convex shapes (will hopefully support concave shapes in the future)
 	for (auto& plane : oc->GetPlanes())
 	{
-		_info.normal = plane.normal;
+		_info.normal = -plane.normal;
 		_info.a = c->radius * _info.normal + t->position;
 		_info.errorLength = Mathf::Project(_info.a, plane) - c->radius;
-		_info.valid = _info.valid && _info.errorLength <= 0.0f;
+		_info.valid |= _info.errorLength <= 0.0f;
 	}
 
 	return _info;

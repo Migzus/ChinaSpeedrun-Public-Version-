@@ -58,7 +58,7 @@ bool cs::Camera::FrustumTest(const OBB& obb, const Matrix4x4& matrix)
 	for (size_t i{ 0 }; i < 8; i++)
 	{
 		Vector4 _corner{ matrix * _corners[i] };
-		_isInside |= Mathf::Within(-_corner.w, _corner.x, _corner.w) && Mathf::Within(-_corner.w, _corner.y, _corner.w) && Mathf::Within(0.0f, _corner.z, _corner.w);
+		_isInside |= Mathf::Within(-_corner.w, _corner.x, _corner.w) || Mathf::Within(-_corner.w, _corner.y, _corner.w) || Mathf::Within(0.0f, _corner.z, _corner.w);
 	}
 
 	return _isInside;

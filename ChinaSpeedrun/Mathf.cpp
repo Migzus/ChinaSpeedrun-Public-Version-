@@ -62,6 +62,16 @@ bool cs::Mathf::Within(const float& a, const float& b, const float& c)
     return a <= b && b <= c;
 }
 
+bool cs::Mathf::IsVectorZero(const Vector2& vec)
+{
+    return vec.x == 0.0f || vec.y == 0.0f;
+}
+
+bool cs::Mathf::IsVectorZero(const Vector3& vec)
+{
+    return vec.x == 0.0f || vec.y == 0.0f || vec.z == 0.0f;
+}
+
 void cs::Mathf::DecomposeMatrix(const Matrix4x4& transform, Vector3& position, Vector3& rotation, Vector3& scale)
 {
     Matrix4x4 _localMatrix{ transform };
