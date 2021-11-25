@@ -154,6 +154,17 @@ void cs::Scene::CreateDescriptorPools()
 		ChinaEngine::renderer.MakeDescriptorPool(*object);
 }
 
+void cs::Scene::Input(int keycode, int scancode, int action, int mods)
+{
+	auto _scriptableObjects{ registry.view<ScriptComponent>() };
+	for (auto e : _scriptableObjects)
+	{
+		auto& _script{ registry.get<ScriptComponent>(e) };
+
+		_script.Input(keycode);
+	}
+}
+
 bool cs::Scene::ImGuiDrawGameObjects()
 {
 	bool _isClicked{ false };

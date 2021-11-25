@@ -8,6 +8,7 @@
 #include "Scene.h"
 #include "Input.h"
 #include "Camera.h"
+#include "CameraComponent.h"
 
 #include "Debug.h"
 
@@ -33,17 +34,44 @@ void cs::editor::EngineEditor::SetPlaymode(const Playmode newPlaymode)
 	switch (mode)
 	{
 	case cs::editor::EngineEditor::Playmode::EDITOR:
+	{
 		SceneManager::mainCamera = editorCamera;
-		
+
 		if (SceneManager::HasScenes() && SceneManager::GetCurrentScene()->GetPhysicsServer() != nullptr)
 			SceneManager::GetCurrentScene()->GetPhysicsServer()->Reset();
 		break;
+	}
 	case cs::editor::EngineEditor::Playmode::PLAY:
-		
+	{
+		Scene* _scene{ SceneManager::GetCurrentScene() };
+
+		if (_scene != nullptr)
+		{
+			auto _camera{ SceneManager::GetRegistry().view<CameraComponent>() };
+
+			if (_camera.empty())
+			{
+				Debug::LogError("Cannot run a scene with no cameras. Add a camera component!");
+				mode = Playmode::EDITOR;
+			}
+			else
+			{
+				SceneManager::mainCamera = &SceneManager::GetRegistry().get<CameraComponent>(_camera.front());
+				_scene->Start();
+			}
+		}
+		else
+		{
+			Debug::LogError("You do not have any scenes active.");
+			mode = Playmode::EDITOR;
+		}
+
 		break;
+	}
 	case cs::editor::EngineEditor::Playmode::PAUSE:
-		
+	{
 		break;
+	}
 	}
 }
 

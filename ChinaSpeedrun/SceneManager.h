@@ -53,6 +53,8 @@ namespace cs
 		static void Update();
 		static bool HasScenes();
 
+		static void SendInput(int keycode, int scancode, int action, int mods);
+
 		static entt::registry& GetRegistry();
 
 		static Scene* CreateScene(std::string name);

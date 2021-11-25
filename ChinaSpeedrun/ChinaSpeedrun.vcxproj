@@ -166,6 +166,7 @@
     <ClCompile Include="AudioComponent.cpp" />
     <ClCompile Include="AudioData.cpp" />
     <ClCompile Include="AudioSystem.cpp" />
+    <ClCompile Include="BSpline.cpp" />
     <ClCompile Include="BulletManagerComponent.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CameraBase.cpp" />
@@ -176,11 +177,11 @@
     <ClCompile Include="Color.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="Debug.cpp" />
+    <ClCompile Include="Delaunay.cpp" />
     <ClCompile Include="Draw.cpp" />
     <ClCompile Include="EditorCamera.cpp" />
     <ClCompile Include="EngineEditor.cpp" />
     <ClCompile Include="GameObject.cpp" />
-    <ClCompile Include="Gizmos.cpp" />
     <ClCompile Include="ImGuiLayer.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
@@ -217,6 +218,7 @@
     <ClInclude Include="AudioComponent.h" />
     <ClInclude Include="AudioData.h" />
     <ClInclude Include="AudioSystem.h" />
+    <ClInclude Include="BSpline.h" />
     <ClInclude Include="BulletManagerComponent.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraBase.h" />
@@ -228,11 +230,11 @@
     <ClInclude Include="Color.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Debug.h" />
+    <ClInclude Include="Delaunay.h" />
     <ClInclude Include="Draw.h" />
     <ClInclude Include="EditorCamera.h" />
     <ClInclude Include="EngineEditor.h" />
     <ClInclude Include="GameObject.h" />
-    <ClInclude Include="Gizmos.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="ImGuiLayer.h" />
     <ClInclude Include="Input.h" />

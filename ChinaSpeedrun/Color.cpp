@@ -30,6 +30,16 @@ float* cs::Color::GetColorValues()
 	return &r;
 }
 
+Vector3 cs::Color::ConvertToGLMVector()
+{
+	return { r, g, b };
+}
+
+Vector4 cs::Color::ConvertToGLMVectorAlpha()
+{
+	return { r, g, b, a };
+}
+
 ImVec4 cs::Color::ColorToImVec4(const Color& color)
 {
 	return ImVec4(color.r, color.g, color.b, color.a);

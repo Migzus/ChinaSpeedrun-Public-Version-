@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Mathf.h"
+
 struct ImVec4;
 
 namespace cs
@@ -25,6 +27,8 @@ namespace cs
 		Color(float r, float g, float b, float a);
 
 		float* GetColorValues();
+		Vector3 ConvertToGLMVector();
+		Vector4 ConvertToGLMVectorAlpha();
 
 		static ImVec4 ColorToImVec4(const Color& color);
 	};

@@ -1,5 +1,6 @@
 #include "Draw.h"
 
+#include "Color.h"
 #include "ChinaEngine.h"
 #include "VulkanEngineRenderer.h"
 #include "ResourceManager.h"
@@ -44,10 +45,61 @@ void cs::Draw::Update()
 	ubo.view = Camera::GetViewMatrix(*SceneManager::mainCamera);
 }
 
-void cs::Draw::Line(const std::vector<Vector3>& points, const std::vector<class Color>& colors)
+auto cs::Draw::MakeLine(const Vector3& startPos, const Vector3& endPos)
 {
-	if (points.empty())
+	return std::make_tuple(startPos, endPos, endPos);
+}
+
+void cs::Draw::Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode)
+{
+	Line(points, colors, drawMode, descriptorSets);
+}
+
+void cs::Draw::Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode, std::vector<VkDescriptorSet>& descriptorSetsRef)
+{
+	if (points.size() <= 1)
 		return;
+
+	if (colors.empty())
+		colors.push_back(Color::white);
+
+	std::vector<Vertex> _vertcies;
+	std::vector<uint32_t> _indcies;
+
+	const size_t _increase{ static_cast<size_t>(drawMode == DrawMode::SOLID ? 1 : 2) };
+	const size_t _size{ points.size() - (drawMode == DrawMode::SOLID ? 1 : 3) };
+
+	for (size_t i{ 0 }; i < _size; i += _increase)
+	{
+		Color _finalColor{ colors[i * (colors.size() / points.size())] };
+		auto [_start, _mid, _end]{ MakeLine(points[i], points[i + 1]) };
+
+		_indcies.push_back(static_cast<uint32_t>(_vertcies.size()));
+		_vertcies.push_back({ _start, _finalColor.ConvertToGLMVector(), Vector2(0.0f) });
+		_indcies.push_back(static_cast<uint32_t>(_vertcies.size()));
+		_vertcies.push_back({ _mid, _finalColor.ConvertToGLMVector(), Vector2(0.0f) });
+		_indcies.push_back(static_cast<uint32_t>(_vertcies.size()));
+		_vertcies.push_back({ _end, _finalColor.ConvertToGLMVector(), Vector2(0.0f) });
+	}
+
+	Mesh* _mesh{ new Mesh };
+	_mesh->SetMesh(_vertcies, _indcies);
+	_mesh->resourcePath = "debug_element_" + std::to_string(debugItems.size());
+
+	DrawItem _newItem{};
+	_newItem.mesh = _mesh;
+	_newItem.SetDescriptorRefs(descriptorSetsRef);
+	debugItems.push_back(_newItem);
+
+	updateVertexIndexBuffers = true;
+}
+
+void cs::Draw::MeshLine(Mesh* mesh)
+{
+	DrawItem _newItem{};
+	_newItem.mesh = mesh;
+	_newItem.SetDescriptorRefs(descriptorSets);
+	debugItems.push_back(_newItem);
 
 	updateVertexIndexBuffers = true;
 }
@@ -105,7 +157,7 @@ void cs::Draw::DebugGrid()
 
 	for (float x{ -_extents.x }; x < _extents.x + 1.0f; x++)
 	{
-		const Vector3 _color{ (int)x == 0 ? Vector3(0.0f, 0.0f, 1.0f) : Vector3(0.1f, 0.1f, 0.1f) };
+		const Vector3 _color{ (int)x == 0 ? Vector3(0.0f, 0.0f, 1.0f) : (int)x % 10 == 0 ? Vector3(0.1f) : Vector3(0.01f) };
 
 		_indcies.push_back(static_cast<uint32_t>(_vertcies.size()));
 		_vertcies.push_back({ Vector3(x, 0.0f, _extents.z), _color, Vector2(0.0f) });
@@ -117,7 +169,7 @@ void cs::Draw::DebugGrid()
 
 	for (float z{ -_extents.z }; z < _extents.z + 1.0f; z++)
 	{
-		const Vector3 _color{ (int)z == 0 ? Vector3(1.0f, 0.0f, 0.0f) : Vector3(0.1f, 0.1f, 0.1f) };
+		const Vector3 _color{ (int)z == 0 ? Vector3(1.0f, 0.0f, 0.0f) : (int)z % 10 == 0 ? Vector3(0.1f) : Vector3(0.01f) };
 
 		_indcies.push_back(static_cast<uint32_t>(_vertcies.size()));
 		_vertcies.push_back({ Vector3(_extents.x, 0.0f, z), _color, Vector2(0.0f) });
@@ -136,10 +188,8 @@ void cs::Draw::DebugGrid()
 
 	_gridMesh->SetMesh(_vertcies, _indcies);
 	_gridMesh->resourcePath = "grid";
-	ResourceManager::ForcePushMesh(_gridMesh);
 
 	DrawItem _item{};
-
 	_item.mesh = _gridMesh;
 	_item.SetDescriptorRefs(descriptorSets);
 

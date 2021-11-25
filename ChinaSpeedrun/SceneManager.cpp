@@ -108,6 +108,12 @@ bool cs::SceneManager::HasScenes()
 	return !activeScenes.empty();
 }
 
+void cs::SceneManager::SendInput(int keycode, int scancode, int action, int mods)
+{
+	if (ChinaEngine::editor.GetPlaymodeState() == editor::EngineEditor::Playmode::PLAY && HasScenes())
+		GetCurrentScene()->Input(keycode, scancode, action, mods);
+}
+
 entt::registry& cs::SceneManager::GetRegistry()
 {
 	return GetCurrentScene()->registry;

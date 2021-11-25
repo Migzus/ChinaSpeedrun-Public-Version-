@@ -3,6 +3,8 @@
 #include "Component.h"
 #include "Resource.h"
 
+#include "GameObject.h"
+
 #include <string>
 #include <variant>
 #include <vector>
@@ -17,6 +19,8 @@ namespace cs
 	{
 	public:
 		friend class ResourceManager;
+
+		std::string scriptText;
 
 		virtual void Initialize() override;
 	};
@@ -45,13 +49,17 @@ namespace cs
 		virtual void ImGuiDrawComponent() override;
 		
 		void GetGlobalTable();
+		void CompileScript();
+		void CreateLuaState();
 
 		void Start();
 		void Update();
 		void Input(char eventKey);
 		void Exit();
 
+		Script* GetScript() const;
 		void SetScript(Script* newScript);
+		void ClearScript();
 
 		~ScriptComponent();
 
@@ -64,4 +72,17 @@ namespace cs
 
 		bool CheckLua(const char* errorMessage, int result);
 	};
+
+	class TransformComponent;
+
+	namespace lua_functions
+	{
+		int lua_GetComponent(lua_State* L);
+	}
+
+	namespace lua_tables
+	{
+		void CreateTransform(lua_State* L, const char* name, TransformComponent& transform);
+		void CreateVector3(lua_State* L, const char* name, Vector3& vec);
+	}
 }

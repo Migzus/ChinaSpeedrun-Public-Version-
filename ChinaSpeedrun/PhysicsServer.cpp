@@ -170,16 +170,25 @@ cs::CollisionInfo cs::collision_tests::SpherePolygonIntersection(const Transform
 {
 	CollisionInfo _info{};
 
-	// currently only supports convex shapes (will hopefully support concave shapes in the future)
+	_info.valid = true;
+
 	for (auto& plane : oc->GetPlanes())
 	{
 		_info.normal = -plane.normal;
 		_info.a = c->radius * _info.normal + t->position;
 		_info.errorLength = Mathf::Project(_info.a, plane) - c->radius;
-		_info.valid |= _info.errorLength <= 0.0f;
+		_info.valid = _info.valid && _info.errorLength <= 0.0f;
 	}
 
 	return _info;
+}
+
+cs::CollisionInfo cs::collision_tests::BarycentricIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const PolygonColliderComponent* oc)
+{
+	const float _w1{};
+	const float _w2{};
+
+	return CollisionInfo();
 }
 
 cs::Collision::Collision(PhysicsBodyComponent* a, PhysicsBodyComponent* b, CollisionInfo newInfo) :

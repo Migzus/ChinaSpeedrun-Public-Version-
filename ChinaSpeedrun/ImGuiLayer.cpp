@@ -10,6 +10,7 @@
 #include "GameObject.h"
 #include "Time.h"
 
+#include "Script.h"
 #include "Transform.h"
 #include "VulkanEngineRenderer.h"
 #include "ChinaEngine.h"
@@ -108,24 +109,24 @@ void cs::editor::ImGuiLayer::Step()
         switch (editorRoot->GetPlaymodeState())
         {
         case EngineEditor::Playmode::EDITOR:
-            ImGui::Button("Play");
-            if (ImGui::IsItemClicked())
+            if (ImGui::Button("Play"))
             {
                 editorRoot->SetPlaymode(EngineEditor::Playmode::PLAY);
-                SceneManager::GetCurrentScene()->Start();
             }
             break;
         case editor::EngineEditor::Playmode::PLAY:
-            ImGui::Button("Pause");
-            if (ImGui::IsItemClicked())
+            if (ImGui::Button("Pause"))
+            {
                 editorRoot->SetPlaymode(EngineEditor::Playmode::PAUSE);
+            }
 
             DrawStopSimulationButton();
             break;
         case EngineEditor::Playmode::PAUSE:
-            ImGui::Button("Continue");
-            if (ImGui::IsItemClicked())
+            if (ImGui::Button("Continue"))
+            {
                 editorRoot->SetPlaymode(EngineEditor::Playmode::PLAY);
+            }
             
             DrawStopSimulationButton();
             break;
@@ -154,6 +155,24 @@ void cs::editor::ImGuiLayer::Step()
         IsWindowHovered();
     }
 	ImGui::End();
+
+    if (activeObject != nullptr && activeObject->HasComponent<ScriptComponent>())
+    {
+        ScriptComponent& _script{ activeObject->GetComponent<ScriptComponent>() };
+
+        if (ImGui::Begin("Scripting"))
+        {
+            char* _text{ _script.GetScript()->scriptText.data() };
+            ImGui::InputTextMultiline("", _text, INT16_MAX, ImVec2(ImGui::GetWindowSize().x - 12.0f, ImGui::GetWindowSize().y - 35.0f), ImGuiInputTextFlags_AllowTabInput);
+            _script.GetScript()->scriptText = _text;
+
+            if (ImGui::IsItemDeactivatedAfterEdit())
+                _script.CompileScript();
+            
+            IsWindowHovered();
+        }
+        ImGui::End();
+    }
 
     if (ImGui::Begin("Debugger"))
     {

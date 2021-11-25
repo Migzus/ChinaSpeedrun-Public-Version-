@@ -24,7 +24,6 @@
     <ClCompile Include="EditorCamera.cpp" />
     <ClCompile Include="EngineEditor.cpp" />
     <ClCompile Include="GameObject.cpp" />
-    <ClCompile Include="Gizmos.cpp" />
     <ClCompile Include="ImGuiLayer.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
@@ -57,6 +56,8 @@
     <ClCompile Include="VulkanEngineRenderer.cpp" />
     <ClCompile Include="CameraBase.cpp" />
     <ClCompile Include="Draw.cpp" />
+    <ClCompile Include="Delaunay.cpp" />
+    <ClCompile Include="BSpline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\ImGuizmo\ImGuizmo.h" />
@@ -77,7 +78,6 @@
     <ClInclude Include="EditorCamera.h" />
     <ClInclude Include="EngineEditor.h" />
     <ClInclude Include="GameObject.h" />
-    <ClInclude Include="Gizmos.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="ImGuiLayer.h" />
     <ClInclude Include="Input.h" />
@@ -109,6 +109,8 @@
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="VulkanEngineRenderer.h" />
     <ClInclude Include="Draw.h" />
+    <ClInclude Include="Delaunay.h" />
+    <ClInclude Include="BSpline.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="scripts">

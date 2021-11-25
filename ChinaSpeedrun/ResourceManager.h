@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Mathf.h"
+
 #include <string>
 #include <unordered_map>
 #include <iostream>
@@ -28,10 +30,11 @@ namespace cs
 		template<class T>
 		static T* Load(const std::string filename);
 		template<class T>
-		static T* Save(const std::string filename, T* resource);
+		static void Save(const std::string filename, T* resource);
 		template<class T>
 		static void ForcePush(T* resource);
 
+		static std::vector<Vector3> LoadLAS(const std::string& filename);
 		static Mesh* LoadModel(const std::string filename);
 		static AudioData* LoadAudio(const std::string filename);
 		static Texture* LoadTexture(const std::string filename);
@@ -40,6 +43,8 @@ namespace cs
 		static Scene* LoadScene(const std::string filename);
 		static RawData LoadRaw(const std::string filename);
 		static Script* LoadScript(const std::string filename);
+
+		static void SaveScript(const std::string& filename, Script* script);
 
 		static void ForcePushMesh(Mesh* mesh);
 
@@ -52,6 +57,12 @@ namespace cs
 		static Script* Load(const std::string filename)
 		{
 			return LoadScript(filename);
+		}
+
+		template<>
+		static void Save(const std::string filename, Script* resource)
+		{
+			SaveScript(filename, resource);
 		}
 
 		template<>

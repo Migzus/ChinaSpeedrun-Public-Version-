@@ -42,7 +42,17 @@ Vector3 cs::Mathf::CrossProduct(const Vector3& vec1, const Vector3& vec2)
     return glm::cross(vec1, vec2);
 }
 
+float cs::Mathf::CrossProduct(const Vector2& vec1, const Vector2& vec2)
+{
+    return vec1.x * vec2.y - vec2.x * vec1.y;
+}
+
 float cs::Mathf::DotProduct(const Vector3& vec1, const Vector3& vec2)
+{
+    return glm::dot(vec1, vec2);
+}
+
+float cs::Mathf::DotProduct(const Vector2& vec1, const Vector2& vec2)
 {
     return glm::dot(vec1, vec2);
 }

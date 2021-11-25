@@ -54,6 +54,7 @@ namespace cs
 	private:
 		void DestroyDescriptorPools();
 		void CreateDescriptorPools();
+		void Input(int keycode, int scancode, int action, int mods);
 
 		bool ImGuiDrawGameObjects();
 		void UpdateEditorComponents();

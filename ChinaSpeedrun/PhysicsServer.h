@@ -40,6 +40,7 @@ namespace cs
 	{
 		CollisionInfo SphereSphereIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const SphereColliderComponent* oc);
 		CollisionInfo SpherePolygonIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const PolygonColliderComponent* oc);
+		CollisionInfo BarycentricIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const PolygonColliderComponent* oc);
 	}
 
 	class PhysicsServer

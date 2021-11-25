@@ -25,13 +25,13 @@ void cs::PolygonColliderComponent::ImGuiDrawComponent()
 cs::PolygonColliderComponent::PolygonColliderComponent()
 {
 	planes.push_back({ glm::normalize(Vector3(0.0f, -1.0f, 1.0f)), 0.0f });
-	//planes.push_back({ glm::normalize(Vector3(0.0f, -1.0f, 0.0f)), 1.0f });
+	planes.push_back({ glm::normalize(Vector3(0.0f, -1.0f, 0.0f)), 0.0f });
 }
 
 // This method has yet to be tested
 void cs::PolygonColliderComponent::CreateBasedOnMesh()
 {
-	if (!gameObject->HasComponent<MeshRendererComponent>() && true)
+	if (!gameObject->HasComponent<MeshRendererComponent>())
 	{
 		Debug::LogWarning("Cannot create a polygon collider. No mesh was found on the same gameobject.");
 		return;

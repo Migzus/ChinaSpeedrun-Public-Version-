@@ -11,6 +11,7 @@
 #include "Shader.h"
 #include "AudioData.h"
 #include "Script.h"
+#include "Mathf.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -30,6 +31,41 @@ std::unordered_map<std::string, cs::Mesh*> cs::ResourceManager::meshes;
 std::unordered_map<std::string, cs::Shader*> cs::ResourceManager::shaders;
 std::unordered_map<std::string, cs::AudioData*> cs::ResourceManager::audio;
 std::unordered_map<std::string, cs::Script*> cs::ResourceManager::scripts;
+
+std::vector<Vector3> cs::ResourceManager::LoadLAS(const std::string& filename)
+{
+	std::ifstream _file{ filename };
+	std::vector<Vector3> _reservedPoints;
+	std::string _currentLine{};
+
+	if (_file.bad())
+		return _reservedPoints;
+
+	std::getline(_file, _currentLine);
+
+	const int _size{ std::stoi(_currentLine) };
+
+	for (int i{ 0 }; i < _size; i++)
+	{
+		std::getline(_file, _currentLine);
+
+		uint32_t _startStringIndex{ 0 };
+		float _x{ 0.0f }, _y{ 0.0f }, _z{ 0.0f };
+
+		_x = std::stof(_currentLine.substr(_startStringIndex, _currentLine.find_first_of('\t')));
+		_startStringIndex = _currentLine.find_first_of('\t');
+
+		std::string _midSubStr{ _currentLine.substr(_startStringIndex) };
+		_z = std::stof(_currentLine.substr(_startStringIndex, _currentLine.find_first_of('\t')));
+		_startStringIndex += _midSubStr.find_first_of('\t', _startStringIndex);
+
+		_y = std::stof(_currentLine.substr(_startStringIndex));
+
+		_reservedPoints.push_back(Vector3(_x, _y, _z));
+	}
+
+	return _reservedPoints;
+}
 
 cs::Mesh* cs::ResourceManager::LoadModel(const std::string filename)
 {
@@ -251,11 +287,19 @@ cs::Script* cs::ResourceManager::LoadScript(const std::string filename)
 		return nullptr;
 	}
 
-	_readFile.close();
-
 	Script* _newScript{ new Script };
+	_newScript->scriptText = std::string(std::istreambuf_iterator<char>(_readFile), std::istreambuf_iterator<char>());
+	_readFile.close();
 	_newScript->resourcePath = filename;
 	return _newScript;
+}
+
+void cs::ResourceManager::SaveScript(const std::string& filename, Script* script)
+{
+	std::ofstream _file{ filename };
+
+	_file << script->scriptText;
+	_file.close();
 }
 
 void cs::ResourceManager::ForcePushMesh(Mesh* mesh)
