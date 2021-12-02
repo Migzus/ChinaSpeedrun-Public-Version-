@@ -8,6 +8,7 @@
 namespace cs
 {
 	class Mesh;
+	class Scene;
 
 	struct DrawItem
 	{
@@ -37,12 +38,12 @@ namespace cs
 
 		static void DebugGrid();
 		static auto MakeLine(const Vector3& startPos, const Vector3& endPos);
-		static cs::DrawItem* Line(const std::vector<Vector3>& points, std::vector<class Color> colors, const DrawMode& drawMode);
-		static cs::DrawItem* Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode, std::vector<VkDescriptorSet>& descriptorSetsRef);
-		static void MeshLine(Mesh* mesh);
-		static void Rectangle(const Vector3& extents, const Vector3& position);
-		static void Circle(const float& radius, const Vector3& position, const Color& color, const uint32_t& resolution = 16);
-		static void Image(const class Texture* texture, const Vector3& position, const Vector3& size = Vector3(1.0f));
+		static cs::DrawItem* Line(const std::vector<Vector3>& points, std::vector<class Color> colors, const DrawMode& drawMode, Scene* sceneToAttatchTo = nullptr);
+		static cs::DrawItem* Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode, std::vector<VkDescriptorSet>& descriptorSetsRef, Scene* sceneToAttatchTo = nullptr);
+		static void MeshLine(Mesh* mesh, Scene* sceneToAttatchTo = nullptr);
+		static void Rectangle(const Vector3& extents, const Vector3& position, Scene* sceneToAttatchTo = nullptr);
+		static void Circle(const float& radius, const Vector3& position, const Color& color, const uint32_t& resolution = 16, Scene* sceneToAttatchTo = nullptr);
+		static void Image(const class Texture* texture, const Vector3& position, const Vector3& size = Vector3(1.0f), Scene* sceneToAttatchTo = nullptr);
 		static void VulkanDraw(VkCommandBuffer& commandBuffer, const size_t& index, VkBuffer& vertexBuffer, VkBuffer& indexBuffer);
 		static void CreateDescriptorSets();
 

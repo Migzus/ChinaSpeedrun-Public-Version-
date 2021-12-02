@@ -45,5 +45,5 @@ void cs::DirectionalLight::MakeRayLines()
 		_points.push_back(_orientation * Vector4(_pointEdit, 1.0f));
 	}
 
-	Draw::Line(_points, { lightColor }, Draw::DrawMode::DASHED);
+	Draw::Line(_points, { lightColor }, Draw::DrawMode::DASHED, gameObject->GetScene());
 }

@@ -9,6 +9,8 @@
 #include "Material.h"
 #include "Mesh.h"
 #include "Camera.h"
+
+#include "Scene.h"
 #include "SceneManager.h"
 
 cs::Material* cs::Draw::material{ nullptr };
@@ -50,12 +52,12 @@ auto cs::Draw::MakeLine(const Vector3& startPos, const Vector3& endPos)
 	return std::make_tuple(startPos, endPos, endPos);
 }
 
-cs::DrawItem* cs::Draw::Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode)
+cs::DrawItem* cs::Draw::Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode, Scene* sceneToAttatchTo)
 {
-	return Line(points, colors, drawMode, descriptorSets);
+	return Line(points, colors, drawMode, descriptorSets, sceneToAttatchTo);
 }
 
-cs::DrawItem* cs::Draw::Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode, std::vector<VkDescriptorSet>& descriptorSetsRef)
+cs::DrawItem* cs::Draw::Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode, std::vector<VkDescriptorSet>& descriptorSetsRef, Scene* sceneToAttatchTo)
 {
 	if (points.size() <= 1)
 		return nullptr;
@@ -89,24 +91,31 @@ cs::DrawItem* cs::Draw::Line(const std::vector<Vector3>& points, std::vector<Col
 	DrawItem* _newItem{ new DrawItem };
 	_newItem->mesh = _mesh;
 	_newItem->SetDescriptorRefs(descriptorSetsRef);
-	debugItems.push_back(_newItem);
+	if (sceneToAttatchTo == nullptr)
+		debugItems.push_back(_newItem);
+	else
+		sceneToAttatchTo->PushDebugItem(_newItem);
 
 	updateVertexIndexBuffers = true;
 
 	return _newItem;
 }
 
-void cs::Draw::MeshLine(Mesh* mesh)
+void cs::Draw::MeshLine(Mesh* mesh, Scene* sceneToAttatchTo)
 {
 	DrawItem* _newItem{ new DrawItem };
 	_newItem->mesh = mesh;
 	_newItem->SetDescriptorRefs(descriptorSets);
-	debugItems.push_back(_newItem);
+
+	if (sceneToAttatchTo == nullptr)
+		debugItems.push_back(_newItem);
+	else
+		sceneToAttatchTo->PushDebugItem(_newItem);
 
 	updateVertexIndexBuffers = true;
 }
 
-void cs::Draw::Rectangle(const Vector3& extents, const Vector3& position)
+void cs::Draw::Rectangle(const Vector3& extents, const Vector3& position, Scene* sceneToAttatchTo)
 {
 	if (Mathf::IsVectorZero(extents))
 		return;
@@ -114,7 +123,7 @@ void cs::Draw::Rectangle(const Vector3& extents, const Vector3& position)
 	updateVertexIndexBuffers = true;
 }
 
-void cs::Draw::Circle(const float& radius, const Vector3& position, const Color& color, const uint32_t& resolution)
+void cs::Draw::Circle(const float& radius, const Vector3& position, const Color& color, const uint32_t& resolution, Scene* sceneToAttatchTo)
 {
 	if (radius <= 0.0f)
 		return;
@@ -122,7 +131,7 @@ void cs::Draw::Circle(const float& radius, const Vector3& position, const Color&
 	updateVertexIndexBuffers = true;
 }
 
-void cs::Draw::Image(const Texture* texture, const Vector3& position, const Vector3& size)
+void cs::Draw::Image(const Texture* texture, const Vector3& position, const Vector3& size, Scene* sceneToAttatchTo)
 {
 	if (texture == nullptr || Mathf::IsVectorZero(size))
 		return;
@@ -135,6 +144,15 @@ void cs::Draw::VulkanDraw(VkCommandBuffer& commandBuffer, const size_t& index, V
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipeline);
 
 	for (auto* item : debugItems)
+	{
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &item->mesh->vertexBufferOffset);
+		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, item->mesh->indexBufferOffset, VK_INDEX_TYPE_UINT32);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->shader->layout, 0, 1, item->descriptorSetsRef[index], 0, nullptr);
+
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(item->mesh->GetIndices().size()), 1, 0, 0, 0);
+	}
+
+	for (auto* item : SceneManager::GetCurrentScene()->GetDrawItems())
 	{
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &item->mesh->vertexBufferOffset);
 		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, item->mesh->indexBufferOffset, VK_INDEX_TYPE_UINT32);

@@ -110,17 +110,15 @@ void cs::ChinaEngine::EngineInit()
 	_magmaMaterial->shaderParams["texSampler"] = _magma;
 
 	{
-		GameObject* _terrain{ SceneManager::InstanceObject("Delaunay Terrain", Vector3(0.0f, 0.0f, 0.0f)) };
-		GameObject* _ball{ SceneManager::InstanceObject("Ball", Vector3(-4.0f, 10.0f, 2.0f)) };
-		GameObject* _ball2{ SceneManager::InstanceObject("Ball", Vector3(-3.0f, 8.0f, -2.0f)) };
+		GameObject* _terrain{ SceneManager::InstanceObject("Delaunay Terrain") };
 		GameObject* _light{ SceneManager::InstanceObject("Diractional Light", Vector3(0.0f), Vector3(0.0f, 40.0f, -10.0f)) };
 		GameObject* _camera{ SceneManager::InstanceObject("Camera", Vector3(14.0f, 10.0f, 15.0f), Vector3(-25.0f, 42.5f, 0.0f)) };
 		GameObject* _curves{ SceneManager::InstanceObject("Curves") };
 
 		MeshRendererComponent& _meshRenderer{ _terrain->AddComponent<MeshRendererComponent>() };
-		_meshRenderer.material = _magmaMaterial;
+		_meshRenderer.material = Draw::material;
 
-		std::vector<Vector3> _points{ ResourceManager::LoadLAS("../Resources/test_las.txt", Vector3(615200.0f, 6758300.0f, 550.0f)) }; // 245592
+		std::vector<Vector3> _points{ ResourceManager::LoadLAS("../Resources/test_las.txt", Vector3(615200.0f, 6758300.0f, 570.0f)) }; // 245592
 		/*BSpline& _bSpline{ _terrain->AddComponent<BSpline>() };
 		_bSpline.points.push_back({ { 3.0f, 0.0f, 0.0f }, { 0.7f, 1.2f, 3.2f } });
 		_bSpline.points.push_back({ { 0.0f, -4.0f, 2.0f }, { 7.3f, 5.0f, -3.2f } });
@@ -139,23 +137,28 @@ void cs::ChinaEngine::EngineInit()
 		_terrain->AddComponent<StaticBodyComponent>();
 
 		/* -------------------
-		*  BALL AND BALL2
+		*  BALL SPAWNER
 		*/
 
-		_ball->AddComponent<SphereColliderComponent>();
-		_ball->AddComponent<RigidbodyComponent>();
+		const size_t _width{ 4 }, _height{ 4 }, _depth{ 4 };
 
-		MeshRendererComponent& _ballMesh{ _ball->AddComponent<MeshRendererComponent>() };
-		_ballMesh.material = _material;
-		_ballMesh.SetMesh(ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj"));
+		for (size_t x{ 0 }; x < _width; x++)
+		{
+			for (size_t y{ 0 }; y < _height; y++)
+			{
+				for (size_t z{ 0 }; z < _depth; z++)
+				{
+					const std::string _name{ "Physics Ball " + std::to_string(x + y * _width + z * _width * _height) };
+					GameObject* _ball{ SceneManager::InstanceObject(_name.c_str(), Vector3((float)x * 3.0f - 30.0f, (float)y * 3.0f + 20.0f, (float)z * 3.0f - 20.0f)) };
 
-
-		_ball2->AddComponent<SphereColliderComponent>();
-		_ball2->AddComponent<RigidbodyComponent>();
-
-		MeshRendererComponent& _ball2Mesh{ _ball2->AddComponent<MeshRendererComponent>() };
-		_ball2Mesh.material = _material;
-		_ball2Mesh.SetMesh(ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj"));
+					_ball->AddComponent<SphereColliderComponent>();
+					_ball->AddComponent<RigidbodyComponent>();
+					MeshRendererComponent& _ballMesh{ _ball->AddComponent<MeshRendererComponent>() };
+					_ballMesh.material = _material;
+					_ballMesh.SetMesh(ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj"));
+				}
+			}
+		}
 
 		/* -------------------
 		*  CAMERA

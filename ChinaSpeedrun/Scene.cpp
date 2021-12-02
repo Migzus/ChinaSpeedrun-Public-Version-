@@ -107,9 +107,7 @@ void cs::Scene::RemoveGameObject()
 
 void cs::Scene::ClearScene()
 {
-	//DestroyDescriptorPools();
-
-	// currently the resources will just not be deleted (they are stored in ResourceManager)
+	// the resources will just not be deleted (the ResourceManager handles that)
     for (GameObject* object : gameObjects)
         delete object;
 
@@ -148,6 +146,16 @@ void cs::Scene::RemoveFromRenderQueue(RenderComponent* renderer)
 uint32_t cs::Scene::GetUBOOffset()
 {
 	return UniformBufferObject::GetByteSize() * (uint32_t)renderableObjects.size();
+}
+
+const std::vector<cs::DrawItem*>& cs::Scene::GetDrawItems() const
+{
+	return drawItems;
+}
+
+void cs::Scene::PushDebugItem(DrawItem* drawItem)
+{
+	drawItems.push_back(drawItem);
 }
 
 void cs::Scene::DestroyDescriptorPools()

@@ -66,10 +66,6 @@ void cs::VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
 
 	mesh->vertexSize = sizeof(Vertex) * mesh->vertices.size();
 	CopyDataToBuffer(_stagingBufferMemory, mesh->vertices.data(), vertexBuffer.dataSize, (size_t)mesh->vertexSize);
-	/*void* _vertexData;
-	vkMapMemory(device, _stagingBufferMemory, vertexBuffer.dataSize, vertexBuffer.bufferSize - vertexBuffer.dataSize, 0, &_vertexData);
-	memcpy(_vertexData, mesh->vertices.data(), (size_t)mesh->vertexSize);
-	vkUnmapMemory(device, _stagingBufferMemory);*/
 
 	mesh->vertexBufferOffset = vertexBuffer.dataSize;
 	vertexBuffer.dataSize = _newVertexOffset;
@@ -88,10 +84,6 @@ void cs::VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
 
 	mesh->indexSize = sizeof(uint32_t) * mesh->indices.size();
 	CopyDataToBuffer(_stagingBufferMemory, mesh->indices.data(), indexBuffer.dataSize, (size_t)mesh->indexSize);
-	/*void* _indexData;
-	vkMapMemory(device, _stagingBufferMemory, indexBuffer.dataSize, indexBuffer.bufferSize - indexBuffer.dataSize, 0, &_indexData);
-	memcpy(_indexData, mesh->indices.data(), (size_t)mesh->indexSize);
-	vkUnmapMemory(device, _stagingBufferMemory);*/
 
 	mesh->indexBufferOffset = indexBuffer.dataSize;
 	indexBuffer.dataSize = _newIndexOffset;

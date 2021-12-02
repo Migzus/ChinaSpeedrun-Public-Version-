@@ -208,5 +208,5 @@ void cs::SceneManager::DrawScenes()
 
 	for (size_t i{ 0 }; i < activeScenes.size(); i++)
 		if (activeScenes[i]->ImGuiDrawGameObjects())
-			SetCurrentFocusedScene(i);
+			SetCurrentFocusedScene(static_cast<uint32_t>(i));
 }

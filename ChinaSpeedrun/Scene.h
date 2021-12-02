@@ -12,6 +12,7 @@ namespace cs
 	class GameObject;
 	class SceneManager;
 	class VulkanEngineRenderer;
+	struct DrawItem;
 
 	// Scenes can also be treated as prefabs
 	class Scene : public Resource
@@ -51,6 +52,9 @@ namespace cs
 
 		uint32_t GetUBOOffset();
 
+		const std::vector<DrawItem*>& GetDrawItems() const;
+		void PushDebugItem(DrawItem* drawItem);
+
 	private:
 		void DestroyDescriptorPools();
 		void CreateDescriptorPools();
@@ -67,5 +71,6 @@ namespace cs
 		std::string name;
 		std::vector<GameObject*> gameObjects;
 		std::vector<RenderComponent*> renderableObjects;
+		std::vector<DrawItem*> drawItems;
 	};
 }

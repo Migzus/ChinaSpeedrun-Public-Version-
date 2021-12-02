@@ -20,15 +20,15 @@ cs::BSpline::Point3D::Point3D(const Vector3& position, const Vector3& tangentIn,
 {}
 
 cs::BSpline::BSpline() :
-    loop{ false }, subdivisions{ 10 }, matrixWarp{ nullptr }, size{ 0 }
+    loop{ false }, subdivisions{ 10 }, matrixWarp{ nullptr }, size{ 0 }, item{ nullptr }
 {}
 
 cs::BSpline::BSpline(std::vector<Point3D> points) :
-    loop{ false }, points{ points }, subdivisions{ 10 }, matrixWarp{ nullptr }, size{ 0 }
+    loop{ false }, points{ points }, subdivisions{ 10 }, matrixWarp{ nullptr }, size{ 0 }, item{ nullptr }
 {}
 
 cs::BSpline::BSpline(std::vector<Point3D> points, size_t subDivs) :
-    loop{ false }, points{ points }, subdivisions{ subDivs }, matrixWarp{ nullptr }, size{ 0 }
+    loop{ false }, points{ points }, subdivisions{ subDivs }, matrixWarp{ nullptr }, size{ 0 }, item{ nullptr }
 {}
 
 void cs::BSpline::Init()
@@ -100,7 +100,7 @@ void cs::BSpline::MakeDrawLine()
 
     _linePoints.push_back(points.back().position);
 
-    item = Draw::Line(_linePoints, { Color::magenta }, Draw::DrawMode::SOLID);
+    item = Draw::Line(_linePoints, { Color::magenta }, Draw::DrawMode::SOLID, gameObject->GetScene());
 }
 
 // the float value can be 0.0f to the number of "points - 1" (example: 4.0f, and 5 points; we would end up on the fifth point)
