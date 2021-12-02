@@ -14,6 +14,7 @@ namespace cs
 	class MeshRendererComponent;
 	class BulletManagerComponent;
 	class Draw;
+	class BSpline;
 
 	class Mesh : public Resource
 	{
@@ -23,6 +24,7 @@ namespace cs
 		friend ResourceManager;
 		friend MeshRendererComponent;
 		friend BulletManagerComponent;
+		friend BSpline;
 
 		Mesh();
 		Mesh(std::vector<class cs::Vertex> vertexArray, std::vector<uint32_t> indexArray);

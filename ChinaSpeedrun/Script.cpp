@@ -61,6 +61,17 @@ void cs::ScriptComponent::GetGlobalTable()
 	if (!luaOK)
 		return;
 
+	/*
+	lua_pushinteger(luaState, 262); // right
+	lua_setfield(luaState, -2, "KEY_RIGHT_ARROW");
+	lua_pushinteger(luaState, 263); // left
+	lua_setfield(luaState, -2, "KEY_LEFT_ARROW");
+	lua_pushinteger(luaState, 264); // down
+	lua_setfield(luaState, -2, "KEY_DOWN_ARROW");
+	lua_pushinteger(luaState, 265); // up
+	lua_setfield(luaState, -2, "KEY_UP_ARROW");
+	*/
+
 	//lua_pop(luaState, -1);
 	lua_pushglobaltable(luaState);
 	lua_pushnil(luaState);
@@ -143,16 +154,25 @@ void cs::ScriptComponent::Update()
 	}
 }
 
-void cs::ScriptComponent::Input(char eventKey)
+void cs::ScriptComponent::Input(int keycode, int scancode, int action, int mods)
 {
 	if (!luaOK)
 		return;
 
 	if (lua_getglobal(luaState, "input") == LUA_TFUNCTION)
 	{
-		lua_pushinteger(luaState, eventKey);
-		//lua_pushlightuserdata(luaState, &eventKey);
-		lua_pcall(luaState, 1, 0, 0);
+		luaL_newmetatable(luaState, "event");
+		lua_pushvalue(luaState, -1);
+		lua_setfield(luaState, -2, "__index");
+		lua_pushinteger(luaState, keycode);
+		lua_setfield(luaState, -2, "keycode");
+		lua_pushinteger(luaState, scancode);
+		lua_setfield(luaState, -2, "scancode");
+		lua_pushinteger(luaState, action);
+		lua_setfield(luaState, -2, "action");
+		lua_pushinteger(luaState, mods);
+		lua_setfield(luaState, -2, "mods");
+		IssueLua(lua_pcall(luaState, 1, 0, 0));
 	}
 }
 
@@ -162,6 +182,24 @@ void cs::ScriptComponent::Exit()
 		return;
 
 	if (lua_getglobal(luaState, "exit") == LUA_TFUNCTION)
+		lua_pcall(luaState, 0, 0, 0);
+}
+
+void cs::ScriptComponent::OnCollisionEnter()
+{
+	if (!luaOK)
+		return;
+
+	if (lua_getglobal(luaState, "on_collision_exit") == LUA_TFUNCTION)
+		lua_pcall(luaState, 0, 0, 0);
+}
+
+void cs::ScriptComponent::OnCollisionExit()
+{
+	if (!luaOK)
+		return;
+
+	if (lua_getglobal(luaState, "on_collision_exit") == LUA_TFUNCTION)
 		lua_pcall(luaState, 0, 0, 0);
 }
 
@@ -195,6 +233,12 @@ cs::ScriptComponent::~ScriptComponent()
 	ClearScript();
 }
 
+void cs::ScriptComponent::IssueLua(int result)
+{
+	if (result != LUA_OK)
+		Debug::LogIssue(lua_tostring(luaState, -1));
+}
+
 bool cs::ScriptComponent::CheckLua(const char* errorMessage, int result)
 {
 	if (result != LUA_OK)
@@ -225,6 +269,7 @@ void cs::lua_tables::CreateTransform(lua_State* L, const char* name, TransformCo
 void cs::lua_tables::CreateVector3(lua_State* L, const char* name, Vector3& vec)
 {
 	luaL_newmetatable(L, name);
+	//lua_settable(L, -2);
 	lua_pushvalue(L, -1);
 	lua_setfield(L, -2, "__index");
 	lua_pushnumber(L, vec.x);

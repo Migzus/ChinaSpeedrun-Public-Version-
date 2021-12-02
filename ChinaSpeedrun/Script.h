@@ -54,8 +54,11 @@ namespace cs
 
 		void Start();
 		void Update();
-		void Input(char eventKey);
+		void Input(int keycode, int scancode, int action, int mods);
 		void Exit();
+
+		void OnCollisionEnter();
+		void OnCollisionExit();
 
 		Script* GetScript() const;
 		void SetScript(Script* newScript);
@@ -70,6 +73,7 @@ namespace cs
 
 		std::vector<LuaVariable> globalVariables;
 
+		void IssueLua(int result);
 		bool CheckLua(const char* errorMessage, int result);
 	};
 

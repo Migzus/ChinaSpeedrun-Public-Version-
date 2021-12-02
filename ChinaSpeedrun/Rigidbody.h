@@ -18,15 +18,18 @@ namespace cs
 
 		float mass;
 		float gravity;
-
-		Vector3 velocity;
+		float endTime;
+		Vector3 velocity, startForce;
 
 		RigidbodyComponent();
 
+		void ShootStartVelocity();
 		void AddForce(const Vector3 additionalForce);
 		virtual void ImGuiDrawComponent() override;
 
 	private:
 		Vector3 force;
+
+		void UpdateTrajectory();
 	};
 }

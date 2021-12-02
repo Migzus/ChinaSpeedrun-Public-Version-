@@ -56,6 +56,7 @@ void cs::editor::EngineEditor::SetPlaymode(const Playmode newPlaymode)
 			}
 			else
 			{
+				//uiLayer->activeObject = nullptr;
 				SceneManager::mainCamera = &SceneManager::GetRegistry().get<CameraComponent>(_camera.front());
 				_scene->Start();
 			}
@@ -73,6 +74,8 @@ void cs::editor::EngineEditor::SetPlaymode(const Playmode newPlaymode)
 		break;
 	}
 	}
+
+	Camera::CalculateProjection(*SceneManager::mainCamera);
 }
 
 cs::GameObject* cs::editor::EngineEditor::GetSelectedGameObject() const
@@ -102,7 +105,7 @@ void cs::editor::EngineEditor::Start()
 
 	editorCamera = new EditorCamera(this);
 	//editorCamera->projection = CameraBase::Projection::ORTHOGRAPHIC;
-	//editorCamera->SetExtents(42.0f, 80.0f);
+	//editorCamera->SetExtents(1080.0f, 1920.0f);
 	Camera::CalculateProjection(*editorCamera);
 
 	uiLayer = new ImGuiLayer(this);
@@ -110,6 +113,8 @@ void cs::editor::EngineEditor::Start()
 	SetPlaymode(Playmode::EDITOR);
 	operation = ImGuizmo::TRANSLATE;
 	operationMode = ImGuizmo::LOCAL;
+
+	uiLayer->SetStyle();
 }
 
 void cs::editor::EngineEditor::Update()

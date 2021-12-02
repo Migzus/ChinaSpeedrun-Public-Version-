@@ -32,7 +32,7 @@ std::unordered_map<std::string, cs::Shader*> cs::ResourceManager::shaders;
 std::unordered_map<std::string, cs::AudioData*> cs::ResourceManager::audio;
 std::unordered_map<std::string, cs::Script*> cs::ResourceManager::scripts;
 
-std::vector<Vector3> cs::ResourceManager::LoadLAS(const std::string& filename)
+std::vector<Vector3> cs::ResourceManager::LoadLAS(const std::string& filename, const Vector3& offset, const AxisMode& mode)
 {
 	std::ifstream _file{ filename };
 	std::vector<Vector3> _reservedPoints;
@@ -50,18 +50,29 @@ std::vector<Vector3> cs::ResourceManager::LoadLAS(const std::string& filename)
 		std::getline(_file, _currentLine);
 
 		uint32_t _startStringIndex{ 0 };
-		float _x{ 0.0f }, _y{ 0.0f }, _z{ 0.0f };
+		float _x{ -offset.x }, _y{ -offset.y }, _z{ -offset.z };
 
-		_x = std::stof(_currentLine.substr(_startStringIndex, _currentLine.find_first_of('\t')));
+		_x += std::stof(_currentLine.substr(_startStringIndex, _currentLine.find_first_of('\t')));
 		_startStringIndex = _currentLine.find_first_of('\t');
 
 		std::string _midSubStr{ _currentLine.substr(_startStringIndex) };
-		_z = std::stof(_currentLine.substr(_startStringIndex, _currentLine.find_first_of('\t')));
+		_y += std::stof(_currentLine.substr(_startStringIndex, _currentLine.find_first_of('\t')));
 		_startStringIndex += _midSubStr.find_first_of('\t', _startStringIndex);
 
-		_y = std::stof(_currentLine.substr(_startStringIndex));
+		_z += std::stof(_currentLine.substr(_startStringIndex));
 
-		_reservedPoints.push_back(Vector3(_x, _y, _z));
+		switch (mode)
+		{
+		case AxisMode::X:
+			_reservedPoints.push_back(Vector3(_z, _x, _y));
+			break;
+		case AxisMode::Y:
+			_reservedPoints.push_back(Vector3(_x, _z, _y));
+			break;
+		case AxisMode::Z:
+			_reservedPoints.push_back(Vector3(_x, _y, _z));
+			break;
+		}
 	}
 
 	return _reservedPoints;

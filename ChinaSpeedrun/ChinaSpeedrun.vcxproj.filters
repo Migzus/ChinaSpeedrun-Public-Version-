@@ -58,6 +58,10 @@
     <ClCompile Include="Draw.cpp" />
     <ClCompile Include="Delaunay.cpp" />
     <ClCompile Include="BSpline.cpp" />
+    <ClCompile Include="DirectionalLight.cpp" />
+    <ClCompile Include="PlaneCollider.cpp" />
+    <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="MarchingTriangles.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\ImGuizmo\ImGuizmo.h" />
@@ -111,6 +115,10 @@
     <ClInclude Include="Draw.h" />
     <ClInclude Include="Delaunay.h" />
     <ClInclude Include="BSpline.h" />
+    <ClInclude Include="DirectionalLight.h" />
+    <ClInclude Include="PlaneCollider.h" />
+    <ClInclude Include="Timer.h" />
+    <ClInclude Include="MarchingTriangles.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="scripts">

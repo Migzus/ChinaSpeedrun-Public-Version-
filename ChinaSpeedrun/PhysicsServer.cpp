@@ -7,6 +7,8 @@
 #include "Transform.h"
 #include "SphereCollider.h"
 #include "PolygonCollider.h"
+#include "PlaneCollider.h"
+#include "Vertex.h"
 #include "GameObject.h"
 
 #include "Debug.h"
@@ -87,35 +89,36 @@ void cs::PhysicsServer::Solve()
 		{
 			RigidbodyComponent* _rbA{ reinterpret_cast<RigidbodyComponent*>(collision.bodyA) };
 			RigidbodyComponent* _rbB{ reinterpret_cast<RigidbodyComponent*>(collision.bodyB) };
+			TransformComponent& _trA{ _rbA->gameObject->GetComponent<TransformComponent>() };
+			TransformComponent& _trB{ _rbB->gameObject->GetComponent<TransformComponent>() };
+			const Vector3 _projA{ Mathf::Project(collision.info.normal, _rbA->velocity) };
+			const Vector3 _projB{ Mathf::Project(collision.info.normal, _rbB->velocity) };
+			const float _pushBackDistance{ collision.info.errorLength * 0.5f };
+
+			_trA.position -= collision.info.normal * _pushBackDistance;
+			_trB.position += collision.info.normal * _pushBackDistance;
+			_rbA->velocity -= _projA / _rbA->mass;
+			_rbB->velocity -= _projB / _rbB->mass;
 		}
 		else if (collision.bodyA->bodyType == PhysicsBodyComponent::BodyType::RIGID && collision.bodyB->bodyType == PhysicsBodyComponent::BodyType::STATIC)
 		{
 			RigidbodyComponent* _rbA{ reinterpret_cast<RigidbodyComponent*>(collision.bodyA) };
 			StaticBodyComponent* _sbB{ reinterpret_cast<StaticBodyComponent*>(collision.bodyB) };
-
-			//Vector3 _bouncyForce{ glm::reflect(_rbA->velocity, collision.info.normal) * 10.0f };
 			TransformComponent& _tr{ _rbA->gameObject->GetComponent<TransformComponent>() };
-			_tr.position -= collision.info.normal * collision.info.errorLength;
-			Vector3 _proj{ Mathf::Project(collision.info.normal, _rbA->velocity) };
-			_rbA->velocity -= _proj;
+			const Vector3 _proj{ Mathf::Project(collision.info.normal, _rbA->velocity) };
 
-			//_rbA->AddForce(collision.info.normal * collision.info.errorLength * 100.0f);
+			_tr.position -= collision.info.normal * collision.info.errorLength;
+			_rbA->velocity -= _proj / _rbA->mass;
 		}
 		else if (collision.bodyA->bodyType == PhysicsBodyComponent::BodyType::STATIC && collision.bodyB->bodyType == PhysicsBodyComponent::BodyType::RIGID)
 		{
 			StaticBodyComponent* _sbA{ reinterpret_cast<StaticBodyComponent*>(collision.bodyA) };
 			RigidbodyComponent* _rbB{ reinterpret_cast<RigidbodyComponent*>(collision.bodyB) };
-
 			TransformComponent& _tr{ _rbB->gameObject->GetComponent<TransformComponent>() };
+			const Vector3 _proj{ Mathf::Project(collision.info.normal, _rbB->velocity) };
+
 			_tr.position -= collision.info.normal * collision.info.errorLength;
-			//_rbB->velocity += 1.2f * collision.info.normal * _rbB->velocity;
-
-			Vector3 _proj{ Mathf::Project(collision.info.normal, _rbB->velocity) };
-			_rbB->velocity -= _proj;
-
-			//_rbB->velocity = glm::reflect(_rbB->velocity, collision.info.normal);
-			//_rbB->velocity = Vector3(0.0f, 0.0f, 0.0f);
-			//_rbB->AddForce(collision.info.normal * collision.info.errorLength * 100.0f);
+			_rbB->velocity -= _proj / _rbB->mass;
 		}
 	}
 
@@ -169,26 +172,50 @@ cs::CollisionInfo cs::collision_tests::SphereSphereIntersection(const TransformC
 cs::CollisionInfo cs::collision_tests::SpherePolygonIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const PolygonColliderComponent* oc)
 {
 	CollisionInfo _info{};
+	const auto& _vertices{ oc->GetMeshCollider().vertices };
+	const auto& _indices{ oc->GetMeshCollider().indices };
+	uint32_t _collisionCount{ 0 };
 
-	_info.valid = true;
-
-	for (auto& plane : oc->GetPlanes())
+	for (size_t i{ 0 }; i < _indices.size(); i += 3)
 	{
-		_info.normal = -plane.normal;
-		_info.a = c->radius * _info.normal + t->position;
-		_info.errorLength = Mathf::Project(_info.a, plane) - c->radius;
-		_info.valid = _info.valid && _info.errorLength <= 0.0f;
+		const Vector3 _pointA{ _vertices[_indices[i]].position + ot->position }; // this becomes the origin
+		const Vector3 _pointB{ _vertices[_indices[i + 1]].position - _pointA };
+		const Vector3 _pointC{ _vertices[_indices[i + 2]].position - _pointA };
+		const Vector3 _pointP{ t->position - _pointA };
+
+		const float _w1{ (_pointP.z * _pointC.x - _pointP.x * _pointC.z) / (_pointB.z * _pointC.x - _pointB.x * _pointC.z) };
+		const float _w2{ (_pointP.z - _w1 * _pointB.z) / _pointC.z };
+
+		if (_w1 >= 0.0f && _w2 >= 0.0f && _w1 + _w2 <= 1.0f)
+		{
+			const Vector3 _offsetB{ _pointB - _pointA };
+			const Vector3 _offsetC{ _pointC - _pointA };
+
+			_info.normal += glm::normalize(Mathf::CrossProduct(_offsetB, _offsetC));
+			_info.a = -_info.normal * c->radius + _pointP;
+			_info.b = _offsetB * _w1 + _offsetC * _w2;
+			_info.length = glm::length(_pointP - _info.b);
+			_info.errorLength = _info.length - glm::length(_info.a - _info.b);
+			_info.valid |= _info.errorLength <= 0.0f;
+			_collisionCount++;
+		}
 	}
+
+	_info.normal /= _collisionCount == 0 ? 1.0f : (float)_collisionCount; // safety net, so we don't divide by zero... ever
 
 	return _info;
 }
 
-cs::CollisionInfo cs::collision_tests::BarycentricIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const PolygonColliderComponent* oc)
+cs::CollisionInfo cs::collision_tests::SpherePlaneIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const PlaneColliderComponent* oc)
 {
-	const float _w1{};
-	const float _w2{};
+	CollisionInfo _info{};
 
-	return CollisionInfo();
+	_info.normal = -oc->plane.normal;
+	_info.a = c->radius * _info.normal + t->position;
+	_info.errorLength = Mathf::Project(_info.a, oc->plane) - c->radius;
+	_info.valid = _info.valid && _info.errorLength <= 0.0f;
+
+	return _info;
 }
 
 cs::Collision::Collision(PhysicsBodyComponent* a, PhysicsBodyComponent* b, CollisionInfo newInfo) :

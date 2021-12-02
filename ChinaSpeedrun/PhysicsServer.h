@@ -35,19 +35,20 @@ namespace cs
 	class TransformComponent;
 	class SphereColliderComponent;
 	class PolygonColliderComponent;
+	class PlaneColliderComponent;
 
 	namespace collision_tests
 	{
 		CollisionInfo SphereSphereIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const SphereColliderComponent* oc);
 		CollisionInfo SpherePolygonIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const PolygonColliderComponent* oc);
-		CollisionInfo BarycentricIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const PolygonColliderComponent* oc);
+		CollisionInfo SpherePlaneIntersection(const TransformComponent* t, const SphereColliderComponent* c, const TransformComponent* ot, const PlaneColliderComponent* oc);
 	}
 
 	class PhysicsServer
 	{
 	public:
 		constexpr static Vector3 gravityDirection{ 0.0f, -1.0f, 0.0f };
-		constexpr static float airResistance{ 0.8f };
+		constexpr static float airResistance{ 1.0f };
 
 		std::vector<class PhysicsBodyComponent*> bodies;
 

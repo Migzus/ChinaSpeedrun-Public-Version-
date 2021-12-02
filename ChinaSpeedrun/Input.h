@@ -12,6 +12,10 @@ class Input
 {
 public:
 	struct Key { bool held{ false }, pressed{ false }, released{ false }; };
+	struct KeyEvent
+	{
+		int keycode{ 0 }, scancode{ 0 }, action{ 0 }, mods{ 0 };
+	};
 
 	static Vector2 mousePosition;
 	static Vector2 mouseMovement;

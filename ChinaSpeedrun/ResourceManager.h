@@ -23,6 +23,13 @@ namespace cs
 	class ResourceManager
 	{
 	public:
+		enum class AxisMode
+		{
+			X,
+			Y,
+			Z
+		};
+
 		friend class VulkanEngineRenderer;
 
 		template<class T>
@@ -34,7 +41,7 @@ namespace cs
 		template<class T>
 		static void ForcePush(T* resource);
 
-		static std::vector<Vector3> LoadLAS(const std::string& filename);
+		static std::vector<Vector3> LoadLAS(const std::string& filename, const Vector3& offset, const AxisMode& mode = AxisMode::Y);
 		static Mesh* LoadModel(const std::string filename);
 		static AudioData* LoadAudio(const std::string filename);
 		static Texture* LoadTexture(const std::string filename);

@@ -33,6 +33,7 @@ namespace cs
 
 	private:
 		bool isQueued;
+		bool updateTransform;
 	};
 
 	class Transform

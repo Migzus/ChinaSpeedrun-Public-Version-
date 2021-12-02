@@ -24,6 +24,12 @@ cs::CollisionInfo cs::SphereColliderComponent::Intersect(const TransformComponen
 	return cs::collision_tests::SpherePolygonIntersection(transform, this, otherTransform, otherCollider);
 }
 
+cs::CollisionInfo cs::SphereColliderComponent::Intersect(const TransformComponent* transform, const PlaneColliderComponent* otherCollider, const TransformComponent* otherTransform) const
+{
+	// Sphere v Plane
+	return cs::collision_tests::SpherePlaneIntersection(transform, this, otherTransform, otherCollider);
+}
+
 void cs::SphereColliderComponent::ImGuiDrawComponent()
 {
 	if (ImGui::TreeNodeEx("Sphere Collider", ImGuiTreeNodeFlags_DefaultOpen))

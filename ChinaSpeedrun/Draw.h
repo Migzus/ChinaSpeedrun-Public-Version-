@@ -16,6 +16,7 @@ namespace cs
 
 		DrawItem();
 
+		void UpdateMesh();
 		void SetDescriptorRefs(std::vector<VkDescriptorSet>& sets);
 	};
 
@@ -36,8 +37,8 @@ namespace cs
 
 		static void DebugGrid();
 		static auto MakeLine(const Vector3& startPos, const Vector3& endPos);
-		static void Line(const std::vector<Vector3>& points, std::vector<class Color> colors, const DrawMode& drawMode);
-		static void Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode, std::vector<VkDescriptorSet>& descriptorSetsRef);
+		static cs::DrawItem* Line(const std::vector<Vector3>& points, std::vector<class Color> colors, const DrawMode& drawMode);
+		static cs::DrawItem* Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode, std::vector<VkDescriptorSet>& descriptorSetsRef);
 		static void MeshLine(Mesh* mesh);
 		static void Rectangle(const Vector3& extents, const Vector3& position);
 		static void Circle(const float& radius, const Vector3& position, const Color& color, const uint32_t& resolution = 16);
@@ -48,7 +49,7 @@ namespace cs
 		static class Material* material;
 	private:
 		static bool updateVertexIndexBuffers;
-		static std::vector<DrawItem> debugItems;
+		static std::vector<DrawItem*> debugItems;
 		static VkDescriptorPool descriptorPool;
 		static std::vector<VkDescriptorSet> descriptorSets;
 		static struct UniformBufferObject ubo;

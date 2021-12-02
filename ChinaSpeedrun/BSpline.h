@@ -3,6 +3,8 @@
 #include "Mathf.h"
 #include "Component.h"
 
+#include "Draw.h"
+
 #include <vector>
 
 namespace cs
@@ -19,6 +21,7 @@ namespace cs
             Point3D(const Vector3& position, const Vector3& tangentIn, const Vector3& tangentOut);
         };
 
+        bool loop;
         std::vector<Point3D> points;
         size_t subdivisions;
 
@@ -29,13 +32,14 @@ namespace cs
         virtual void Init() override;
         virtual void ImGuiDrawComponent() override;
 
+        void UpdateMesh();
+
         void MakeDrawLine();
         void Interpolate(const float& value, Vector3& point);
         void InterpolateNoMatrix(const float& value, Vector3& point);
 
 	private:
-        //struct DrawItem item;
-
+        DrawItem* item;
         Matrix4x4* matrixWarp;
         int size;
 	};

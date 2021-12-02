@@ -40,9 +40,6 @@ cs::CollisionShape::CollisionShape() : shape(nullptr), type(Type::None)
 {
 }
 
-
-
-
 b2BoxShape::b2BoxShape() : extents({0.5f, 0.5f})
 {
 	SetAsBox(extents.x, extents.y);

@@ -28,9 +28,17 @@ void cs::Camera::CalculateProjection(CameraBase& camera)
 	switch (camera.projection)
 	{
 	case CameraComponent::Projection::ORTHOGRAPHIC:
+	{
+		int _width{ 0 }, _height{ 0 };
+
+		ChinaEngine::renderer.GetViewportSize(_width, _height);
+
 		// we might want to multiply aspect ratio into this somewhere, or just pass window size directly
-		camera.proj = glm::ortho(camera.leftPlane, camera.rightPlane, camera.bottomPlane, camera.topPlane, camera.nearPlane, camera.farPlane);
+		const float _multiplyWidth{ _width * 0.5f }, _multiplyHeight{ _height * 0.5f };
+
+		camera.proj = glm::orthoZO(camera.leftPlane / _multiplyWidth, camera.rightPlane / _multiplyWidth, camera.bottomPlane / _multiplyHeight, camera.topPlane / _multiplyHeight, camera.nearPlane, camera.farPlane);
 		break;
+	}
 	case CameraComponent::Projection::PERSPECTIVE:
 		camera.proj = glm::perspective(glm::radians(camera.fov), ChinaEngine::AspectRatio(), camera.nearPlane, camera.farPlane);
 		break;

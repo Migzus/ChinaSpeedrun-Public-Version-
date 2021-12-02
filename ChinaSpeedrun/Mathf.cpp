@@ -1,6 +1,6 @@
 #include "Mathf.h"
 
-#include "PolygonCollider.h"
+#include "PlaneCollider.h"
 
 #include <random>
 #include <ctime>
@@ -9,7 +9,7 @@
 
 void cs::Mathf::InitRand()
 {
-    srand(time(nullptr));
+    srand((unsigned int)time(nullptr));
 }
 
 int cs::Mathf::Rand()

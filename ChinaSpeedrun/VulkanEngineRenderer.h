@@ -167,6 +167,7 @@ namespace cs
 		void AllocateShader(Shader* shader);
 		void AllocateMaterial(Material* material);
 
+		void UpdateMesh(Mesh* mesh);
 		void UpdateShader(Shader* shader);
 		void UpdateTexture(Texture* texture);
 		void UpdateMaterial(Material* material);

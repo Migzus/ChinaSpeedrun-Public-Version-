@@ -178,6 +178,7 @@
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="Delaunay.cpp" />
+    <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="Draw.cpp" />
     <ClCompile Include="EditorCamera.cpp" />
     <ClCompile Include="EngineEditor.cpp" />
@@ -185,6 +186,7 @@
     <ClCompile Include="ImGuiLayer.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MarchingTriangles.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mathf.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -193,6 +195,7 @@
     <ClCompile Include="PhysicsComponent.cpp" />
     <ClCompile Include="PhysicsLocator.cpp" />
     <ClCompile Include="PhysicsSystem.cpp" />
+    <ClCompile Include="PlaneCollider.cpp" />
     <ClCompile Include="PolygonCollider.cpp" />
     <ClCompile Include="RenderComponent.cpp" />
     <ClCompile Include="Resource.cpp" />
@@ -209,6 +212,7 @@
     <ClCompile Include="StaticBody.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Time.cpp" />
+    <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Transform.cpp" />
     <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="VulkanEngineRenderer.cpp" />
@@ -231,6 +235,7 @@
     <ClInclude Include="Component.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Delaunay.h" />
+    <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="Draw.h" />
     <ClInclude Include="EditorCamera.h" />
     <ClInclude Include="EngineEditor.h" />
@@ -238,6 +243,7 @@
     <ClInclude Include="Editor.h" />
     <ClInclude Include="ImGuiLayer.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="MarchingTriangles.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mathf.h" />
     <ClInclude Include="Mesh.h" />
@@ -246,6 +252,7 @@
     <ClInclude Include="PhysicsComponent.h" />
     <ClInclude Include="PhysicsLocator.h" />
     <ClInclude Include="PhysicsSystem.h" />
+    <ClInclude Include="PlaneCollider.h" />
     <ClInclude Include="PolygonCollider.h" />
     <ClInclude Include="RenderComponent.h" />
     <ClInclude Include="Resource.h" />
@@ -262,6 +269,7 @@
     <ClInclude Include="StaticBody.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Time.h" />
+    <ClInclude Include="Timer.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="VulkanEngineRenderer.h" />

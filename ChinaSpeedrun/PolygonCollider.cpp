@@ -4,61 +4,46 @@
 #include "Collider.h"
 #include "SphereCollider.h"
 #include "PhysicsServer.h"
+#include "PlaneCollider.h"
 #include "Transform.h"
 #include "GameObject.h"
 #include "MeshRenderer.h"
 #include "Mesh.h"
+#include "Vertex.h"
+
+void cs::PolygonColliderComponent::Init()
+{
+	if (gameObject->HasComponent<MeshRendererComponent>())
+	{
+		Mesh* _meshRef{ gameObject->GetComponent<MeshRendererComponent>().mesh };
+
+		meshColldier = new MeshCollider(_meshRef->GetVertices(), _meshRef->GetIndices());
+	}
+}
 
 void cs::PolygonColliderComponent::ImGuiDrawComponent()
 {
 	if (ImGui::TreeNodeEx("Polygon Collider", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		ImGui::Checkbox("Use Mesh", &useMesh);
-		if (ImGui::IsItemClicked() && useMesh)
-			CreateBasedOnMesh();
 		ImGui::DragFloat("Friction", &friction, 0.01f);
 
 		ImGui::TreePop();
 	}
 }
 
-cs::PolygonColliderComponent::PolygonColliderComponent()
+const cs::MeshCollider& cs::PolygonColliderComponent::GetMeshCollider() const
 {
-	planes.push_back({ glm::normalize(Vector3(0.0f, -1.0f, 1.0f)), 0.0f });
-	planes.push_back({ glm::normalize(Vector3(0.0f, -1.0f, 0.0f)), 0.0f });
+	return *meshColldier;
 }
 
-// This method has yet to be tested
-void cs::PolygonColliderComponent::CreateBasedOnMesh()
+cs::PolygonColliderComponent::~PolygonColliderComponent()
 {
-	if (!gameObject->HasComponent<MeshRendererComponent>())
-	{
-		Debug::LogWarning("Cannot create a polygon collider. No mesh was found on the same gameobject.");
-		return;
-	}
-
-	planes.clear();
-
-	Mesh* _mesh{ gameObject->GetComponent<MeshRendererComponent>().mesh };
-	const auto& _indices{ _mesh->GetIndices() };
-	const auto& _vertices{ _mesh->GetVertices() };
-	const size_t _size{ _indices.size() / 3 }; // per triangle
-
-	// could do this to be safe, but ... we don't have to
-	// if ((_indices.size() & 3) == 0)
-
-	for (size_t i{ 0 }; i < _size; i++)
-	{
-		Vector3 _normal{ Mathf::CrossProduct(_vertices[_indices[i]].position - _vertices[_indices[i + 1]].position, _vertices[_indices[i + 2]].position - _vertices[_indices[i + 1]].position) };
-	
-		planes.push_back({-glm::normalize(_normal), glm::length(_vertices[_indices[i + 1]].position)});
-	}
+	delete meshColldier;
 }
 
-const std::vector<cs::Plane>& cs::PolygonColliderComponent::GetPlanes() const
-{
-	return planes;
-}
+cs::PolygonColliderComponent::PolygonColliderComponent() :
+	friction{ 0.0f }, meshColldier{ nullptr }
+{}
 
 cs::CollisionInfo cs::PolygonColliderComponent::Intersect(const TransformComponent* transform, const ColliderComponent* otherCollider, const TransformComponent* otherTransform) const
 {
@@ -76,3 +61,13 @@ cs::CollisionInfo cs::PolygonColliderComponent::Intersect(const TransformCompone
 	// Ignore Polygon against Polygon (could get very expensive)
 	return {};
 }
+
+cs::CollisionInfo cs::PolygonColliderComponent::Intersect(const TransformComponent* transform, const PlaneColliderComponent* otherCollider, const TransformComponent* otherTransform) const
+{
+	// Polygon v Plane (this will also be ignored)
+	return {};
+}
+
+cs::MeshCollider::MeshCollider(const std::vector<Vertex>& nVert, const std::vector<uint32_t>& nInd) :
+	vertices{ nVert }, indices{ nInd }
+{}

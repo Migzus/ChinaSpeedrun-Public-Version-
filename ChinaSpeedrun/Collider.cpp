@@ -4,11 +4,10 @@
 #include "Transform.h"
 #include "SphereCollider.h"
 #include "PolygonCollider.h"
+#include "PlaneCollider.h"
 
 void cs::ColliderComponent::Init()
-{
-
-}
+{}
 
 cs::CollisionInfo cs::ColliderComponent::Intersect(const TransformComponent* transform, const ColliderComponent* otherCollider, const TransformComponent* otherTransform) const
 {
@@ -21,6 +20,11 @@ cs::CollisionInfo cs::ColliderComponent::Intersect(const TransformComponent* tra
 }
 
 cs::CollisionInfo cs::ColliderComponent::Intersect(const TransformComponent* transform, const PolygonColliderComponent* otherCollider, const TransformComponent* otherTransform) const
+{
+    return {};
+}
+
+cs::CollisionInfo cs::ColliderComponent::Intersect(const TransformComponent* transform, const PlaneColliderComponent* otherCollider, const TransformComponent* otherTransform) const
 {
     return {};
 }

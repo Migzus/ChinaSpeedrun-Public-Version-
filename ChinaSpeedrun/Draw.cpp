@@ -13,7 +13,7 @@
 
 cs::Material* cs::Draw::material{ nullptr };
 bool cs::Draw::updateVertexIndexBuffers{ false };
-std::vector<cs::DrawItem> cs::Draw::debugItems;
+std::vector<cs::DrawItem*> cs::Draw::debugItems;
 VkDescriptorPool cs::Draw::descriptorPool;
 std::vector<VkDescriptorSet> cs::Draw::descriptorSets;
 cs::UniformBufferObject cs::Draw::ubo;
@@ -50,15 +50,15 @@ auto cs::Draw::MakeLine(const Vector3& startPos, const Vector3& endPos)
 	return std::make_tuple(startPos, endPos, endPos);
 }
 
-void cs::Draw::Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode)
+cs::DrawItem* cs::Draw::Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode)
 {
-	Line(points, colors, drawMode, descriptorSets);
+	return Line(points, colors, drawMode, descriptorSets);
 }
 
-void cs::Draw::Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode, std::vector<VkDescriptorSet>& descriptorSetsRef)
+cs::DrawItem* cs::Draw::Line(const std::vector<Vector3>& points, std::vector<Color> colors, const DrawMode& drawMode, std::vector<VkDescriptorSet>& descriptorSetsRef)
 {
 	if (points.size() <= 1)
-		return;
+		return nullptr;
 
 	if (colors.empty())
 		colors.push_back(Color::white);
@@ -85,20 +85,22 @@ void cs::Draw::Line(const std::vector<Vector3>& points, std::vector<Color> color
 	Mesh* _mesh{ new Mesh };
 	_mesh->SetMesh(_vertcies, _indcies);
 	_mesh->resourcePath = "debug_element_" + std::to_string(debugItems.size());
-
-	DrawItem _newItem{};
-	_newItem.mesh = _mesh;
-	_newItem.SetDescriptorRefs(descriptorSetsRef);
+	
+	DrawItem* _newItem{ new DrawItem };
+	_newItem->mesh = _mesh;
+	_newItem->SetDescriptorRefs(descriptorSetsRef);
 	debugItems.push_back(_newItem);
 
 	updateVertexIndexBuffers = true;
+
+	return _newItem;
 }
 
 void cs::Draw::MeshLine(Mesh* mesh)
 {
-	DrawItem _newItem{};
-	_newItem.mesh = mesh;
-	_newItem.SetDescriptorRefs(descriptorSets);
+	DrawItem* _newItem{ new DrawItem };
+	_newItem->mesh = mesh;
+	_newItem->SetDescriptorRefs(descriptorSets);
 	debugItems.push_back(_newItem);
 
 	updateVertexIndexBuffers = true;
@@ -132,13 +134,13 @@ void cs::Draw::VulkanDraw(VkCommandBuffer& commandBuffer, const size_t& index, V
 {
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipeline);
 
-	for (auto& item : debugItems)
+	for (auto* item : debugItems)
 	{
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &item.mesh->vertexBufferOffset);
-		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, item.mesh->indexBufferOffset, VK_INDEX_TYPE_UINT32);
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->shader->layout, 0, 1, item.descriptorSetsRef[index], 0, nullptr);
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &item->mesh->vertexBufferOffset);
+		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, item->mesh->indexBufferOffset, VK_INDEX_TYPE_UINT32);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->shader->layout, 0, 1, item->descriptorSetsRef[index], 0, nullptr);
 
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(item.mesh->GetIndices().size()), 1, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(item->mesh->GetIndices().size()), 1, 0, 0, 0);
 	}
 }
 
@@ -189,9 +191,9 @@ void cs::Draw::DebugGrid()
 	_gridMesh->SetMesh(_vertcies, _indcies);
 	_gridMesh->resourcePath = "grid";
 
-	DrawItem _item{};
-	_item.mesh = _gridMesh;
-	_item.SetDescriptorRefs(descriptorSets);
+	DrawItem* _item{ new DrawItem };
+	_item->mesh = _gridMesh;
+	_item->SetDescriptorRefs(descriptorSets);
 
 	debugItems.push_back(_item);
 }
@@ -199,6 +201,11 @@ void cs::Draw::DebugGrid()
 cs::DrawItem::DrawItem() :
 	mesh{ nullptr }
 {}
+
+void cs::DrawItem::UpdateMesh()
+{
+	ChinaEngine::renderer.SolveMesh(mesh, Solve::UPDATE);
+}
 
 void cs::DrawItem::SetDescriptorRefs(std::vector<VkDescriptorSet>& sets)
 {

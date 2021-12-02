@@ -41,6 +41,14 @@ void cs::Scene::Start()
 
 		_script.Start();
 	}
+
+	auto _physicsSimulations{ registry.view<RigidbodyComponent>() };
+	for (auto e : _physicsSimulations)
+	{
+		auto& _rigidbody{ registry.get<RigidbodyComponent>(e) };
+
+		_rigidbody.ShootStartVelocity();
+	}
 }
 
 void cs::Scene::Update()
@@ -60,7 +68,7 @@ void cs::Scene::Update()
 
 void cs::Scene::Exit()
 {
-	Debug::LogIssue("Exiting ", name);
+	Debug::LogInfo("Exiting ", name);
 
 	auto _scriptableObjects{ registry.view<ScriptComponent>() };
 	for (auto e : _scriptableObjects)
@@ -139,7 +147,7 @@ void cs::Scene::RemoveFromRenderQueue(RenderComponent* renderer)
 
 uint32_t cs::Scene::GetUBOOffset()
 {
-	return UniformBufferObject::GetByteSize() * renderableObjects.size();
+	return UniformBufferObject::GetByteSize() * (uint32_t)renderableObjects.size();
 }
 
 void cs::Scene::DestroyDescriptorPools()
@@ -161,7 +169,7 @@ void cs::Scene::Input(int keycode, int scancode, int action, int mods)
 	{
 		auto& _script{ registry.get<ScriptComponent>(e) };
 
-		_script.Input(keycode);
+		_script.Input(keycode, scancode, action, mods);
 	}
 }
 

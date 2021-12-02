@@ -95,7 +95,9 @@ void cs::editor::ImGuiLayer::Step()
 		{
             ImGui::Checkbox("", &activeObject->active);
             ImGui::SameLine();
-			ImGui::Text(activeObject->name.c_str());
+            char* _name{ activeObject->name.data() };
+			ImGui::InputText("", _name, INT16_MAX);
+            activeObject->name = _name;
 
             activeObject->EditorDrawComponents();
 		}
@@ -190,6 +192,39 @@ void cs::editor::ImGuiLayer::End()
 void cs::editor::ImGuiLayer::SetStyle()
 {
     ImGuiStyle* _style{ &ImGui::GetStyle() };
+
+    Color _green{ Color(0.0f, 0.3f, 0.0f) };
+    Color _greenActive{ Color(0.0f, 0.71f, 0.0f) };
+    Color _greenCollapsed{ Color(0.0f, 0.2f, 0.0f, 0.5f) };
+
+    Color _gray{ Color(0.05f, 0.05f, 0.05f) };
+    Color _grayActive{ Color(0.3f, 0.3f, 0.3f) };
+    Color _grayCollapsed{ Color(0.1f, 0.1f, 0.1f, 0.2f) };
+
+    Color _grayBG{ Color(0.2f, 0.2f, 0.2f, 0.4f) };
+
+    _style->Colors[ImGuiCol_FrameBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.0f);
+    _style->Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.00f, 0.04f, 0.04f, 0.3f);
+    _style->Colors[ImGuiCol_FrameBgActive] = ImVec4(0.04f, 0.04f, 0.04f, 1.0f);
+
+    _style->Colors[ImGuiCol_TitleBg] = Color::ColorToImVec4(_gray);
+    _style->Colors[ImGuiCol_TitleBgActive] = Color::ColorToImVec4(_greenActive);
+    _style->Colors[ImGuiCol_TitleBgCollapsed] = Color::ColorToImVec4(_grayCollapsed);
+    
+    _style->Colors[ImGuiCol_CheckMark] = Color::ColorToImVec4(_green);
+    _style->Colors[ImGuiCol_Button] = Color::ColorToImVec4(_green);
+    _style->Colors[ImGuiCol_Header] = Color::ColorToImVec4(_green);
+    _style->Colors[ImGuiCol_Separator] = Color::ColorToImVec4(_green);
+    _style->Colors[ImGuiCol_PlotLines] = Color::ColorToImVec4(_green);
+
+    _style->Colors[ImGuiCol_Tab] = Color::ColorToImVec4(_gray);
+    _style->Colors[ImGuiCol_TabActive] = ImVec4(0.0f, 0.92f, 0.0f, 1.0f);
+    _style->Colors[ImGuiCol_TabHovered] = Color::ColorToImVec4(_grayCollapsed);
+
+    _style->Colors[ImGuiCol_WindowBg] = Color::ColorToImVec4(_grayBG);
+
+    _style->FrameBorderSize = 0.0f;
+    _style->WindowBorderSize = 0.0f;
 }
 
 const bool& cs::editor::ImGuiLayer::IsManipulating() const

@@ -26,8 +26,10 @@
 #include "Rigidbody.h"
 #include "Script.h"
 #include "BulletManagerComponent.h"
+#include "DirectionalLight.h"
 
 #include "Delaunay.h"
+#include "MarchingTriangles.h"
 
 #include "Editor.h"
 #include "Draw.h"
@@ -75,7 +77,8 @@ void cs::ChinaEngine::FramebufferResizeCallback(GLFWwindow* window, int newWidth
 
 void cs::ChinaEngine::EngineInit()
 {
-	SceneManager::Load(SceneManager::CreateScene("Delaunay Test"));
+	SceneManager::Load(SceneManager::CreateScene("Task 3.1 - 3.3"));
+	SceneManager::Load(SceneManager::CreateScene("Task 3.4"));
 	SceneManager::SetCurrentFocusedScene(0);
 
 	Shader* _shader{ ResourceManager::Load<Shader>("../Resources/shaders/default_shader") };
@@ -87,6 +90,7 @@ void cs::ChinaEngine::EngineInit()
 
 	_shader->AssignShaderDescriptor("ubo", 0, Shader::Type::VERTEX, Shader::Data::UNIFORM);
 	_shader->AssignShaderDescriptor("texSampler", 1, Shader::Type::FRAGMENT, Shader::Data::SAMPLER2D);
+	//_shader->AssignShaderDescriptor("TIME", 2, Shader::Type::ANY, Shader::Data::UNIFORM);
 
 	Texture* _debugTexture{ ResourceManager::Load<Texture>("../Resources/textures/debug_texture.png") };
 	_debugTexture->filter = Texture::Filter::NEAREST;
@@ -95,41 +99,100 @@ void cs::ChinaEngine::EngineInit()
 	_magma->tilingX = Texture::Tiling::MIRRORED_REPEAT;
 	_magma->tilingY = Texture::Tiling::MIRRORED_REPEAT;
 
-	Material* _material1{ ResourceManager::Load<Material>("../Resources/materials/test1.mat") };
-	Material* _material2{ ResourceManager::Load<Material>("../Resources/materials/test2.mat") };
+	Material* _material{ ResourceManager::Load<Material>("../Resources/materials/test1.mat") };
+	Material* _magmaMaterial{ ResourceManager::Load<Material>("../Resources/materials/test2.mat") };
 
-	_material1->shader = _shader;
-	_material1->shaderParams["texSampler"] = _debugTexture;
+	_material->shader = _shader;
+	_material->shaderParams["texSampler"] = _debugTexture;
 
-	_material2->shader = _shader;
-	//_material2->cullMode = Material::CullMode::NONE;
-	_material2->shaderParams["texSampler"] = _magma;
+	_magmaMaterial->shader = _shader;
+	//_magmaMaterial->cullMode = Material::CullMode::NONE;
+	_magmaMaterial->shaderParams["texSampler"] = _magma;
 
-	GameObject* _terrain{ SceneManager::InstanceObject("Delaunay Terrain") };
+	{
+		GameObject* _terrain{ SceneManager::InstanceObject("Delaunay Terrain", Vector3(0.0f, 0.0f, 0.0f)) };
+		GameObject* _ball{ SceneManager::InstanceObject("Ball", Vector3(-4.0f, 10.0f, 2.0f)) };
+		GameObject* _ball2{ SceneManager::InstanceObject("Ball", Vector3(-3.0f, 8.0f, -2.0f)) };
+		GameObject* _light{ SceneManager::InstanceObject("Diractional Light", Vector3(0.0f), Vector3(0.0f, 40.0f, -10.0f)) };
+		GameObject* _camera{ SceneManager::InstanceObject("Camera", Vector3(14.0f, 10.0f, 15.0f), Vector3(-25.0f, 42.5f, 0.0f)) };
+		GameObject* _curves{ SceneManager::InstanceObject("Curves") };
 
-	MeshRendererComponent& _meshRenderer{ _terrain->AddComponent<MeshRendererComponent>() };
-	_meshRenderer.material = Draw::material;
+		MeshRendererComponent& _meshRenderer{ _terrain->AddComponent<MeshRendererComponent>() };
+		_meshRenderer.material = _magmaMaterial;
 
-	std::vector<Vector3> _points; //{ ResourceManager::LoadLAS("../Resources/test_las.txt") };
-	//const float _size{ 6.0f };
-	//for (size_t i{ 0 }; i < 10; i++)
-	//	_points.push_back({ Mathf::RandRange(-_size, _size), 0.0f, Mathf::RandRange(-_size, _size) });
+		std::vector<Vector3> _points{ ResourceManager::LoadLAS("../Resources/test_las.txt", Vector3(615200.0f, 6758300.0f, 550.0f)) }; // 245592
+		/*BSpline& _bSpline{ _terrain->AddComponent<BSpline>() };
+		_bSpline.points.push_back({ { 3.0f, 0.0f, 0.0f }, { 0.7f, 1.2f, 3.2f } });
+		_bSpline.points.push_back({ { 0.0f, -4.0f, 2.0f }, { 7.3f, 5.0f, -3.2f } });
+		_bSpline.points.push_back({ { -2.0f, 3.0f, -10.0f }, { -0.7f, -3.0f, 5.2f } });
+		_bSpline.MakeDrawLine();*/
 
-	_points.push_back({ 0.0f, 1.0f, 2.0f });
-	_points.push_back({ 1.0f, 1.0f, 0.0f });
-	_points.push_back({ 1.0f, 1.0f, 1.0f });
-	_points.push_back({ 0.0f, 1.0f, 0.0f });
+		//_meshRenderer.SetMesh(ResourceManager::Load<Mesh>("../Resources/models/terrain.obj"));
+		_meshRenderer.SetMesh(algorithm::Delaunay::Triangulate(_points, true));
+		//ScriptComponent& _script{ _terrain->AddComponent<ScriptComponent>() };
+		//_script.SetScript(ResourceManager::Load<Script>("../Resources/scripts/lua_test.lua"));
 
-	ScriptComponent& _script{ _terrain->AddComponent<ScriptComponent>() };
-	_script.SetScript(ResourceManager::Load<Script>("../Resources/scripts/lua_test.lua"));
+		DirectionalLight& _directionalLight{ _light->AddComponent<DirectionalLight>() };
+		_directionalLight.MakeRayLines();
+		
+		_terrain->AddComponent<PolygonColliderComponent>();
+		_terrain->AddComponent<StaticBodyComponent>();
 
-	BSpline& _bSpline{ _terrain->AddComponent<BSpline>() };
-	_bSpline.points.push_back({ { 3.0f, 0.0f, 0.0f }, { 0.7f, 1.2f, 3.2f } });
-	_bSpline.points.push_back({ { 0.0f, -4.0f, 2.0f }, { 7.3f, 5.0f, -3.2f } });
-	_bSpline.points.push_back({ { -2.0f, 3.0f, -10.0f }, { -0.7f, -3.0f, 5.2f } });
-	_bSpline.MakeDrawLine();
+		/* -------------------
+		*  BALL AND BALL2
+		*/
 
-	_meshRenderer.SetMesh(algorithm::Delaunay::Triangulate(_points));
+		_ball->AddComponent<SphereColliderComponent>();
+		_ball->AddComponent<RigidbodyComponent>();
+
+		MeshRendererComponent& _ballMesh{ _ball->AddComponent<MeshRendererComponent>() };
+		_ballMesh.material = _material;
+		_ballMesh.SetMesh(ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj"));
+
+
+		_ball2->AddComponent<SphereColliderComponent>();
+		_ball2->AddComponent<RigidbodyComponent>();
+
+		MeshRendererComponent& _ball2Mesh{ _ball2->AddComponent<MeshRendererComponent>() };
+		_ball2Mesh.material = _material;
+		_ball2Mesh.SetMesh(ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj"));
+
+		/* -------------------
+		*  CAMERA
+		*/
+
+		_camera->AddComponent<CameraComponent>();
+
+		/* -------------------
+		*  HEIGHT CURVES
+		*/
+
+		algorithm::MarchingTriangles::Polygonize(_curves, _terrain->GetComponent<MeshRendererComponent>().mesh);
+	}
+	
+	{
+		SceneManager::SetCurrentFocusedScene(1);
+
+		GameObject* _ball{ SceneManager::InstanceObject("Ball") };
+		GameObject* _camera{ SceneManager::InstanceObject("Camera", Vector3(0.0f, 10.0f, 30.0f), Vector3(0.0f, 0.0f, 0.0f)) };
+
+		_ball->AddComponent<SphereColliderComponent>();
+		RigidbodyComponent& _rb{ _ball->AddComponent<RigidbodyComponent>() };
+		_rb.mass = 1.0f;
+		_rb.startForce = Vector3(4.0f, 20.0f, 0.0f);
+		_rb.endTime = 3.0f;
+
+		BSpline& _spline{ _ball->AddComponent<BSpline>() };
+		_spline.subdivisions = 100;
+		_spline.points.resize(2);
+		_spline.MakeDrawLine();
+
+		MeshRendererComponent& _meshRend{ _ball->AddComponent<MeshRendererComponent>() };
+		_meshRend.SetMesh(ResourceManager::Load<Mesh>("../Resources/models/sphere_model.obj"));
+		_meshRend.material = Draw::material;
+
+		_camera->AddComponent<CameraComponent>();
+	}
 
 	/*SceneManager::Load(SceneManager::CreateScene("Performance Test"));
 	SceneManager::Load(SceneManager::CreateScene("Physics Test"));

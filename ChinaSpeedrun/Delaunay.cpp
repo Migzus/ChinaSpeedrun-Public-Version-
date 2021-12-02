@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-cs::Mesh* cs::algorithm::Delaunay::Triangulate(std::vector<Vector3>& points)
+cs::Mesh* cs::algorithm::Delaunay::Triangulate(std::vector<Vector3>& points, const bool& invertFaces, const AxisMode& mode)
 {
 	if (points.size() < 3)
 		return nullptr;
@@ -14,18 +14,18 @@ cs::Mesh* cs::algorithm::Delaunay::Triangulate(std::vector<Vector3>& points)
 	std::vector<uint32_t> _indcies{ 0, 1, 2 }; // the super triangle's indcies
 
 	// go trough each point
-	for (size_t j{ 3 }; j < points.size(); j++)
+	for (size_t j{ 2 }; j < points.size(); j++)
 	{
 		std::vector<Edge> _edgeBuffer;
 
 		// go trough each triangle
-		for (size_t i{ 0 }; i < _indcies.size(); i += 3)
+		for (int i{ (int)_indcies.size() - 3 }; i >= 0; i -= 3)
 		{
 			const uint32_t _indexA{ _indcies[i] };
 			const uint32_t _indexB{ _indcies[i + 1] };
 			const uint32_t _indexC{ _indcies[i + 2] };
 
-			if (ContainsInCircumcircle2D(points[j], points[_indexA], points[_indexB], points[_indexC]) > 0.0f)
+			if (ContainsInCircumcircle2D(points[j], points[_indexA], points[_indexB], points[_indexC], mode) > 0.0f)
 			{
 				_edgeBuffer.push_back(Edge(_indexA, _indexB));
 				_edgeBuffer.push_back(Edge(_indexB, _indexC));
@@ -36,30 +36,29 @@ cs::Mesh* cs::algorithm::Delaunay::Triangulate(std::vector<Vector3>& points)
 			}
 		}
 
-		for (size_t a{ 0 }; a < _edgeBuffer.size(); a++)
+		for (int a{ (int)_edgeBuffer.size() - 2 }; a >= 0; a--)
 		{
-			for (size_t b{ 0 }; b < a; b++)
+			for (int b{ (int)_edgeBuffer.size() - 1 }; b >= a + 1; b--)
 			{
-				if (_edgeBuffer.size() > a && _edgeBuffer[a] == _edgeBuffer[b])
+				if (_edgeBuffer[a] == _edgeBuffer[b])
 				{
-					_edgeBuffer.erase(_edgeBuffer.begin() + a);
-					a--;
 					_edgeBuffer.erase(_edgeBuffer.begin() + b);
+					_edgeBuffer.erase(_edgeBuffer.begin() + a);
 					b--;
 					continue;
 				}
 			}
 		}
-
+		
 		for (size_t i{ 0 }; i < _edgeBuffer.size(); i++)
 		{
-			_indcies.push_back(j);
 			_indcies.push_back(_edgeBuffer[i].a);
 			_indcies.push_back(_edgeBuffer[i].b);
+			_indcies.push_back(j);
 		}
 	}
 
-	/*std::vector<size_t> _removeTriangleIndcies;
+	std::vector<size_t> _removeTriangleIndcies;
 
 	// find the connections to the super triangle
 	for (size_t i{ 0 }; i < _indcies.size(); i += 3)
@@ -78,7 +77,7 @@ cs::Mesh* cs::algorithm::Delaunay::Triangulate(std::vector<Vector3>& points)
 		}
 	}
 
-	// we reverse it because the index ordering will be messed up; deleting from the front
+	// we reverse it because the index ordering will be messed up, if deleting from the front
 	std::reverse(_removeTriangleIndcies.begin(), _removeTriangleIndcies.end());
 
 	// actually remove the indcies
@@ -86,7 +85,12 @@ cs::Mesh* cs::algorithm::Delaunay::Triangulate(std::vector<Vector3>& points)
 		_indcies.erase(_indcies.begin() + index, _indcies.begin() + index + 3);
 
 	// Delete the super triangle points
-	points.erase(points.begin(), points.begin() + 3);*/
+	points.erase(points.begin(), points.begin() + 3);
+
+	// invert the faces if we ask for it
+	if (invertFaces)
+		for (size_t i{ 0 }; i < _indcies.size(); i += 3)
+			std::swap(_indcies[i], _indcies[i + 1]);
 
 	// ---- Construct Mesh -------------------------------------------------------------
 
@@ -116,7 +120,10 @@ std::vector<Vector3> cs::algorithm::Delaunay::GenerateSuperTriangle(const std::v
 			_magnitude = _aZ;
 	}
 
-	return { Vector3(_magnitude * 10.0f, 0.0f, 0.0f), Vector3(0.0f, _magnitude * 10.0f, 0.0f), Vector3(0.0f, 0.0f, _magnitude * 10.0f) };
+	return {
+		Vector3(_magnitude * 10.0f, 0.0f, 0.0f),
+		Vector3(0.0f, _magnitude * 10.0f, 0.0f),
+		Vector3(-_magnitude * 10.0f, -_magnitude * 10.0f, 0.0f) };
 }
 
 void cs::algorithm::Delaunay::PushUnique(std::vector<uint32_t>& arrayRef, const uint32_t& value)
@@ -128,7 +135,7 @@ void cs::algorithm::Delaunay::PushUnique(std::vector<uint32_t>& arrayRef, const 
 	arrayRef.push_back(value);
 }
 
-float cs::algorithm::Delaunay::ContainsInCircumcircle3D(const Vector3& point, const Vector3& aVec, const Vector3& bVec, const Vector3& cVec)
+float cs::algorithm::Delaunay::ContainsInCircumcircle3D(const Vector3& point, const Vector3& aVec, const Vector3& bVec, const Vector3& cVec, const AxisMode& mode)
 {
 	const Vector3 _vecDeltaA{ aVec - point };
 	const Vector3 _vecDeltaB{ bVec - point };
@@ -143,11 +150,38 @@ float cs::algorithm::Delaunay::ContainsInCircumcircle3D(const Vector3& point, co
 	return Mathf::DotProduct(_vecCrossBC, _vecSquaredA) + Mathf::DotProduct(_vecCrossCA, _vecSquaredB) + Mathf::DotProduct(_vecCrossAB, _vecSquaredC);
 }
 
-float cs::algorithm::Delaunay::ContainsInCircumcircle2D(const Vector3& point, const Vector3& aVec, const Vector3& bVec, const Vector3& cVec)
+float cs::algorithm::Delaunay::ContainsInCircumcircle2D(const Vector3& point, const Vector3& aVec, const Vector3& bVec, const Vector3& cVec, const AxisMode& mode)
 {
-	const Vector2 _vecDeltaA{ Vector2(aVec.x, aVec.y) - Vector2(point.x, point.y) };
-	const Vector2 _vecDeltaB{ Vector2(bVec.x, bVec.y) - Vector2(point.x, point.y) };
-	const Vector2 _vecDeltaC{ Vector2(cVec.x, cVec.y) - Vector2(point.x, point.y) };
+	Vector2 _offset{ 0.0f };
+	Vector2 _vecA{ 0.0f };
+	Vector2 _vecB{ 0.0f };
+	Vector2 _vecC{ 0.0f };
+
+	switch (mode)
+	{
+	case AxisMode::X:
+		_offset = Vector2(point.y, point.z);
+		_vecA = Vector2(aVec.y, aVec.z);
+		_vecB = Vector2(bVec.y, bVec.z);
+		_vecC = Vector2(cVec.y, cVec.z);
+		break;
+	case AxisMode::Y:
+		_offset = Vector2(point.x, point.z);
+		_vecA = Vector2(aVec.x, aVec.z);
+		_vecB = Vector2(bVec.x, bVec.z);
+		_vecC = Vector2(cVec.x, cVec.z);
+		break;
+	case AxisMode::Z:
+		_offset = Vector2(point.x, point.y);
+		_vecA = Vector2(aVec.x, aVec.y);
+		_vecB = Vector2(bVec.x, bVec.y);
+		_vecC = Vector2(cVec.x, cVec.y);
+		break;
+	}
+
+	const Vector2 _vecDeltaA{ _vecA - _offset };
+	const Vector2 _vecDeltaB{ _vecB - _offset };
+	const Vector2 _vecDeltaC{ _vecC - _offset };
 	const float _crossAB{ Mathf::CrossProduct(_vecDeltaA, _vecDeltaB) };
 	const float _crossBC{ Mathf::CrossProduct(_vecDeltaB, _vecDeltaC) };
 	const float _crossCA{ Mathf::CrossProduct(_vecDeltaC, _vecDeltaA) };

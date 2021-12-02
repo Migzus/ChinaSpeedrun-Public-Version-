@@ -1,6 +1,6 @@
 #include "BSpline.h"
 
-#include "Draw.h"
+//#include "Draw.h"
 #include "GameObject.h"
 #include "Transform.h"
 
@@ -20,15 +20,15 @@ cs::BSpline::Point3D::Point3D(const Vector3& position, const Vector3& tangentIn,
 {}
 
 cs::BSpline::BSpline() :
-    subdivisions{ 10 }, matrixWarp{ nullptr }, size{ 0 }
+    loop{ false }, subdivisions{ 10 }, matrixWarp{ nullptr }, size{ 0 }
 {}
 
 cs::BSpline::BSpline(std::vector<Point3D> points) :
-    points{ points }, subdivisions{ 10 }, matrixWarp{ nullptr }, size{ 0 }
+    loop{ false }, points{ points }, subdivisions{ 10 }, matrixWarp{ nullptr }, size{ 0 }
 {}
 
 cs::BSpline::BSpline(std::vector<Point3D> points, size_t subDivs) :
-    points{ points }, subdivisions{ subDivs }, matrixWarp{ nullptr }, size{ 0 }
+    loop{ false }, points{ points }, subdivisions{ subDivs }, matrixWarp{ nullptr }, size{ 0 }
 {}
 
 void cs::BSpline::Init()
@@ -45,6 +45,7 @@ void cs::BSpline::ImGuiDrawComponent()
     {
         if (ImGui::TreeNode("Points"))
         {
+            ImGui::Checkbox("Loop", &loop);
             if (ImGui::DragInt("Size", &size, 1.0f, 0, 100000))
                 points.resize(size);
 
@@ -68,6 +69,23 @@ void cs::BSpline::ImGuiDrawComponent()
     }
 }
 
+void cs::BSpline::UpdateMesh()
+{
+    size_t _index{ 0 };
+    const float _padding{ 1.0f / static_cast<float>(subdivisions) };
+    for (float i{ 0 }; i < points.size() - 1.0f; i += _padding)
+    {
+        Vector3& _startPoint{ item->mesh->vertices[_index].position };
+        InterpolateNoMatrix(i, _startPoint);
+        Vector3& _endPoint{ item->mesh->vertices[_index + 1].position };
+        InterpolateNoMatrix(i + _padding, _endPoint);
+        item->mesh->vertices[_index + 2].position = _endPoint;
+        _index += 3;
+    }
+
+    item->UpdateMesh();
+}
+
 void cs::BSpline::MakeDrawLine()
 {
     std::vector<Vector3> _linePoints;
@@ -80,74 +98,26 @@ void cs::BSpline::MakeDrawLine()
         _linePoints.push_back(_point);
     }
 
-    Draw::Line(_linePoints, { Color::cyan }, Draw::DrawMode::SOLID);
+    _linePoints.push_back(points.back().position);
+
+    item = Draw::Line(_linePoints, { Color::magenta }, Draw::DrawMode::SOLID);
 }
-
-/*void cs::BSpline::Start()
-{
-    DrawCurve();
-}
-
-void cs::BSpline::Draw()
-{
-    glBindVertexArray(VAO);
-    glUniformMatrix4fv(matrixUniform, 1, GL_FALSE, transform.GetTransfomationMatrix().constData());
-    glDrawArrays(GL_LINES, 0, mesh->vertices.size());
-}
-
-void cs::BSpline::DrawCurve()
-{
-    if (!visible)
-        return;
-
-    const float _offset{ 1.0f / (float)subdivisions };
-    QVector3D _point;
-
-    mesh = new Mesh;
-
-    for (float i{ 0.0f }; i < (float)points.size() - 1.0f; i += _offset)
-    {
-        mesh->vertices.push_back(Vertex(_point - transform.position, Color::cyan, { 1.0f, 1.0f }));
-        Interpolate(i, _point);
-        mesh->vertices.push_back(Vertex(_point - transform.position, Color::cyan, { 1.0f, 1.0f }));
-    }
-
-    for (auto point : points)
-    {
-        mesh->vertices.push_back(Vertex(point.position, Color::lime, { 1.0f, 1.0f }));
-        mesh->vertices.push_back(Vertex(point.tangentIn + point.position, Color::lime, { 1.0f, 1.0f }));
-
-        mesh->vertices.push_back(Vertex(point.position, Color::yellow, { 1.0f, 1.0f }));
-        mesh->vertices.push_back(Vertex(point.tangentOut + point.position, Color::yellow, { 1.0f, 1.0f }));
-    }
-
-    // we need to re-allocate the new mesh to the buffer (in case we have changed the curve)
-    Renderer::Start();
-}*/
 
 // the float value can be 0.0f to the number of "points - 1" (example: 4.0f, and 5 points; we would end up on the fifth point)
 void cs::BSpline::Interpolate(const float& value, Vector3& point)
 {
-    size_t _roundVal{ (size_t)value };
-    Point3D* _p0{ &points[_roundVal] };
-    Point3D* _p1{ &points[_roundVal + 1] };
-    float _rest{ value - _roundVal }, _in{ 1.0f - _rest };
-
-    Vector4 _outpoint{ *matrixWarp * Vector4(_in * _in * _in * _p0->position +
-        _in * _in * _rest * (_p0->tangentOut + _p0->position) * 3.0f +
-        _in * _rest * _rest * (_p1->tangentIn + _p1->position) * 3.0f +
-        _rest * _rest * _rest * _p1->position, 1.0f) };
-
-    point.x = _outpoint.x;
-    point.y = _outpoint.y;
-    point.z = _outpoint.z;
+    InterpolateNoMatrix(value, point);
+    const Vector4 _pointOut{ *matrixWarp * Vector4(point, 1.0f) };
+    point.x = _pointOut.x;
+    point.y = _pointOut.y;
+    point.z = _pointOut.z;
 }
 
 void cs::BSpline::InterpolateNoMatrix(const float& value, Vector3& point)
 {
     size_t _roundVal{ (size_t)value };
     Point3D* _p0{ &points[_roundVal] };
-    Point3D* _p1{ &points[_roundVal + 1] };
+    Point3D* _p1{ &points[Mathf::Clamp(_roundVal + 1, (size_t)0, points.size() - 1)] };
     float _rest{ value - _roundVal }, _in{ 1.0f - _rest };
 
     point = _in * _in * _in * _p0->position +

@@ -49,6 +49,8 @@ namespace cs
 		// Clamps the value within the specified range
 		template<class T>
 		static void Clamp(T& value, T min, T max);
+		template<class T>
+		static T Clamp(const T& value, const T& min, const T& max);
 		// Clamps the value back to the other end of the specified range, pluss excess value is returned
 		template<class T>
 		static void LoopClamp(T& value, const T& min, const T& max);
@@ -75,6 +77,14 @@ namespace cs
 	{
 		value =
 			max * (value > max) +
+			min * (value < min) +
+			value * (value >= min && value <= max);
+	}
+
+	template<class T>
+	inline T Mathf::Clamp(const T& value, const T& min, const T& max)
+	{
+		return max * (value > max) +
 			min * (value < min) +
 			value * (value >= min && value <= max);
 	}

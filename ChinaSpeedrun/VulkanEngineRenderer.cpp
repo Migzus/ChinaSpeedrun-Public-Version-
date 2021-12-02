@@ -65,10 +65,11 @@ void cs::VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
 	CopyBuffer(vertexBuffer.buffer, _stagingBuffer, vertexBuffer.bufferSize);
 
 	mesh->vertexSize = sizeof(Vertex) * mesh->vertices.size();
-	void* _vertexData;
+	CopyDataToBuffer(_stagingBufferMemory, mesh->vertices.data(), vertexBuffer.dataSize, (size_t)mesh->vertexSize);
+	/*void* _vertexData;
 	vkMapMemory(device, _stagingBufferMemory, vertexBuffer.dataSize, vertexBuffer.bufferSize - vertexBuffer.dataSize, 0, &_vertexData);
 	memcpy(_vertexData, mesh->vertices.data(), (size_t)mesh->vertexSize);
-	vkUnmapMemory(device, _stagingBufferMemory);
+	vkUnmapMemory(device, _stagingBufferMemory);*/
 
 	mesh->vertexBufferOffset = vertexBuffer.dataSize;
 	vertexBuffer.dataSize = _newVertexOffset;
@@ -86,10 +87,11 @@ void cs::VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
 	CopyBuffer(indexBuffer.buffer, _stagingBuffer, indexBuffer.bufferSize);
 
 	mesh->indexSize = sizeof(uint32_t) * mesh->indices.size();
-	void* _indexData;
+	CopyDataToBuffer(_stagingBufferMemory, mesh->indices.data(), indexBuffer.dataSize, (size_t)mesh->indexSize);
+	/*void* _indexData;
 	vkMapMemory(device, _stagingBufferMemory, indexBuffer.dataSize, indexBuffer.bufferSize - indexBuffer.dataSize, 0, &_indexData);
 	memcpy(_indexData, mesh->indices.data(), (size_t)mesh->indexSize);
-	vkUnmapMemory(device, _stagingBufferMemory);
+	vkUnmapMemory(device, _stagingBufferMemory);*/
 
 	mesh->indexBufferOffset = indexBuffer.dataSize;
 	indexBuffer.dataSize = _newIndexOffset;
@@ -178,6 +180,7 @@ void cs::VulkanEngineRenderer::SolveMesh(Mesh* mesh, Solve solveMode, const bool
 			AllocateMesh(mesh);
 			break;
 		case Solve::UPDATE:
+			UpdateMesh(mesh);
 			break;
 		case Solve::REMOVE:
 			FreeMesh(mesh);
@@ -388,7 +391,7 @@ void cs::VulkanEngineRenderer::Resolve()
 			AllocateMesh(mesh.first);
 			break;
 		case Solve::UPDATE:
-			// There is nothing to update for a mesh... (at least not yet)
+			UpdateMesh(mesh.first);
 			break;
 		case Solve::REMOVE:
 			FreeMesh(mesh.first);
@@ -486,6 +489,26 @@ void cs::VulkanEngineRenderer::Resolve()
 		CreateCommandBuffers();
 
 	solveRenderers.clear();
+}
+
+void cs::VulkanEngineRenderer::UpdateMesh(Mesh* mesh)
+{
+	VkBuffer _stagingBuffer;
+	VkDeviceMemory _stagingBufferMemory;
+
+	CreateBuffer(vertexBuffer.bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
+	CopyBuffer(vertexBuffer.buffer, _stagingBuffer, vertexBuffer.bufferSize);
+	CopyDataToBuffer(_stagingBufferMemory, mesh->vertices.data(), mesh->vertexBufferOffset, (size_t)mesh->vertexSize);
+	CopyBuffer(_stagingBuffer, vertexBuffer.buffer, vertexBuffer.bufferSize);
+	vkDestroyBuffer(device, _stagingBuffer, nullptr);
+	vkFreeMemory(device, _stagingBufferMemory, nullptr);
+
+	CreateBuffer(indexBuffer.bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _stagingBuffer, _stagingBufferMemory);
+	CopyBuffer(indexBuffer.buffer, _stagingBuffer, indexBuffer.bufferSize);
+	CopyDataToBuffer(_stagingBufferMemory, mesh->indices.data(), mesh->indexBufferOffset, (size_t)mesh->indexSize);
+	CopyBuffer(_stagingBuffer, indexBuffer.buffer, indexBuffer.bufferSize);
+	vkDestroyBuffer(device, _stagingBuffer, nullptr);
+	vkFreeMemory(device, _stagingBufferMemory, nullptr);
 }
 
 void cs::VulkanEngineRenderer::UpdateShader(Shader* shader)

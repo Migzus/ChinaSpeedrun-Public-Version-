@@ -17,12 +17,32 @@ Matrix4x4& cs::Transform::GetMatrixTransform(TransformComponent& transform)
 }
 
 cs::TransformComponent::TransformComponent() :
-	isQueued{ false }
+	isQueued{ false }, updateTransform{ true }
 {}
 
 cs::TransformComponent::operator Matrix4x4& ()
 {
 	return matrix;
+}
+
+void cs::TransformComponent::SetPosition(const Vector3 pos)
+{
+	
+}
+
+void cs::TransformComponent::SetRotation(const Vector3 rot)
+{
+
+}
+
+void cs::TransformComponent::SetRotationInDegrees(const Vector3 rotDeg)
+{
+
+}
+
+void cs::TransformComponent::SetScale(const Vector3 scale)
+{
+
 }
 
 void cs::TransformComponent::Init()
