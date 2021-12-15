@@ -4,22 +4,19 @@
 
 namespace cs
 {
-	// This component is still a work in progress
-	class SpriteRendererComponent : public RenderComponent
+	/**
+	* Renders a 2D quad with a texture, also called a sprite.
+	*/
+	class SpriteRenderer : public RenderComponent
 	{
 	public:
-		friend class SpriteRenderer;
-
+		int32_t zIndex;
 		class Texture* texture;
+
+		SpriteRenderer();
 
 		virtual void Init() override;
 		virtual void ImGuiDrawComponent() override;
 		virtual bool IsRendererValid() const override;
-	};
-
-	class SpriteRenderer : public Renderer
-	{
-	public:
-
 	};
 }

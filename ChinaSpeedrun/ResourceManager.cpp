@@ -49,7 +49,7 @@ std::vector<Vector3> cs::ResourceManager::LoadLAS(const std::string& filename, c
 	{
 		std::getline(_file, _currentLine);
 
-		uint32_t _startStringIndex{ 0 };
+		size_t _startStringIndex{ 0 };
 		float _x{ -offset.x }, _y{ -offset.y }, _z{ -offset.z };
 
 		_x += std::stof(_currentLine.substr(_startStringIndex, _currentLine.find_first_of('\t')));

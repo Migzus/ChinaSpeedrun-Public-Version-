@@ -11,7 +11,13 @@ namespace cs
 	public:
 		friend CameraBase;
 
+		/**
+		* Extract projection matrix from camera
+		*/
 		static const Matrix4x4& GetProjectionMatrix(CameraBase& camera);
+		/**
+		* Extract view matrix from camera
+		*/
 		static const Matrix4x4& GetViewMatrix(CameraBase& camera);
 		static void UpdateCameraTransform(CameraBase& camera, class TransformComponent& transform);
 		static void CalculateProjection(CameraBase& camera);

@@ -20,6 +20,11 @@ namespace cs
 	class Scene;
 	class Script;
 
+	/**
+	* The resource manager manages all the resources and keeps track of them.
+	* You may also reference these resources at any time, or load them via their file path again.
+	* It also makes sure there are no duplicates.
+	*/
 	class ResourceManager
 	{
 	public:
@@ -32,12 +37,26 @@ namespace cs
 
 		friend class VulkanEngineRenderer;
 
+		/*!
+		* Checks if the resource is a duplicate
+		* Returns a nullptr if the resource does not exist in the resource tree
+		*/
 		template<class T>
 		static T* IsDuplicateResource(std::string filename);
+		/*!
+		* Loads the resource from file path
+		*/
 		template<class T>
 		static T* Load(const std::string filename);
+		/*!
+		* Saves the resource to file path
+		*/
 		template<class T>
 		static void Save(const std::string filename, T* resource);
+		/*!
+		* Force push the resource in to the resource tree. (This will cause duplicates if the resource already exists in the tree)
+		* Consider using "Load<Resource>(filepath)" instead, when loading reasource or by trying to use it multiple times.
+		*/
 		template<class T>
 		static void ForcePush(T* resource);
 

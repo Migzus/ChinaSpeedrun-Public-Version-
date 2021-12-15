@@ -9,6 +9,7 @@
 #include "Input.h"
 #include "Camera.h"
 #include "CameraComponent.h"
+#include "Transform.h"
 
 #include "Debug.h"
 
@@ -104,17 +105,14 @@ void cs::editor::EngineEditor::Start()
 	Input::AddMapping("editor_snap", GLFW_KEY_LEFT_SHIFT);
 
 	editorCamera = new EditorCamera(this);
-	//editorCamera->projection = CameraBase::Projection::ORTHOGRAPHIC;
-	//editorCamera->SetExtents(1080.0f, 1920.0f);
 	Camera::CalculateProjection(*editorCamera);
-
 	uiLayer = new ImGuiLayer(this);
 
 	SetPlaymode(Playmode::EDITOR);
 	operation = ImGuizmo::TRANSLATE;
 	operationMode = ImGuizmo::LOCAL;
 
-	uiLayer->SetStyle();
+	//uiLayer->SetStyle();
 }
 
 void cs::editor::EngineEditor::Update()

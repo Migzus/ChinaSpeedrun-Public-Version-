@@ -7,6 +7,7 @@ namespace cs
 	class Timer : public Component
 	{
 	public:
+		bool startOnAwake;
 		float timeout;
 
 		Timer();

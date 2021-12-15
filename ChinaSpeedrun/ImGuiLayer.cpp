@@ -74,9 +74,9 @@ void cs::editor::ImGuiLayer::Step()
 
                 ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(_transformMatrix), &_position[0], &_rotation[0], &_scale[0]);
 
-                _transform.position = _position;
-                _transform.rotationDegrees = _rotation;
-                _transform.scale = _scale;
+                _transform.SetPosition(_position);
+                _transform.SetRotation(_rotation * Mathf::DEG2RAD);
+                _transform.SetScale(_scale);
             }
         }
     }

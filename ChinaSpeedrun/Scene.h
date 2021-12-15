@@ -14,7 +14,11 @@ namespace cs
 	class VulkanEngineRenderer;
 	struct DrawItem;
 
-	// Scenes can also be treated as prefabs
+	/*!
+	* The scenes are composed of game objects and holds the some of the simple systems.
+	* Scenes can also be treated as prefabs
+	* Scenes would have the ability to merge with each other
+	*/
 	class Scene : public Resource
 	{
 	public:
@@ -24,37 +28,73 @@ namespace cs
 
 		Scene();
 
-		// Initialize the components
+		/*!
+		* Initialize the components
+		*/
 		void Initialize() override;
-		// Start the components
+		/*!
+		* Start the components and scene
+		*/
 		void Start();
-		// Update all of the components
+		/*!
+		* Update all of the components in this scene
+		*/
 		void Update();
-		// Exits the scene and destroys it's contents.
-		// Usually you don't call this yourself, for safety reasons.
+		/*!
+		* Exits the scene and finishes the components
+		* Usually you don't call this yourself, for safety reasons.
+		*/
 		void Exit();
+		/*!
+		* Instantly Frees this scene from memory
+		* Called from the Scene Manager but made it so that you can have access.
+		*/
 		void Free();
 
 		// Adds a game object
 		void AddGameObject(GameObject* newObject = nullptr);
-		// Removes a selective object from the entire scene
+		/*!
+		* Removes a selective object from the entire scene
+		*/
 		void RemoveGameObject();
-		// Clears the scene's contents
+		/*!
+		* Clears the scene's contents
+		*/
 		void ClearScene();
-		// Queues this scene for deletion
+		/*!
+		* Queues this scene for deletion
+		*/
 		void QueueExit();
 
+		/*!
+		* Get this scene's Physics System
+		*/
 		class PhysicsServer* GetPhysicsServer() const;
+		/*!
+		* Get this scene's Audio System
+		*/
 		class AudioSystem* GetAudioSystem() const;
 
+		/*!
+		* Add to this scene's render queue (normally done automatically)
+		*/
 		void AddToRenderQueue(class RenderComponent* renderer);
+		/*!
+		* Removes Vulkan rendered related objects from this scene's render queue
+		*/
 		void RemoveFromRenderQueue(RenderComponent* renderer);
 
 		uint32_t GetUBOOffset();
 
+		/*!
+		* Draw items related to this scene
+		*/
 		const std::vector<DrawItem*>& GetDrawItems() const;
+		/*!
+		* Push draw items to this scene
+		*/
 		void PushDebugItem(DrawItem* drawItem);
-
+		
 	private:
 		void DestroyDescriptorPools();
 		void CreateDescriptorPools();

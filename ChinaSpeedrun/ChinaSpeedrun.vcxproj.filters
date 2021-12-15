@@ -62,6 +62,7 @@
     <ClCompile Include="PlaneCollider.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="MarchingTriangles.cpp" />
+    <ClCompile Include="EditorOptions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\ImGuizmo\ImGuizmo.h" />
@@ -119,6 +120,7 @@
     <ClInclude Include="PlaneCollider.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="MarchingTriangles.h" />
+    <ClInclude Include="EditorOptions.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="scripts">
@@ -126,7 +128,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Resources\scripts\lua_test.lua">
+    <None Include="..\Resources\scripts\PlayerController.lua">
       <Filter>scripts</Filter>
     </None>
   </ItemGroup>

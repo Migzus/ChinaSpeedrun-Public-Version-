@@ -12,8 +12,9 @@ namespace cs {
 		AudioMeta(float duration, unsigned rate, unsigned depth, unsigned channels);
 	};
 
-	struct AudioData
+	class AudioData
 	{
+	public:
 		AudioData(std::vector<uint8_t> buffer, AudioMeta meta);
 		std::vector<float> pcm;
 	private:

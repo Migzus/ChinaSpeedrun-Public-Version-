@@ -15,8 +15,10 @@
 #include "SceneManager.h"
 
 cs::editor::EditorCamera::EditorCamera(EngineEditor* root) :
-	editorRoot{ root }, position{ Vector3(0.0f) }, rotation{ Vector3(0.0f) }, movementsSpeed{ 10.0f }, rotationSpeed{ 0.002f }
-{}
+	editorRoot{ root }, position{ EditorOptions::cameraPosition }, rotation{ EditorOptions::cameraRotation }, movementsSpeed{ 10.0f }, rotationSpeed{ 0.002f }
+{
+	view = glm::inverse(glm::translate(Matrix4x4(1.0f), position) * glm::toMat4(Quaternion(rotation)));
+}
 
 void cs::editor::EditorCamera::Update()
 {
@@ -55,6 +57,8 @@ void cs::editor::EditorCamera::RotateCamera()
 	rotation.x -= Input::mouseMovement.y * rotationSpeed;
 
 	Mathf::Clamp(rotation.x, -Mathf::PI_2, Mathf::PI_2);
+
+	EditorOptions::cameraRotation = rotation;
 }
 
 void cs::editor::EditorCamera::Movement()
@@ -67,6 +71,8 @@ void cs::editor::EditorCamera::Movement()
 
 	position += Vector3(_moveDirection.x, _moveDirection.y, _moveDirection.z) * movementsSpeed * Time::deltaTime;
 	view = glm::inverse(glm::translate(Matrix4x4(1.0f), position) * glm::toMat4(Quaternion(rotation)));
+
+	EditorOptions::cameraPosition = position;
 }
 
 void cs::editor::EditorCamera::ScrollAdjustmentSpeed()

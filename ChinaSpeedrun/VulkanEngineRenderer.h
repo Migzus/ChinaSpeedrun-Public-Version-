@@ -44,6 +44,29 @@ namespace cs
 		const float UsedSpace() const;
 	};
 
+	struct GlobalShaderParams
+	{
+		float time{ 0 };
+		float temp{ 0 };
+		float temp1{ 0 };
+		float temp2{ 0 };
+
+		float temp3{ 0 };
+		float temp4{ 0 };
+		float temp5{ 0 };
+		float temp6{ 0 };
+		
+		float temp7{ 0 };
+		float temp8{ 0 };
+		float temp9{ 0 };
+		float temp10{ 0 };
+
+		float temp11{ 0 };
+		float temp12{ 0 };
+		float temp13{ 0 };
+		float temp14{ 0 };
+	};
+	
 	enum class Solve
 	{
 		NONE,
@@ -60,9 +83,11 @@ namespace cs
 
 		VulkanEngineRenderer();
 
+		constexpr static size_t GLOBAL_SHADER_PARAM_SIZE{ sizeof(float) * 16 };
 		constexpr static unsigned int MAX_BUFFER_SIZE{ UINT32_MAX / 512 };
 
 		static void FramebufferResizeCallback(GLFWwindow* window, int newWidth, int newHeight);
+		static void WindowPosCallback(GLFWwindow* window, int x, int y);
 
 		// Called before rendering happens, this is to ensure we have resolved all
 		// materials, shaders and gameobjects to prepare them for rendering.

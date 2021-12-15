@@ -145,7 +145,7 @@ void cs::Scene::RemoveFromRenderQueue(RenderComponent* renderer)
 
 uint32_t cs::Scene::GetUBOOffset()
 {
-	return UniformBufferObject::GetByteSize() * (uint32_t)renderableObjects.size();
+	return UniformBufferObject::GetByteSize() * (uint32_t)renderableObjects.size() + (uint32_t)VulkanEngineRenderer::GLOBAL_SHADER_PARAM_SIZE; // we add float because of the global TIME variable
 }
 
 const std::vector<cs::DrawItem*>& cs::Scene::GetDrawItems() const
@@ -211,7 +211,8 @@ void cs::Scene::UpdateEditorComponents()
 	for (auto e : _transformComponentView)
 	{
 		auto& _transformComponent{ registry.get<TransformComponent>(e) };
-		Transform::CalculateMatrix(_transformComponent);
+		_transformComponent.RootTraverseChildren();
+		//Transform::CalculateMatrix(_transformComponent);
 	}
 
 	auto _renderableObjects{ registry.view<MeshRendererComponent, TransformComponent>() };
@@ -222,14 +223,6 @@ void cs::Scene::UpdateEditorComponents()
 
 		MeshRenderer::UpdateUBO(_meshRenderer, _transform, *SceneManager::mainCamera);
 	}
-
-	auto _bulletManagerObjects{ registry.view<BulletManagerComponent>() };
-	for (auto e : _bulletManagerObjects)
-	{
-		auto& _bulletManagerComponent{ registry.get<BulletManagerComponent>(e) };
-
-		_bulletManagerComponent.Update();
-	}
 }
 
 void cs::Scene::UpdateComponents()
@@ -238,8 +231,14 @@ void cs::Scene::UpdateComponents()
 	for (auto e : _scriptableObjects)
 	{
 		auto& _script{ registry.get<ScriptComponent>(e) };
-
 		_script.Update();
+	}
+
+	auto _bulletManagerObjects{ registry.view<BulletManagerComponent>() };
+	for (auto e : _bulletManagerObjects)
+	{
+		auto& _bulletManagerComponent{ registry.get<BulletManagerComponent>(e) };
+		_bulletManagerComponent.Update();
 	}
 
 	auto _audioComponentView{ registry.view<AudioComponent>() };
@@ -253,7 +252,7 @@ void cs::Scene::UpdateComponents()
 	for (auto e : _transformComponentView)
 	{
 		auto& _transformComponent{ registry.get<TransformComponent>(e) };
-		Transform::CalculateMatrix(_transformComponent);
+		_transformComponent.RootTraverseChildren();
 	}
 
 	auto _cameras{ registry.view<CameraComponent, TransformComponent>() };

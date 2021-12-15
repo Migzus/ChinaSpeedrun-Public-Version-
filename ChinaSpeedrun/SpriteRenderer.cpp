@@ -1,16 +1,26 @@
 #include "SpriteRenderer.h"
 
-void cs::SpriteRendererComponent::Init()
-{
+#include "imgui.h"
+#include "Texture.h"
 
+cs::SpriteRenderer::SpriteRenderer() :
+	zIndex{ 0 }, texture{ nullptr }
+{}
+
+void cs::SpriteRenderer::Init()
+{}
+
+void cs::SpriteRenderer::ImGuiDrawComponent()
+{
+	if (ImGui::TreeNodeEx("Sprite Renderer", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::DragInt("Z Index", &zIndex);
+		
+		ImGui::TreePop();
+	}
 }
 
-void cs::SpriteRendererComponent::ImGuiDrawComponent()
-{
-
-}
-
-bool cs::SpriteRendererComponent::IsRendererValid() const
+bool cs::SpriteRenderer::IsRendererValid() const
 {
 	return RenderComponent::IsRendererValid() && material != nullptr && texture != nullptr;
 }

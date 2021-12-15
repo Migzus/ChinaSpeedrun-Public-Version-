@@ -18,6 +18,8 @@
 #include "ChinaEngine.h"
 #include "ResourceManager.h"
 #include "BulletManagerComponent.h"
+#include "EditorOptions.h"
+#include "Time.h"
 
 #include "Draw.h"
 #include "Scene.h"
@@ -39,7 +41,16 @@ void cs::VulkanEngineRenderer::FramebufferResizeCallback(GLFWwindow* window, int
 	_app->width = newWidth;
 	_app->height = newHeight;
 
+	editor::EditorOptions::windowWidth = newWidth;
+	editor::EditorOptions::windowHeight = newHeight;
+
 	ChinaEngine::FramebufferResizeCallback(window, newWidth, newHeight);
+}
+
+void cs::VulkanEngineRenderer::WindowPosCallback(GLFWwindow* window, int x, int y)
+{
+	editor::EditorOptions::windowXPos = x;
+	editor::EditorOptions::windowYPos = y;
 }
 
 void cs::VulkanEngineRenderer::AllocateMesh(Mesh* mesh)
@@ -529,7 +540,9 @@ void cs::VulkanEngineRenderer::InitWindow()
 
 	window = glfwCreateWindow(width, height, appName.c_str(), nullptr, nullptr);
 	glfwSetWindowUserPointer(window, this);
+	glfwSetWindowPos(window, editor::EditorOptions::windowXPos, editor::EditorOptions::windowYPos);
 	glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
+	glfwSetWindowPosCallback(window, WindowPosCallback);
 }
 
 void cs::VulkanEngineRenderer::InitVulkan()
@@ -542,20 +555,13 @@ void cs::VulkanEngineRenderer::InitVulkan()
 	CreateSwapChain();			// Necessarily Init Call
 	CreateImageViews();			// Necessarily Init Call
 	CreateRenderPass();			// Necessarily Init Call (For Shader)
-	//CreateDescriptorSetLayout();// Shader Spesific
-	//CreateGraphicsPipeline();	// Material Spesific (Depends on a render pass)
 	CreateColorResources();		// Necessarily Init Call
 	CreateDepthResources();		// Necessarily Init Call
 	CreateFramebuffers();		// Necessarily Init Call (But requires a render pass) (one way to counter this is to create a default shader)
 	CreateCommandPool();		// Necessarily Init Call
-	//CreateTextureImage();		// Texture Spesific
-	//CreateTextureImageView();	// Texture Spesific
-	//CreateTextureSampler();		// Texture Spesific
 	CreateVertexBuffer();		// Necessarily Init Call (For Models)
 	CreateIndexBuffer();		// Necessarily Init Call (For Models)
 	CreateUniformBuffers();		// Necessarily Init Call (For Objects)
-	//CreateDescriptorPool();		// Object Spesific (Technically we only need one descriptor pool, seeing as it describes all object traits in relation to the shader)
-	//CreateDescriptorSets();		// Object Spesific (Here we mash up everything and create a material out of everything told to the shader)
 	CreateCommandBuffers();		// Object Spesific (Whenever we create new objects we need to add them as draw commands) (also, depends on pipeline layout)
 	CreateSyncObjects();		// Necessarily Init Call
 }
@@ -1591,6 +1597,17 @@ void cs::VulkanEngineRenderer::CreateDescriptorSets(RenderComponent& renderer)
 			{
 			case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
 			{
+				if (descriptorBinding.first == "TIME")
+				{
+					VkDescriptorBufferInfo _bufferInfo{};
+					_bufferInfo.buffer = uniformBuffers[i];
+					_bufferInfo.offset = 0; // we know the global TIME variable is located at byte 0
+					_bufferInfo.range = sizeof(float);
+
+					_descriptor.pBufferInfo = &_bufferInfo;
+					break;
+				}
+				
 				VkDescriptorBufferInfo _bufferInfo{};
 				_bufferInfo.buffer = uniformBuffers[i];
 				_bufferInfo.offset = renderer.uboOffset;
@@ -1610,13 +1627,13 @@ void cs::VulkanEngineRenderer::CreateDescriptorSets(RenderComponent& renderer)
 					_imageInfo->sampler = _texture->textureSampler;
 
 					_descriptor.pImageInfo = _imageInfo;
-					break;
 				}
 				catch (const std::bad_variant_access& e)
 				{
 					Debug::LogIssue(e.what());
-					break;
 				}
+
+				break;
 			}
 
 			_descriptorWrites.push_back(_descriptor);
@@ -1638,51 +1655,6 @@ void cs::VulkanEngineRenderer::CreateCommandBuffers()
 
 	if (vkAllocateCommandBuffers(device, &_allocInfo, commandBuffers.data()) != VK_SUCCESS)
 		Debug::LogFail("Failed to allocate command buffers.");
-
-	/*for (size_t i{ 0 }; i < commandBuffers.size(); i++)
-	{
-		VkCommandBufferBeginInfo _beginInfo{};
-		_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		_beginInfo.flags = 0;
-		_beginInfo.pInheritanceInfo = nullptr;
-
-		if (vkBeginCommandBuffer(commandBuffers[i], &_beginInfo) != VK_SUCCESS)
-			Debug::LogFail("Failed to begin recording command buffer.");
-
-		VkRenderPassBeginInfo _renderPassInfo{};
-		_renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		_renderPassInfo.renderPass = renderPass;
-		_renderPassInfo.framebuffer = swapChainFramebuffers[i];
-		_renderPassInfo.renderArea.offset = { 0, 0 };
-		_renderPassInfo.renderArea.extent = swapChainExtent;
-
-		std::array<VkClearValue, 2> _clearValues{};
-		_clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-		_clearValues[1].depthStencil = { 1.0f, 0 };
-
-		_renderPassInfo.clearValueCount = static_cast<uint32_t>(_clearValues.size());
-		_renderPassInfo.pClearValues = _clearValues.data();
-
-		vkCmdBeginRenderPass(commandBuffers[i], &_renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		auto _renderers{ ChinaEngine::world.registry.view<MeshRendererComponent>() };
-		for (auto e : _renderers)
-		{
-			MeshRendererComponent& _meshRenderer{ ChinaEngine::world.registry.get<MeshRendererComponent>(e) };
-
-			if (_meshRenderer.mesh == nullptr || _meshRenderer.materials.empty())
-				continue;
-
-			// for now, let's support only one material per model
-			vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _meshRenderer.materials[0]->pipeline);
-			MeshRenderer::VulkanDraw(_meshRenderer, commandBuffers[i], _meshRenderer.materials[0]->shader->layout, i, vertexBuffer.buffer, indexBuffer.buffer);
-		}
-
-		vkCmdEndRenderPass(commandBuffers[i]);
-
-		if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
-			Debug::LogFail("Failed to record command buffer.");
-	}*/
 }
 
 void cs::VulkanEngineRenderer::CreateSyncObjects()
@@ -1747,7 +1719,7 @@ void cs::VulkanEngineRenderer::CreateDebugDrawDescriptorSets()
 
 		VkDescriptorBufferInfo _bufferInfo{};
 		_bufferInfo.buffer = uniformBuffers[i];
-		_bufferInfo.offset = 0;
+		_bufferInfo.offset = GLOBAL_SHADER_PARAM_SIZE; // again, global TIME variable
 		_bufferInfo.range = static_cast<VkDeviceSize>(UniformBufferObject::GetByteSize());
 
 		_descriptorWrites.pBufferInfo = &_bufferInfo;
@@ -1940,7 +1912,12 @@ void cs::VulkanEngineRenderer::UpdateUniformBuffer(uint32_t currentImage)
 {
 	if (SceneManager::HasScenes())
 	{
-		CopyDataToBuffer(uniformBuffersMemory[currentImage], &Draw::ubo, 0, UniformBufferObject::GetByteSize());
+		//GlobalShaderParams _shaderParams{};
+		//_shaderParams.time = Time::time;
+
+		CopyDataToBuffer(uniformBuffersMemory[currentImage], &Time::time, 0, GLOBAL_SHADER_PARAM_SIZE);
+		// offset by float because of the TIME variable
+		CopyDataToBuffer(uniformBuffersMemory[currentImage], &Draw::ubo, GLOBAL_SHADER_PARAM_SIZE, UniformBufferObject::GetByteSize());
 
 		for (auto _renderer : SceneManager::GetCurrentScene()->renderableObjects)
 		{

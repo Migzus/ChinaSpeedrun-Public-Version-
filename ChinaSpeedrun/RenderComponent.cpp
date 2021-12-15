@@ -14,7 +14,7 @@ uint32_t cs::UniformBufferObject::GetByteSize()
 }
 
 cs::RenderComponent::RenderComponent() :
-	uboOffset{ 0 }
+	uboOffset{ sizeof(float) }
 {}
 
 void cs::RenderComponent::Init()

@@ -181,6 +181,7 @@
     <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="Draw.cpp" />
     <ClCompile Include="EditorCamera.cpp" />
+    <ClCompile Include="EditorOptions.cpp" />
     <ClCompile Include="EngineEditor.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="ImGuiLayer.cpp" />
@@ -238,6 +239,7 @@
     <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="Draw.h" />
     <ClInclude Include="EditorCamera.h" />
+    <ClInclude Include="EditorOptions.h" />
     <ClInclude Include="EngineEditor.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Editor.h" />
@@ -275,7 +277,7 @@
     <ClInclude Include="VulkanEngineRenderer.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Resources\scripts\lua_test.lua" />
+    <None Include="..\Resources\scripts\PlayerController.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -152,6 +152,9 @@ void cs::Draw::VulkanDraw(VkCommandBuffer& commandBuffer, const size_t& index, V
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(item->mesh->GetIndices().size()), 1, 0, 0, 0);
 	}
 
+	if (SceneManager::HasScenes())
+		return;
+
 	for (auto* item : SceneManager::GetCurrentScene()->GetDrawItems())
 	{
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &item->mesh->vertexBufferOffset);

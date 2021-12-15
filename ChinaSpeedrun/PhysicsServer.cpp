@@ -179,14 +179,15 @@ cs::CollisionInfo cs::collision_tests::SpherePolygonIntersection(const Transform
 	for (size_t i{ 0 }; i < _indices.size(); i += 3)
 	{
 		const Vector3 _pointA{ _vertices[_indices[i]].position + ot->position }; // this becomes the origin
-		const Vector3 _pointB{ _vertices[_indices[i + 1]].position - _pointA };
-		const Vector3 _pointC{ _vertices[_indices[i + 2]].position - _pointA };
-		const Vector3 _pointP{ t->position - _pointA };
+		const Vector3 _pointB{ _vertices[_indices[i + 1]].position - _pointA }; // triangle point
+		const Vector3 _pointC{ _vertices[_indices[i + 2]].position - _pointA }; // triangle point
+		const Vector3 _pointP{ t->position - _pointA }; // point to check if inside
 
+		// just, math... hard to explain...
 		const float _w1{ (_pointP.z * _pointC.x - _pointP.x * _pointC.z) / (_pointB.z * _pointC.x - _pointB.x * _pointC.z) };
 		const float _w2{ (_pointP.z - _w1 * _pointB.z) / _pointC.z };
 
-		if (_w1 >= 0.0f && _w2 >= 0.0f && _w1 + _w2 <= 1.0f)
+		if (_w1 >= 0.0f && _w2 >= 0.0f && _w1 + _w2 <= 1.0f) // check this and done
 		{
 			const Vector3 _offsetB{ _pointB - _pointA };
 			const Vector3 _offsetC{ _pointC - _pointA };

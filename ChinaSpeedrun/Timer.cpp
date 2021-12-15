@@ -1,23 +1,27 @@
 #include "Timer.h"
 
-#include "Signal.h"
+//#include "Signal.h"
 #include "GameObject.h"
 #include "imgui.h"
 #include "Time.h"
 
 cs::Timer::Timer() :
-	timeout{ 0.0f }, isActive{ false }, currentTime{ 0.0f }
+	startOnAwake{ false }, timeout{ 0.0f }, isActive{ false }, currentTime{ 0.0f }
 {}
 
 void cs::Timer::Init()
 {
-	// hook up a signal to the gameObject
+	//gameObject->signals.Connect("timeout", this, &Timer::Stop);
+
+	if (startOnAwake)
+		Start();
 }
 
 void cs::Timer::ImGuiDrawComponent()
 {
-	if (ImGui::TreeNodeEx("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::TreeNodeEx("Timer", ImGuiTreeNodeFlags_DefaultOpen))
 	{
+		ImGui::Checkbox("Start On Awake", &startOnAwake);
 		ImGui::DragFloat("Timeout", &timeout);
 
 		ImGui::TreePop();
@@ -55,7 +59,7 @@ void cs::Timer::StepTimer()
 
 	if (currentTime < 0.0f)
 	{
-		//gameObject->signal.EmitSignal("Timeout");
+		//gameObject->signals.EmitSignal("timeout");
 		Stop();
 	}
 }

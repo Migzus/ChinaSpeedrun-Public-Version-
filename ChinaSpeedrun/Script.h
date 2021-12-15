@@ -48,20 +48,56 @@ namespace cs
 		virtual void Init() override;
 		virtual void ImGuiDrawComponent() override;
 		
+		/**
+		* Gets all the variables in the lua instance
+		*/
 		void GetGlobalTable();
+		/**
+		* Compile the lua script
+		*/
 		void CompileScript();
+		/**
+		* Creates a lua state (Always called automatically)
+		*/
 		void CreateLuaState();
 
+		/**
+		* Called on start scene play
+		*/
 		void Start();
+		/**
+		* Call the lua script's update every frame
+		*/
 		void Update();
+		/**
+		* Gives Input to the lua script
+		*/
 		void Input(int keycode, int scancode, int action, int mods);
+		/**
+		* Called once the scene stops
+		*/
 		void Exit();
 
+		/**
+		* Called by a local box2d component, once something enters the collider
+		*/
 		void OnCollisionEnter();
+		/**
+		* Called by a local box2d component, once something exits the collider
+		*/
 		void OnCollisionExit();
 
+		/**
+		* Get the current attached script
+		*/
 		Script* GetScript() const;
+		/**
+		* Set a new script
+		*/
 		void SetScript(Script* newScript);
+		/**
+		* Clear the current script
+		*/
 		void ClearScript();
 
 		~ScriptComponent();

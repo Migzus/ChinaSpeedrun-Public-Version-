@@ -6,7 +6,7 @@ cs::CameraBase::CameraBase() :
 	view{ Matrix4x4(1.0f) }, proj{ Matrix4x4(1.0f) }
 {}
 
-void cs::CameraBase::SetExtents(const float& height, const float& width)
+void cs::CameraBase::SetExtents(const float& width, const float& height)
 {
 	bottomPlane = topPlane = height * 0.5f;
 	bottomPlane = -bottomPlane;

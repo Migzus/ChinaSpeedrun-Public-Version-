@@ -77,7 +77,7 @@ void cs::BulletManagerComponent::VulkanDraw(VkCommandBuffer& commandBuffer, cons
 	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, quadSprite->indexBufferOffset, VK_INDEX_TYPE_UINT32);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->shader->layout, 0, 1, &descriptorSets[index], 0, nullptr);
 
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(quadSprite->GetIndices().size()), activeBullets.size(), 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(quadSprite->GetIndices().size()), static_cast<uint32_t>(activeBullets.size()), 0, 0, 0);
 }
 
 void cs::BulletManagerComponent::CreateSystem()
@@ -127,13 +127,13 @@ void cs::BulletManagerComponent::Update()
 		BulletInfo _info{ BulletInfo(types["circle"]) };
 
 		_info.subColor = Color(Mathf::RandRange(0.0f, 1.0f), Mathf::RandRange(0.0f, 1.0f), Mathf::RandRange(0.0f, 1.0f));
-		_info.speed = 0.1f;
+		_info.speed = 1.0f;
 		//_info.position = Vector2(0.0f);
 		_info.rotation = Mathf::RandRange(0.0f, Mathf::TAU);
 
 		//SpawnBullet(_info);
 		
-		SpawnCircle(_info, 1000);
+		SpawnCircle(_info, 32);
 	}
 
 	uint32_t _index{ 0 };
@@ -170,10 +170,7 @@ void cs::BulletManagerComponent::SpawnCircle(BulletInfo& info, const uint16_t bu
 cs::Bullet* cs::BulletManagerComponent::SpawnBullet(const BulletInfo& info)
 {
 	if (readyBullets.empty())
-	{
-		//Debug::LogWarning("Reached max capacity for bullet manager. Capacity = ", bulletCapacity);
 		return nullptr;
-	}
 
 	Bullet* _newBullet{ readyBullets.front() };
 

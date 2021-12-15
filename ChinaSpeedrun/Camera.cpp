@@ -36,7 +36,7 @@ void cs::Camera::CalculateProjection(CameraBase& camera)
 		// we might want to multiply aspect ratio into this somewhere, or just pass window size directly
 		const float _multiplyWidth{ _width * 0.5f }, _multiplyHeight{ _height * 0.5f };
 
-		camera.proj = glm::orthoZO(camera.leftPlane / _multiplyWidth, camera.rightPlane / _multiplyWidth, camera.bottomPlane / _multiplyHeight, camera.topPlane / _multiplyHeight, camera.nearPlane, camera.farPlane);
+		camera.proj = glm::orthoZO(_multiplyWidth / camera.leftPlane, _multiplyWidth / camera.rightPlane, _multiplyHeight / camera.bottomPlane, _multiplyHeight / camera.topPlane, camera.nearPlane, camera.farPlane);
 		break;
 	}
 	case CameraComponent::Projection::PERSPECTIVE:
